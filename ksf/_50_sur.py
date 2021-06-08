@@ -32,11 +32,18 @@ def set_random_last_modified(file: Path):
     _set_file_last_modified(file, _random_datetime())
 
 
-def create_fake(name: str, ref_size: int, target_dir: Path):
-    """Creates a fake file. The encoded name of fake file will match `name`,
-    but the content is random, so the header does not match.
+def create_surrogate(name: str, ref_size: int, target_dir: Path):
+    """Creates a surrogate file.
 
-    ref_size: The size of the real file. The fake file will have
+    The file name of the surrogate will be the correct imprint from the
+    [name]. But the file content is random, so the file header is not
+    a correct imprint from [name].
+
+    Knowing the name we can easily find all the surrogates and real files
+    for the name. We can differentiate the real file from the surrogate
+    by the header (only for real files it contains the imprint).
+
+    ref_size: The size of the real file. The surrogate file will have
     similar size but randomized.
     """
     target_file = target_dir / Imprint(name).as_str

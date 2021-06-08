@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from ksf._40_imprint import name_matches_encoded
-from ksf._51_encryption import name_matches_header
+from ksf._51_encryption import name_matches_header, encrypt_to_dir
 
 
 def _get_newest_file(files: List[Path]) -> Path:
@@ -18,7 +18,7 @@ def _get_newest_file(files: List[Path]) -> Path:
     return files_modified_at_max[0]
 
 
-class FileAndFakes:
+class FileAndSurrogates:
     def __init__(self, parent: Path, name: str):
         self.parent = parent
         self.name = name
@@ -26,7 +26,7 @@ class FileAndFakes:
         self.file: Optional[Path] = None
 
         # `files` are all files related to the current item, the real one
-        # and the fakes
+        # and the surrogates
         self.all_files = [p for p in self.parent.glob('*')
                           if name_matches_encoded(self.name, p.name)]
 
@@ -42,6 +42,10 @@ class FileAndFakes:
             assert len(reals) == 0
             self.file = None
 
-# def encrypt_with_fakes(source_file: Path, target_dir: Path):
+        self.surrogates = [f for f in self.all_files if f != self.file]
 
-# encrypt_to_dir
+
+def write_with_surrogates(source_file: Path, name: str, target_dir: Path):
+    old_files = FileAndSurrogates(target_dir, name)
+
+    real_file = encrypt_to_dir(source_file, name, target_dir)

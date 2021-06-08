@@ -7,20 +7,20 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ksf._40_imprint import name_matches_encoded
-from ksf._50_fakes import create_fake
+from ksf._50_sur import create_surrogate
 from ksf._51_encryption import encrypt_to_dir
-from ksf._60_file_with_fakes import FileAndFakes
+from ksf._60_finder import FileAndSurrogates
 
 
 class TestFileWithFakes(unittest.TestCase):
 
-    def test_create_fakes(self):
+    def test_create_sur(self):
         with TemporaryDirectory() as tds:
             td = Path(tds)
 
             N = 10
             for _ in range(N):
-                create_fake('abc', 2000, td)
+                create_surrogate('abc', 2000, td)
 
             # check we really created 10 files with unique names
             files = list(td.glob('*'))
@@ -47,7 +47,7 @@ class TestFileWithFakes(unittest.TestCase):
                                datetime.date.today() - datetime.timedelta(
                                    days=30 * 11))
 
-    def test_find_file_and_fakes(self):
+    def test_find(self):
         with TemporaryDirectory() as tds:
             td = Path(tds)
             source_file = td / "source"
@@ -55,17 +55,19 @@ class TestFileWithFakes(unittest.TestCase):
 
             NAME = "abc"
             for _ in range(5):
-                create_fake(NAME, 2000, td)
+                create_surrogate(NAME, 2000, td)
             real = encrypt_to_dir(source_file, NAME, td)
 
-            correct = FileAndFakes(td, NAME)
+            correct = FileAndSurrogates(td, NAME)
             # we have 7 files total (including the source)
             self.assertEqual(sum(1 for _ in td.glob('*')), 7)
             # 6 files corresponding to the name
             self.assertEqual(len(correct.all_files), 6)
+            # 5 surrogate files
+            self.assertEqual(len(correct.surrogates), 5)
             # one real file
             self.assertEqual(correct.file, real)
 
-            incorrect = FileAndFakes(td, "incorrect name")
+            incorrect = FileAndSurrogates(td, "incorrect name")
             self.assertEqual(len(incorrect.all_files), 0)
             self.assertEqual(incorrect.file, None)

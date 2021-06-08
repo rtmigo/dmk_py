@@ -13,7 +13,7 @@ from Crypto.Hash import BLAKE2b
 
 from ksf._10_randoms import get_fast_random_bytes
 from ksf._40_imprint import Imprint, HashCollision, half_n_half
-from ksf._50_fakes import set_random_last_modified
+from ksf._50_sur import set_random_last_modified
 from ksf._wtf import WritingToTempFile
 
 
@@ -175,20 +175,12 @@ class DecryptedFile:
             imprint_bytes = f.read(Imprint.FULL_LEN)
             # todo check header?
             mac = read_or_fail(f, MAC_LEN)
-            # print('dec mac', mac)
-            # if len(mac)
+
             nonce = Imprint.bytes_to_nonce(imprint_bytes)
             encrypted_bytes = f.read()
 
-            # print(name, nonce)
-
-            # print("LEN enc", len(encrypted_bytes))
-
             key = pwd_to_encryption_key(name, salt=nonce)
             cipher = ChaCha20_Poly1305.new(key=key, nonce=nonce)
-
-            # print('dec key', key)
-            # print('dec bytes', encrypted_bytes)
 
             try:
                 decrypted = cipher.decrypt_and_verify(encrypted_bytes,
