@@ -1,11 +1,8 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
-import datetime
-import os
-import random
+import binascii
 from base64 import urlsafe_b64encode, urlsafe_b64decode
-from pathlib import Path
 from typing import Tuple, Optional
 
 from Crypto.Hash import BLAKE2b
@@ -56,7 +53,7 @@ class Imprint:
 
     NONCE_LEN = 24
     DIGEST_LEN = 24
-    HEADER_LEN = NONCE_LEN + DIGEST_LEN
+    FULL_LEN = NONCE_LEN + DIGEST_LEN
 
     def __init__(self, name: str, nonce: bytes = None):
         if len(name) < 1:
@@ -84,7 +81,7 @@ class Imprint:
             h_obj = BLAKE2b.new(digest_bits=Imprint.DIGEST_LEN * 8)
             h_obj.update(data_for_hash)
             result = h_obj.digest() + self.nonce
-            assert len(result) == Imprint.HEADER_LEN
+            assert len(result) == Imprint.FULL_LEN
             self.__as_bytes = result
         return self.__as_bytes
 
@@ -98,13 +95,22 @@ class Imprint:
 
     @staticmethod
     def bytes_to_nonce(h: bytes) -> bytes:
-        if len(h) != Imprint.HEADER_LEN:
+        if len(h) != Imprint.FULL_LEN:
             raise ValueError
         return h[-Imprint.NONCE_LEN:]
 
 
 def name_matches_encoded(name: str, encoded: str) -> bool:
-    nonce = Imprint.bytes_to_nonce(str_to_bytes(encoded))
+    try:
+        bts = str_to_bytes(encoded)
+    except binascii.Error:
+        return False
+
+    if len(bts) != Imprint.FULL_LEN:
+        return False
+
+    nonce = Imprint.bytes_to_nonce(bts)
+
     assert len(nonce) == Imprint.NONCE_LEN
     return encoded == Imprint(name, nonce=nonce).as_str
 
@@ -123,21 +129,3 @@ class HashCollision(Exception):
     such a collision is much less than the inoperability of the program for
     other reasons."""
     pass
-
-
-MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000 * 1000
-assert datetime.timedelta(microseconds=MICROSECONDS_PER_DAY) \
-           .total_seconds() == 60 * 60 * 24
-
-
-def random_datetime(max_days_ago=366) -> datetime.datetime:
-    mcs = random.randint(0, MICROSECONDS_PER_DAY * max_days_ago)
-    delta = datetime.timedelta(microseconds=mcs)
-    return datetime.datetime.now() - delta
-
-
-def set_file_last_modified(file: Path, dt: datetime.datetime):
-    dt_epoch = dt.timestamp()
-    os.utime(str(file), (dt_epoch, dt_epoch))
-
-

@@ -3,7 +3,7 @@
 
 import unittest
 
-from ksf._randoms import get_fast_random_bytes
+from ksf._10_randoms import get_fast_random_bytes
 
 
 class TestRandomBytes(unittest.TestCase):

@@ -1,14 +1,15 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
+
 import random
 import unittest
 from base64 import b64encode
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf._20_encryption import _encrypt_file_to_file, encrypt_to_dir, \
+from ksf._10_randoms import get_fast_random_bytes
+from ksf._51_encryption import _encrypt_file_to_file, encrypt_to_dir, \
     MacCheckFailed, DecryptedFile, name_matches_header
-from ksf._randoms import get_fast_random_bytes
 
 
 class TestEncryptDecrypt(unittest.TestCase):
