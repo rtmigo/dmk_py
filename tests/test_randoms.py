@@ -20,5 +20,3 @@ class TestRandomBytes(unittest.TestCase):
         self.assertNotEqual(
             get_fast_random_bytes(50),
             get_fast_random_bytes(50))
-
-

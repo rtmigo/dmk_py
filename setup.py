@@ -26,7 +26,7 @@ setup(
     author_email="ortemeo@gmail.com",
     # url='https://github.com/rtmigo/vien_py',
 
-    packages=['ksks'],
+    packages=['ksf'],
     python_requires='>=3.8',
     install_requires=['pycryptodome', 'click'], # ,
 
