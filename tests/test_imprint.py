@@ -1,12 +1,9 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
-import datetime
 import unittest
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
-from ksf._10_imprint import bytes_to_str, str_to_bytes, \
+from ksf._40_imprint import bytes_to_str, str_to_bytes, \
     name_matches_encoded, Imprint
 
 
@@ -43,10 +40,3 @@ class Test(unittest.TestCase):
         for _ in range(10):
             s.add(Imprint('the_same.file').as_bytes)
         self.assertEqual(len(s), 10)
-
-
-
-
-
-
-

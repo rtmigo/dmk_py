@@ -1,18 +1,20 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
-import random
-import struct
 import io
 import os
+import random
+import struct
 from pathlib import Path
 from typing import BinaryIO
 
 from Crypto.Cipher import ChaCha20_Poly1305
 from Crypto.Hash import BLAKE2b
 
-from ksf._10_imprint import Imprint, HashCollision, half_n_half
-from ksf._randoms import get_fast_random_bytes
+from ksf._10_randoms import get_fast_random_bytes
+from ksf._40_imprint import Imprint, HashCollision, half_n_half
+from ksf._50_fakes import set_random_last_modified
+from ksf._wtf import WritingToTempFile
 
 
 class MacCheckFailed(Exception):
@@ -45,6 +47,7 @@ def encrypt_to_dir(source_file: Path, name: str, target_dir: Path) -> Path:
     fn = target_dir / imprint.as_str
     if fn.exists():
         raise HashCollision
+
     _encrypt_file_to_file(source_file, name, fn)
     return fn
 
@@ -71,7 +74,7 @@ SRC_MTIME_LEN = 8
 SRC_SIZE_LEN = 3
 
 
-class IntroPadding:
+class _IntroPadding:
     """When the encrypted content always starts with the same bytes, this
     could hypothetically make it easier to crack the cipher. So I put a little
     random padding at the beginning of the file.
@@ -89,7 +92,7 @@ class IntroPadding:
     @staticmethod
     def gen_bytes():
         first_byte = random.randint(0, 0xFF)
-        length = IntroPadding.first_byte_to_len(first_byte)
+        length = _IntroPadding.first_byte_to_len(first_byte)
         assert 0 <= length <= 15
 
         result = bytes((first_byte,))
@@ -102,7 +105,7 @@ class IntroPadding:
     def skip_in_file(df: BinaryIO):
         # skipping the intro padding
         intro_padding_first_byte = read_or_fail(df, 1)[0]
-        intro_length = IntroPadding.first_byte_to_len(intro_padding_first_byte)
+        intro_length = _IntroPadding.first_byte_to_len(intro_padding_first_byte)
         if intro_length > 1:
             read_or_fail(df, intro_length - 1)  # or just seek?
 
@@ -122,20 +125,8 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
                                            signed=False)
     assert len(src_size_bytes) == SRC_SIZE_LEN
 
-    # If the encrypted content always starts with the same bytes, this could
-    # hypothetically make it easier to crack the cipher. So I put a little
-    # padding at the beginning of the file.
-
-    # intro_padding_length_byte = random.randint(1, 0xFF)
-    # intro_padding_length = intro_padding_length_byte & 15
-    # assert 0<=intro_padding_length
-    # print(0x1111)
-    # raise 0x1111
-
-    # todo insert random padding before the version
-
     plain_parts = [
-        IntroPadding.gen_bytes(),
+        _IntroPadding.gen_bytes(),
         version,
         src_mtime_bytes,
         src_size_bytes,
@@ -160,11 +151,14 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
 
     assert len(mac) == MAC_LEN
 
-    with target_file.open('wb') as f:
-        f.write(header_imprint.as_bytes)
-        f.write(mac)
-        # print("LEN ciph", len(cipher_bytes))
-        f.write(cipher_bytes)  # todo chunks?
+    with WritingToTempFile(target_file) as wtf:
+        # must be the same as writing a fake file
+        with wtf.dirty.open('wb') as outfile:
+            outfile.write(header_imprint.as_bytes)
+            outfile.write(mac)
+            outfile.write(cipher_bytes)  # todo chunks?
+        set_random_last_modified(wtf.dirty)  # todo test it
+        wtf.replace()
 
 
 def read_or_fail(f: BinaryIO, n: int) -> bytes:
@@ -178,7 +172,7 @@ class DecryptedFile:
 
     def __init__(self, source_file: Path, name: str):
         with source_file.open('rb') as f:
-            imprint_bytes = f.read(Imprint.HEADER_LEN)
+            imprint_bytes = f.read(Imprint.FULL_LEN)
             # todo check header?
             mac = read_or_fail(f, MAC_LEN)
             # print('dec mac', mac)
@@ -206,7 +200,7 @@ class DecryptedFile:
 
             with io.BytesIO(decrypted) as df:
 
-                IntroPadding.skip_in_file(df)
+                _IntroPadding.skip_in_file(df)
 
                 version_bytes = df.read(VERSION_LEN)
                 src_mtime_bytes = df.read(SRC_MTIME_LEN)
@@ -233,8 +227,8 @@ def name_matches_header(name: str, file: Path) -> bool:
     """Returns True if the header imprint (written into the file) matches
     the `name`."""
     with file.open('rb') as f:
-        header_bytes = f.read(Imprint.HEADER_LEN)
-        if len(header_bytes) < Imprint.HEADER_LEN:
+        header_bytes = f.read(Imprint.FULL_LEN)
+        if len(header_bytes) < Imprint.FULL_LEN:
             return False
         nonce = Imprint.bytes_to_nonce(header_bytes)
     return Imprint(name, nonce=nonce).as_bytes == header_bytes
