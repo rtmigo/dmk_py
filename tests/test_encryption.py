@@ -6,18 +6,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ksf._20_encryption import _encrypt_file_to_file, encrypt_to_dir, \
-    MacCheckFailed, DecryptedFile, name_matches_header, IntroPadding
+    MacCheckFailed, DecryptedFile, name_matches_header
 
 
 class TestEncryptDecrypt(unittest.TestCase):
-
-        #minn =
-
-        #for _ in range(500):
-        #    padding = intro_padding()
-        #    size = len(padding)
-        #    #self.assertGreaterEqual(size, 0)
-        #    #self.assertLess([], 15)
 
     def test_name_matches_header(self):
         with TemporaryDirectory() as tds:
