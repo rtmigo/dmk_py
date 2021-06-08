@@ -25,6 +25,23 @@ class TestEncryptDecrypt(unittest.TestCase):
             self.assertTrue(name_matches_header('abc', right))
             self.assertFalse(name_matches_header('def', right))
 
+    def test_encrypted_does_not_contain_plain(self):
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            source_file = td / "source"
+            body = b'qwertyuiop'
+            source_file.write_bytes(body)
+            encrypted_file = encrypt_to_dir(source_file, 'some_name', td)
+
+            # checking that the original content can be found in original file,
+            # but not in the encrypted file
+            self.assertIn(body, source_file.read_bytes())
+
+            # the same way we can find original content in the original file
+            self.assertNotIn(body, encrypted_file.read_bytes())
+
+    #def _encrypt_decrypt(self, body: bytes):
+
     def test(self):
         with TemporaryDirectory() as tds:
             td = Path(tds)

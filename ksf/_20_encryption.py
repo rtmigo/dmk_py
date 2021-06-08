@@ -220,6 +220,7 @@ class DecryptedFile:
                 data = df.read(src_size)
                 if len(data) != src_size:
                     raise ValueError
+                self.end_padding_size = len(decrypted) - df.seek(0)
                 self.body = data
 
     def write(self, target: Path):
