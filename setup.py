@@ -30,7 +30,7 @@ setup(
     python_requires='>=3.7',
     install_requires=['pycryptodome', 'click'], # ,
 
-    # description="Command-line tool for managing Python virtual environments",
+    description="Experimental",
 
     long_description=readme,
     long_description_content_type='text/markdown',
@@ -45,15 +45,15 @@ setup(
     keywords="".split(),
 
     classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
+        #"Development Status :: 4 - Beta",
+        #"Intended Audience :: Developers",
         'License :: OSI Approved :: BSD License',
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Environment :: Console",
         "Typing :: Typed",
-        "Topic :: Software Development :: Build Tools",
+        #"Topic :: Software Development :: Build Tools",
         "Operating System :: POSIX",
         # "Operating System :: Microsoft :: Windows"
     ],
