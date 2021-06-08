@@ -88,7 +88,7 @@ def write_with_surrogates(source_file: Path, name: str, target_dir: Path):
     if len(old_files.surrogates) >= 3:
         for surrogate in random.sample(old_files.surrogates,
                                        random.randint(1, 3)):
-            tasks.append((ANYTIME, lambda: os.remove(surrogate)))
+            tasks.append((ANYTIME, lambda: os.remove(str(surrogate))))
 
     # and add random count of surrogates
     src_size = source_file.stat().st_size
@@ -104,7 +104,7 @@ def write_with_surrogates(source_file: Path, name: str, target_dir: Path):
 
     # remove the old real file
     if old_files.file is not None:
-        tasks.append((LATER, lambda: os.remove(old_files.file)))
+        tasks.append((LATER, lambda: os.remove(str(old_files.file))))
 
     ##############
 
