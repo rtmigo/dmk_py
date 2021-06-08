@@ -31,6 +31,27 @@ def half_n_half(salt: bytes) -> Tuple[bytes, bytes]:
 
 
 class Imprint:
+    """Each name has a conventionally infinite number of imprints
+    (2^192 or six octodecillion).
+
+    Each new imprint is unique, although the name is the same.
+
+    Knowing the name, we can tell if the imprint belongs to it.
+
+    Without knowing the name, we can hardly do anything. We cannot
+    reconstruct a name from an imprint, or even suggest it. We cannot say
+    whether two imprints correspond to the same name or to different ones.
+
+    ==
+
+    Imprint collision can happen in two ways:
+    - we will generate two identical imprints for the same name
+    - different names will produce the same imprints
+
+    Until we're in a spaceship with infinite improbability drive,
+    neither will happen.
+    """
+
     __slots__ = ['__name', '__nonce', '__as_bytes', '__as_str']
 
     NONCE_LEN = 24
@@ -38,7 +59,7 @@ class Imprint:
     HEADER_LEN = NONCE_LEN + DIGEST_LEN
 
     def __init__(self, name: str, nonce: bytes = None):
-        if len(name)<1:
+        if len(name) < 1:
             raise ValueError("Name must not be empty")
         self.__name = name
         self.__nonce: Optional[bytes] = nonce
@@ -57,16 +78,6 @@ class Imprint:
 
     @property
     def as_bytes(self) -> bytes:
-        """Each name has a conventionally infinite number of imprints.
-        Each new imprint is unique, although the name is the same.
-
-        Knowing the name, we can tell if the imprint belongs to it.
-        Knowing the imprint, we cannot recover the name.
-
-        It is highly unlikely, but possible, an imprint collision could
-        occur. In this case, the imprint of a different name will look like
-        an imprint of the current name.
-        """
         if self.__as_bytes is None:
             a, b = half_n_half(self.nonce)
             data_for_hash = a + self.name.encode('utf-8') + b
@@ -130,21 +141,3 @@ def set_file_last_modified(file: Path, dt: datetime.datetime):
     os.utime(str(file), (dt_epoch, dt_epoch))
 
 
-def create_fake(name: str, ref_size: int, target_dir: Path):
-    """Creates a fake file. The encoded name of fake file will match `name`,
-    but the content is random, so the header does not match.
-    """
-    target_file = target_dir / Imprint(name).as_str
-    if target_file.exists():
-        raise HashCollision
-    size = ref_size + random.randint(int(-ref_size * 0.75),
-                                     int(ref_size * 0.75))
-    non_matching_header = get_random_bytes(Imprint.HEADER_LEN)
-    if name_matches_hash(name, non_matching_header):
-        raise HashCollision
-
-    target_file.write_bytes(get_random_bytes(size))  # todo chunks
-
-    set_file_last_modified(target_file, random_datetime())
-
-    # target_file.s

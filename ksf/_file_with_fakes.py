@@ -1,10 +1,13 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-
+import random
 from pathlib import Path
 from typing import List
 
-from ksf._10_imprint import name_matches_encoded
+from Crypto.Random import get_random_bytes
+
+from ksf._10_imprint import name_matches_encoded, Imprint, HashCollision, \
+    name_matches_hash, set_file_last_modified, random_datetime
 from ksf._20_encryption import name_matches_header
 
 
@@ -40,3 +43,21 @@ class FileAndFakes:
             raise RuntimeError("Real file not found")
 
 
+def create_fake(name: str, ref_size: int, target_dir: Path):
+    """Creates a fake file. The encoded name of fake file will match `name`,
+    but the content is random, so the header does not match.
+    """
+    target_file = target_dir / Imprint(name).as_str
+    if target_file.exists():
+        raise HashCollision
+    size = ref_size + random.randint(int(-ref_size * 0.75),
+                                     int(ref_size * 0.75))
+    non_matching_header = get_random_bytes(Imprint.HEADER_LEN)
+    if name_matches_hash(name, non_matching_header):
+        raise HashCollision
+
+    target_file.write_bytes(get_random_bytes(size))  # todo chunks?
+
+    set_file_last_modified(target_file, random_datetime())
+
+    # target_file.s
