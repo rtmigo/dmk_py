@@ -26,8 +26,8 @@ setup(
     author_email="ortemeo@gmail.com",
     # url='https://github.com/rtmigo/vien_py',
 
-    packages=['ksks'],
-    python_requires='>=3.8',
+    packages=['ksf'],
+    python_requires='>=3.7',
     install_requires=['pycryptodome', 'click'], # ,
 
     # description="Command-line tool for managing Python virtual environments",
@@ -48,6 +48,7 @@ setup(
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         'License :: OSI Approved :: BSD License',
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Environment :: Console",
