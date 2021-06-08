@@ -38,6 +38,8 @@ class Imprint:
     HEADER_LEN = NONCE_LEN + DIGEST_LEN
 
     def __init__(self, name: str, nonce: bytes = None):
+        if len(name)<1:
+            raise ValueError("Name must not be empty")
         self.__name = name
         self.__nonce: Optional[bytes] = nonce
         self.__as_bytes: Optional[bytes] = None
