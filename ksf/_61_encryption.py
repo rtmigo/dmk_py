@@ -15,7 +15,8 @@ from ksf._00_common import read_or_fail, InsufficientData
 from ksf._00_wtf import WritingToTempFile
 from ksf._20_key_derivation import FilesetPrivateKey
 from ksf._40_imprint import Imprint, HashCollision, pk_matches_imprint_bytes
-from ksf._50_sur import set_random_last_modified, randomized_size
+from ksf._50_sur import set_random_last_modified
+from ksf.random_sizes import random_size_like_file
 from ksf._60_intro_padding import IntroPadding
 
 _DEBUG_PRINT = False
@@ -189,7 +190,7 @@ def _encrypt_file_to_file(source_file: Path, fpk: FilesetPrivateKey, target_file
             # adding random data to the end of file.
             # This data is not encrypted, it's from urandom (is it ok?)
             current_size = outfile.seek(0, os.SEEK_CUR)
-            target_size = randomized_size(current_size)
+            target_size = random_size_like_file(current_size)
             padding_size = target_size - current_size
             assert padding_size >= 0
             outfile.write(get_random_bytes(padding_size))
