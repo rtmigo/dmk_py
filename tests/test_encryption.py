@@ -115,6 +115,22 @@ class TestEncryptDecrypt(unittest.TestCase):
             self.assertEqual(decrypted_file.stat().st_mtime,
                              source_file.stat().st_mtime)
 
+    def test_decrypt_header_only(self):
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            source_file = td / "source"
+            source_file.write_bytes(b'abc')
+            NAME = "thename"
+            encrypted_file = encrypt_to_dir(source_file, NAME, td)
+            df = DecryptedFile(encrypted_file, NAME, decrypt_body=False)
+
+            self.assertEqual(df.mtime,
+                             source_file.stat().st_mtime)
+            self.assertEqual(df.body, None)
+
+
+
+
 
 if __name__ == "__main__":
     TestEncryptDecrypt()._encrypt_decrypt('abcdef', b'qwertyuiop',
