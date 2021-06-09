@@ -75,6 +75,7 @@ def encrypt_to_dir(source_file: Path, name: str, target_dir: Path) -> Path:
 #     h_obj.update(a + password.encode('utf-8') + b)
 #     return h_obj.digest()
 
+INTRO_PADDING_MAX_LEN = 64
 
 ENCRYPTION_NONCE_LEN = 8
 MAC_LEN = 16
@@ -187,7 +188,7 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
     body_bytes = source_file.read_bytes()
     body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
 
-    decrypted_bytes = (IntroPadding.gen_bytes() +
+    decrypted_bytes = (IntroPadding(INTRO_PADDING_MAX_LEN).gen_bytes() +
                        header_bytes + header_crc_bytes +
                        body_bytes + body_crc_bytes)
 
@@ -262,7 +263,7 @@ class DecryptedFile:
                 return cfg.cipher.decrypt(encrypted)
 
             ip_first = read_and_decrypt(1)[0]
-            ip_len = IntroPadding.first_byte_to_len(ip_first)
+            ip_len = IntroPadding(INTRO_PADDING_MAX_LEN).first_byte_to_len(ip_first)
             if ip_len > 0:
                 read_and_decrypt(ip_len)
 
