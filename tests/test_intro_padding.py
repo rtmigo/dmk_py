@@ -11,13 +11,13 @@ from ksf._60_intro_padding import IntroPadding
 class TestIntro(unittest.TestCase):
 
     def test_min_len_1(self):
-        random.seed(a=1, version=2)
-        for maxlen in [2, 16, 64]:
+        for maxlen in [2, 8]:
             self.assertEqual(
                 min(len(IntroPadding(maxlen).gen_bytes()) for _ in range(1000)),
                 1)
 
     def test_max_len_64(self):
+        random.seed(1, version=2)
         self.assertEqual(
             max(len(IntroPadding(64).gen_bytes()) for _ in range(200)),
             64)

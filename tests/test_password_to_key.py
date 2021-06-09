@@ -40,7 +40,6 @@ class TestPtk(unittest.TestCase):
         self.assertNotIn(p, seen)
         seen.add(p)
 
-
         try:
             KeyDerivationSettings.power -= 1
 
@@ -53,3 +52,11 @@ class TestPtk(unittest.TestCase):
             KeyDerivationSettings.power = POWER
 
         self.assertEqual(len(seen), 5)
+
+    def test_empty_password(self):
+        r = password_to_key('', bytes([1, 2, 3]))
+        self.assertIsInstance(r, bytes)
+
+    def test_empty_salt(self):
+        r = password_to_key('pass', bytes([]))
+        self.assertIsInstance(r, bytes)
