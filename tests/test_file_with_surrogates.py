@@ -10,9 +10,21 @@ from ksf._40_imprint import name_matches_encoded
 from ksf._50_sur import create_surrogate
 from ksf._51_encryption import encrypt_to_dir
 from ksf._60_finder import FileAndSurrogates
+from ksf.key_derivation import FasterKeys
 
 
 class TestFileWithFakes(unittest.TestCase):
+
+    faster: FasterKeys
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.faster = FasterKeys()
+        cls.faster.start()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.faster.end()
 
     def test_create_sur(self):
         with TemporaryDirectory() as tds:

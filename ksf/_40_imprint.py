@@ -5,8 +5,9 @@ import binascii
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from typing import Tuple, Optional
 
-from Crypto.Hash import BLAKE2b
 from Crypto.Random import get_random_bytes
+
+from ksf.key_derivation import password_to_key
 
 
 def bytes_to_str(data: bytes) -> str:
@@ -49,7 +50,7 @@ class Imprint:
     neither will happen.
     """
 
-    __slots__ = ['__name', '__nonce', '__as_bytes', '__as_str']
+    __slots__ = ['__name', '__salt', '__as_bytes', '__as_str']
 
     NONCE_LEN = 24
     DIGEST_LEN = 24
@@ -59,7 +60,7 @@ class Imprint:
         if len(name) < 1:
             raise ValueError("Name must not be empty")
         self.__name = name
-        self.__nonce: Optional[bytes] = nonce
+        self.__salt: Optional[bytes] = nonce
         self.__as_bytes: Optional[bytes] = None
         self.__as_str: Optional[str] = None
 
@@ -68,19 +69,24 @@ class Imprint:
         return self.__name
 
     @property
-    def nonce(self):
-        if self.__nonce is None:
-            self.__nonce = get_random_bytes(Imprint.NONCE_LEN)
-        return self.__nonce
+    def salt(self):
+        if self.__salt is None:
+            self.__salt = get_random_bytes(Imprint.NONCE_LEN)
+        return self.__salt
 
     @property
     def as_bytes(self) -> bytes:
         if self.__as_bytes is None:
-            a, b = half_n_half(self.nonce)
-            data_for_hash = a + self.name.encode('utf-8') + b
-            h_obj = BLAKE2b.new(digest_bits=Imprint.DIGEST_LEN * 8)
-            h_obj.update(data_for_hash)
-            result = h_obj.digest() + self.nonce
+            digest = password_to_key(
+                password=self.name,
+                salt=self.salt,
+                size=Imprint.DIGEST_LEN)
+            # digest = scrypt(self.name,
+            #                 self.salt,
+            #                 key_len=Imprint.DIGEST_LEN,
+            #                 N=2 ** 10,  # 17,
+            #                 r=8, p=1)
+            result = digest + self.salt
             assert len(result) == Imprint.FULL_LEN
             self.__as_bytes = result
         return self.__as_bytes
@@ -115,9 +121,9 @@ def name_matches_encoded(name: str, encoded: str) -> bool:
     return encoded == Imprint(name, nonce=nonce).as_str
 
 
-def name_matches_hash(name: str, header: bytes) -> bool:
-    nonce = Imprint.bytes_to_nonce(header)
-    return Imprint(name, nonce=nonce).as_bytes == header
+def name_matches_imprint_bytes(name: str, imprint: bytes) -> bool:
+    nonce = Imprint.bytes_to_nonce(imprint)
+    return Imprint(name, nonce=nonce).as_bytes == imprint
 
 
 class HashCollision(Exception):
