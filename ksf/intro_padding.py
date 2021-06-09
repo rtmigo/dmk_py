@@ -5,7 +5,7 @@ from ksf._05_common import read_or_fail
 from ksf._10_randoms import get_fast_random_bytes
 
 
-def is_power_of_two(n: int) -> bool:
+def _is_power_of_two(n: int) -> bool:
     return n > 0 and (n & (n - 1)) == 0
 
 
@@ -22,9 +22,13 @@ class IntroPadding:
     __slots__ = ["max_len"]
 
     def __init__(self, maxlen: int):
+
+        # technically 1 is a power of two (2**0), but the minimum value is 2.
+        # So all max_len values are positive and even
+
         if not 2 <= maxlen <= 0xFF:
             raise ValueError("Range error")
-        if not is_power_of_two(maxlen):
+        if not _is_power_of_two(maxlen):
             raise ValueError("not a power of two")
         self.max_len = maxlen
 
