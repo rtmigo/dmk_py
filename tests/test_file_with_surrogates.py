@@ -6,15 +6,15 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ksf._00_randoms import get_fast_random_bytes
+from ksf._20_key_derivation import FasterKeys
 from ksf._40_imprint import name_matches_encoded
 from ksf._50_sur import create_surrogate
-from ksf._51_encryption import encrypt_to_dir
-from ksf._60_finder import FileAndSurrogates
-from ksf.key_derivation import FasterKeys
+from ksf._61_encryption import encrypt_to_dir, DecryptedFile
+from ksf._70_navigator import FileAndSurrogates, write_with_surrogates
 
 
 class TestFileWithFakes(unittest.TestCase):
-
     faster: FasterKeys
 
     @classmethod
@@ -78,8 +78,32 @@ class TestFileWithFakes(unittest.TestCase):
             # 5 surrogate files
             self.assertEqual(len(correct.surrogates), 5)
             # one real file
-            self.assertEqual(correct.file, real)
+            self.assertEqual(correct.real_file, real)
 
             incorrect = FileAndSurrogates(td, "incorrect name")
             self.assertEqual(len(incorrect.all_files), 0)
-            self.assertEqual(incorrect.file, None)
+            self.assertEqual(incorrect.real_file, None)
+
+    def test_write_with_surrogates(self):
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+
+            NAME = "abc"
+            fas = FileAndSurrogates(td, NAME)
+            self.assertEqual(len(fas.all_files), 0)
+
+            # todo in windows this test probably needs two-seconds pause
+
+            for _ in range(10):
+                the_data = get_fast_random_bytes(100)
+
+                source_file = td / "source"
+                source_file.write_bytes(the_data)
+
+                write_with_surrogates(source_file, NAME, td)
+
+                # finding the latest file and checking it has the new contents
+                fas = FileAndSurrogates(td, NAME)
+                self.assertGreaterEqual(len(fas.all_files), 2)
+                self.assertEqual(DecryptedFile(fas.real_file, NAME).data,
+                                 the_data)

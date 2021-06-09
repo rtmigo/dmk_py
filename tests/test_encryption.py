@@ -7,10 +7,10 @@ from base64 import b64encode
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf._10_randoms import get_fast_random_bytes
-from ksf._51_encryption import _encrypt_file_to_file, encrypt_to_dir, \
+from ksf._00_randoms import get_fast_random_bytes
+from ksf._61_encryption import _encrypt_file_to_file, encrypt_to_dir, \
     ChecksumMismatch, DecryptedFile, name_matches_header
-from ksf.key_derivation import FasterKeys
+from ksf._20_key_derivation import FasterKeys
 
 
 class TestEncryptDecrypt(unittest.TestCase):
@@ -101,7 +101,7 @@ class TestEncryptDecrypt(unittest.TestCase):
                     DecryptedFile(encrypted_file, 'wrong_item_name')
 
             df = DecryptedFile(encrypted_file, name)
-            self.assertEqual(df.body, body)
+            self.assertEqual(df.data, body)
             self.assertEqual(df.mtime, source_file.stat().st_mtime)
 
             # writing the decrypted data to disk checking the saved file is
@@ -124,12 +124,10 @@ class TestEncryptDecrypt(unittest.TestCase):
             encrypted_file = encrypt_to_dir(source_file, NAME, td)
             df = DecryptedFile(encrypted_file, NAME, decrypt_body=False)
 
-            self.assertEqual(df.mtime,
-                             source_file.stat().st_mtime)
-            self.assertEqual(df.body, None)
-
-
-
+            # meta-data is loaded
+            self.assertEqual(df.size, source_file.stat().st_size)
+            # but there is no body
+            self.assertEqual(df.data, None)
 
 
 if __name__ == "__main__":
