@@ -3,6 +3,7 @@
 
 import unittest
 from io import BytesIO
+import random
 
 from ksf._60_intro_padding import IntroPadding
 
@@ -10,9 +11,10 @@ from ksf._60_intro_padding import IntroPadding
 class TestIntro(unittest.TestCase):
 
     def test_min_len_1(self):
+        random.seed(a=1, version=2)
         for maxlen in [2, 16, 64]:
             self.assertEqual(
-                min(len(IntroPadding(maxlen).gen_bytes()) for _ in range(10000)),
+                min(len(IntroPadding(maxlen).gen_bytes()) for _ in range(1000)),
                 1)
 
     def test_max_len_64(self):
