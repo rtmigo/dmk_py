@@ -33,7 +33,7 @@ def set_random_last_modified(file: Path):
     _set_file_last_modified(file, _random_datetime())
 
 
-def create_surrogate(fpk: FilesetPrivateKey, ref_size: int, target_dir: Path):
+def create_surrogate(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
     """Creates a surrogate file.
 
     The file name of the surrogate will be the correct imprint from the
@@ -50,18 +50,15 @@ def create_surrogate(fpk: FilesetPrivateKey, ref_size: int, target_dir: Path):
     target_file = target_dir / Imprint(fpk).as_str
     if target_file.exists():
         raise HashCollision
-    size = randomized_size(ref_size) # todo
+    #size = randomized_size(target_size) # todo
     non_matching_header = get_random_bytes(Imprint.FULL_LEN)
     if pk_matches_imprint_bytes(fpk, non_matching_header):
         raise HashCollision
 
     with WritingToTempFile(target_file) as wtf:
         # must be the same as writing the real file
-        wtf.dirty.write_bytes(get_random_bytes(size))  # todo chunks?
+        wtf.dirty.write_bytes(get_random_bytes(target_size))  # todo chunks?
         set_random_last_modified(wtf.dirty)
         wtf.replace()
 
 
-def randomized_size(real_size: int) -> int:
-    # must be used when creating both surrogates and real files
-    return real_size + random.randint(0, round(real_size / 2))

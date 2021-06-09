@@ -43,9 +43,9 @@ class TestFileWithFakes(unittest.TestCase):
             for f in files:
                 self.assertTrue(pk_matches_codename(pk, f.name))
 
-            # check sizes are mostly different
-            sizes = set(f.stat().st_size for f in files)
-            self.assertGreater(len(sizes), 5)
+            # # check sizes are mostly different
+            # sizes = set(f.stat().st_size for f in files)
+            # self.assertGreater(len(sizes), 5)
 
             lm_days = [datetime.date.fromtimestamp(f.stat().st_mtime)
                        for f in files]
@@ -86,6 +86,22 @@ class TestFileWithFakes(unittest.TestCase):
             self.assertEqual(len(incorrect.all_files), 0)
             self.assertEqual(incorrect.real_file, None)
 
+    def test_write_with_surrogates_sizes(self):
+        # random.seed(9, version=2)
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            fpk_a = FilesetPrivateKey("some name")
+
+            all_sizes_ever = set()
+
+            for _ in range(8):
+                source_file_a = td / "a"
+                source_file_a.write_bytes(b'abcdef')
+                update_fileset(source_file_a, fpk_a, td)
+                all_sizes_ever.update(f.stat().st_size for f in td.glob('*'))
+
+            self.assertGreater(len(all_sizes_ever), 5)
+
     def test_write_with_surrogates(self):
         with TemporaryDirectory() as tds:
             td = Path(tds)
@@ -119,4 +135,3 @@ class TestFileWithFakes(unittest.TestCase):
                 self.assertGreaterEqual(len(fas.all_files), 2)
                 self.assertEqual(DecryptedFile(fas.real_file, fpk_a).data,
                                  the_data_a)
-

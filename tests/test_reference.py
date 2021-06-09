@@ -3,16 +3,6 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-# def generate_reference_file(name: str, body: bytes, target_dir: Path):
-#     with TemporaryDirectory() as tds:
-#         td = Path(tds)
-#         source_file = td / "source"
-#         source_file.write_bytes(body)
-#
-#
-#
-#         pk = FilesetPrivateKey(name)
-#         update_fileset(source_file, pk, target_dir)
 from ksf._20_key_derivation import FilesetPrivateKey
 from ksf._80_dir import CryptoDir
 
@@ -26,7 +16,6 @@ refs_dir = Path(__file__).parent / "data_refs"
 
 
 def generate_references():
-
     assert FilesetPrivateKey._power == 18
 
     if not input(f"Really replace {refs_dir}? (y/n) ").lower().startswith('y'):
@@ -56,5 +45,5 @@ class TestRefs(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    #unittest.main()
-    generate_references()
+    unittest.main()
+    # generate_references()

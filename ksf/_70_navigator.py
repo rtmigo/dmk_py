@@ -11,6 +11,7 @@ from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_surrogate
 from ksf._61_encryption import pk_matches_header, encrypt_to_dir, \
     DecryptedFile
+from ksf.random_sizes import random_size_like_others_in_dir, random_size_like_file
 
 
 def _get_newest_file(files: List[Path], pk: FilesetPrivateKey) -> Path:
@@ -36,8 +37,8 @@ class Fileset:
 
         self.real_file: Optional[Path] = None
 
-        # `files` are all files related to the current item, the real one
-        # and the surrogates
+        # `files` are all files related to the current item,
+        # the real one and the surrogates
         self.all_files = [p for p in self.parent.glob('*')
                           if pk_matches_codename(self.fpk, p.name)]
 
@@ -61,7 +62,8 @@ class Task:
 
 
 class WriteFakeTask(Task):
-    pass
+    def __init__(self, size: int):
+        self.size = size
 
 
 class DeleteTask(Task):
@@ -92,19 +94,32 @@ def _shuffle_so_creating_before_deleting(tasks: List[Task]):
             break
 
 
+def dir_to_file_sizes(d: Path) -> List[int]:
+    return [f.stat().st_size for f in d.glob('*') if f.is_file]
+
+
 def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
     # we will remove and add some surrogates, and also remove old real file
     # add new real file. We will do this in random order, so as not to give
     # out which files are real and which are surrogates
 
+    source_file_size = source_file.stat().st_size
+    all_file_sizes = dir_to_file_sizes(target_dir)
+
+    def fake_size():
+        result = random_size_like_others_in_dir(all_file_sizes)
+        if result is None:
+            result = random_size_like_file(source_file_size)
+        return result
+
     tasks: List[Task] = list()
 
-    source_file_size = source_file.stat().st_size
+
 
     old_files = Fileset(target_dir, fpk)
 
     max_to_delete = 4
-    max_to_fake = max_to_delete-1  # +1 real file will be written
+    max_to_fake = max_to_delete - 1  # +1 real file will be written
 
     # we will remove random number of files
     if len(old_files.all_files) > 0:
@@ -117,7 +132,7 @@ def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
                 is_real=(f == old_files.real_file)))
 
     for _ in range(random.randint(1, max_to_fake)):
-        tasks.append(WriteFakeTask())
+        tasks.append(WriteFakeTask(fake_size()))
     tasks.append(WriteRealTask())
 
     _shuffle_so_creating_before_deleting(tasks)
@@ -131,7 +146,7 @@ def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
         elif isinstance(task, WriteFakeTask):
             create_surrogate(fpk,
                              target_dir=target_dir,
-                             ref_size=source_file_size)
+                             target_size=task.size)
         elif isinstance(task, DeleteTask):
             assert real_written or not task.is_real
             os.remove(str(task.file))
