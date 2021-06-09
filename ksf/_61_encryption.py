@@ -13,8 +13,8 @@ from Crypto.Random import get_random_bytes
 
 from ksf._00_common import read_or_fail, InsufficientData
 from ksf._00_wtf import WritingToTempFile
-from ksf._20_key_derivation import password_to_key
-from ksf._40_imprint import Imprint, HashCollision, name_matches_imprint_bytes
+from ksf._20_key_derivation import FilesetPrivateKey
+from ksf._40_imprint import Imprint, HashCollision, pk_matches_imprint_bytes
 from ksf._50_sur import set_random_last_modified, randomized_size
 from ksf._60_intro_padding import IntroPadding
 
@@ -43,23 +43,6 @@ def uint32_to_bytes(x: int) -> bytes:
     return x.to_bytes(4, byteorder='big', signed=False)
 
 
-def encrypt_to_dir(source_file: Path, name: str, target_dir: Path) -> Path:
-    """The file contains two imprints: one in the file name, and the other
-    at the beginning of the file.
-
-    Both imprints are generated from the same name, but with different
-    nonce values.
-    """
-
-    imprint = Imprint(name)
-    fn = target_dir / imprint.as_str
-    if fn.exists():
-        raise HashCollision
-
-    _encrypt_file_to_file(source_file, name, fn)
-    return fn
-
-
 _intro_padding_64 = IntroPadding(64)
 
 ENCRYPTION_NONCE_LEN = 8
@@ -85,14 +68,14 @@ def bytes_to_str(lst: bytes):
 
 
 class Cryptographer:
-    def __init__(self, name: str, name_salt: bytes, nonce: Optional[bytes]):
-        self.name = name
-        self.name_salt = name_salt
-        self.key = password_to_key(name, salt=name_salt, size=32)
+    def __init__(self,
+                 fpk: FilesetPrivateKey,
+                 nonce: Optional[bytes]):
+        self.fpk = fpk
         if nonce is not None:
-            self.cipher = ChaCha20.new(key=self.key, nonce=nonce)
+            self.cipher = ChaCha20.new(key=self.fpk.as_bytes, nonce=nonce)
         else:
-            self.cipher = ChaCha20.new(key=self.key)
+            self.cipher = ChaCha20.new(key=self.fpk.as_bytes)
 
     @property
     def nonce(self):
@@ -100,14 +83,14 @@ class Cryptographer:
 
     def __str__(self):
         return '\n'.join([
-            f'name: {self.name}',
-            f'name salt: {bytes_to_str(self.name_salt)}',
-            f'key: {bytes_to_str(self.key)}',
+            f'fpk: {self.fpk.as_bytes}',
+            # f'name salt: {bytes_to_str(self.name_salt)}',
+            # f'key: {bytes_to_str(self.key)}',
             f'nonce: {bytes_to_str(self.nonce)}',
         ])
 
 
-def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
+def _encrypt_file_to_file(source_file: Path, fpk: FilesetPrivateKey, target_file: Path):
     """
     File format
     -----------
@@ -140,7 +123,7 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
 
     """
 
-    header_imprint = Imprint(name)
+    header_imprint = Imprint(fpk)
 
     stat = source_file.stat()
 
@@ -173,8 +156,8 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
                        header_bytes + header_crc_bytes +
                        body_bytes + body_crc_bytes)
 
-    cryptographer = Cryptographer(name=name,
-                                  name_salt=header_imprint.salt,
+    cryptographer = Cryptographer(fpk=fpk,
+                                  #№name_salt=header_imprint.nonce,
                                   nonce=None)
 
     if _DEBUG_PRINT:
@@ -188,7 +171,7 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
     # mac = get_fast_random_bytes(MAC_LEN)
     if _DEBUG_PRINT:
         print(f"ENC: Original {bytes_to_str(decrypted_bytes)}")
-    print(f"ENC: Encrypted {bytes_to_str(encrypted_bytes)}")
+        print(f"ENC: Encrypted {bytes_to_str(encrypted_bytes)}")
 
     with WritingToTempFile(target_file) as wtf:
         # must be the same as writing a fake file
@@ -216,20 +199,22 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
 
 class DecryptedFile:
 
-    def __init__(self, source_file: Path, name: str, decrypt_body=True):
+    def __init__(self, source_file: Path, fpk: FilesetPrivateKey,
+                 decrypt_body=True):
 
         with source_file.open('rb') as f:
             # reading and the imprint and checking that the name
             # matches this imprint
             imprint_bytes = read_or_fail(f, Imprint.FULL_LEN)
-            if not name_matches_imprint_bytes(name, imprint_bytes):
+            if not pk_matches_imprint_bytes(fpk, imprint_bytes):
                 raise ChecksumMismatch("The name does not match the imprint.")
 
             nonce = read_or_fail(f, ENCRYPTION_NONCE_LEN)
 
             cfg = Cryptographer(
-                name=name,
-                name_salt=Imprint.bytes_to_nonce(imprint_bytes),
+                fpk=fpk,
+                # name=name,
+                # name_salt=Imprint.bytes_to_nonce(imprint_bytes),
                 nonce=nonce)
 
             if _DEBUG_PRINT:
@@ -298,7 +283,24 @@ class DecryptedFile:
         # set_file_last_modified(target, self.mtime)
 
 
-def name_matches_header(name: str, file: Path) -> bool:
+def encrypt_to_dir(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path) -> Path:
+    """The file contains two imprints: one in the file name, and the other
+    at the beginning of the file.
+
+    Both imprints are generated from the same name, but with different
+    nonce values.
+    """
+
+    imprint = Imprint(fpk)
+    fn = target_dir / imprint.as_str
+    if fn.exists():
+        raise HashCollision
+
+    _encrypt_file_to_file(source_file, fpk, fn)
+    return fn
+
+
+def pk_matches_header(fpk: FilesetPrivateKey, file: Path) -> bool:
     """Returns True if the header imprint (written into the file) matches
     the `name`."""
     with file.open('rb') as f:
@@ -306,4 +308,6 @@ def name_matches_header(name: str, file: Path) -> bool:
         if len(header_bytes) < Imprint.FULL_LEN:
             return False
         nonce = Imprint.bytes_to_nonce(header_bytes)
-    return Imprint(name, nonce=nonce).as_bytes == header_bytes
+    return Imprint(fpk, nonce=nonce).as_bytes == header_bytes
+
+

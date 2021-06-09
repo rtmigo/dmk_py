@@ -9,8 +9,8 @@ from tempfile import TemporaryDirectory
 
 from ksf._00_randoms import get_fast_random_bytes
 from ksf._61_encryption import _encrypt_file_to_file, encrypt_to_dir, \
-    ChecksumMismatch, DecryptedFile, name_matches_header
-from ksf._20_key_derivation import FasterKeys
+    ChecksumMismatch, DecryptedFile, pk_matches_header
+from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
 
 
 class TestEncryptDecrypt(unittest.TestCase):
@@ -26,6 +26,7 @@ class TestEncryptDecrypt(unittest.TestCase):
         cls.faster.end()
 
     def test_name_matches_header(self):
+
         with TemporaryDirectory() as tds:
             td = Path(tds)
 
@@ -35,9 +36,9 @@ class TestEncryptDecrypt(unittest.TestCase):
             right = td / "irrelevant"
             NAME = 'abc'
             # name_to_hash(NAME)
-            _encrypt_file_to_file(source, NAME, right)
-            self.assertTrue(name_matches_header('abc', right))
-            self.assertFalse(name_matches_header('def', right))
+            _encrypt_file_to_file(source, FilesetPrivateKey(NAME), right)
+            self.assertTrue(pk_matches_header(FilesetPrivateKey(NAME), right))
+            self.assertFalse(pk_matches_header(FilesetPrivateKey('labuda'), right))
 
     def test_encrypted_does_not_contain_plain(self):
         with TemporaryDirectory() as tds:
@@ -45,7 +46,7 @@ class TestEncryptDecrypt(unittest.TestCase):
             source_file = td / "source"
             body = b'qwertyuiop!qwertyuiop'
             source_file.write_bytes(body)
-            encrypted_file = encrypt_to_dir(source_file, 'some_name', td)
+            encrypted_file = encrypt_to_dir(source_file, FilesetPrivateKey('some_name'), td)
 
             # checking that the original content can be found in original file,
             # but not in the encrypted file
@@ -61,7 +62,9 @@ class TestEncryptDecrypt(unittest.TestCase):
             body = b'qwertyuiop!qwertyuiop'
             source_file.write_bytes(body)
 
-            files = [encrypt_to_dir(source_file, 'some_name', td)
+            fpk = FilesetPrivateKey('some_name')
+
+            files = [encrypt_to_dir(source_file, fpk, td)
                      for _ in range(10)]
 
             self.assertEqual(len(set(str(f) for f in files)), 10)
@@ -85,7 +88,9 @@ class TestEncryptDecrypt(unittest.TestCase):
             source_file = td / "source"
             source_file.write_bytes(body)
 
-            encrypted_file = encrypt_to_dir(source_file, name, td)
+            fpk = FilesetPrivateKey(name)
+
+            encrypted_file = encrypt_to_dir(source_file, fpk, td)
 
             # checking that the original content can be found in original file,
             # but not in the encrypted file
@@ -98,9 +103,10 @@ class TestEncryptDecrypt(unittest.TestCase):
 
             if check_wrong:
                 with self.assertRaises(ChecksumMismatch):
-                    DecryptedFile(encrypted_file, 'wrong_item_name')
+                    DecryptedFile(encrypted_file,
+                                  FilesetPrivateKey('wrong_item_name'))
 
-            df = DecryptedFile(encrypted_file, name)
+            df = DecryptedFile(encrypted_file, fpk)
             self.assertEqual(df.data, body)
             self.assertEqual(df.mtime, source_file.stat().st_mtime)
 
@@ -121,8 +127,9 @@ class TestEncryptDecrypt(unittest.TestCase):
             source_file = td / "source"
             source_file.write_bytes(b'abc')
             NAME = "thename"
-            encrypted_file = encrypt_to_dir(source_file, NAME, td)
-            df = DecryptedFile(encrypted_file, NAME, decrypt_body=False)
+            pk = FilesetPrivateKey(NAME)
+            encrypted_file = encrypt_to_dir(source_file, pk, td)
+            df = DecryptedFile(encrypted_file, pk, decrypt_body=False)
 
             # meta-data is loaded
             self.assertEqual(df.size, source_file.stat().st_size)
@@ -131,6 +138,7 @@ class TestEncryptDecrypt(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestEncryptDecrypt()._encrypt_decrypt('abcdef', b'qwertyuiop',
-                                          check_wrong=False)
-    print("OK")
+    unittest.main()
+    #TestEncryptDecrypt()._encrypt_decrypt('abcdef', b'qwertyuiop',
+     #                                     check_wrong=False)
+    #print("OK")

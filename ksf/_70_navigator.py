@@ -6,17 +6,18 @@ import random
 from pathlib import Path
 from typing import List, Optional
 
-from ksf._40_imprint import name_matches_encoded
+from ksf._20_key_derivation import FilesetPrivateKey
+from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_surrogate
-from ksf._61_encryption import name_matches_header, encrypt_to_dir, \
+from ksf._61_encryption import pk_matches_header, encrypt_to_dir, \
     DecryptedFile
 
 
-def _get_newest_file(files: List[Path], name: str) -> Path:
+def _get_newest_file(files: List[Path], pk: FilesetPrivateKey) -> Path:
     # we are reading not the file last-modified timestamp, but a timestamp
     # stored inside the encrypted file content
     times_and_files = [
-        (DecryptedFile(fp, name, decrypt_body=False).timestamp, fp)
+        (DecryptedFile(fp, pk, decrypt_body=False).timestamp, fp)
         for fp in files]
 
     latest_timestamp = max(ts for ts, _ in times_and_files)
@@ -29,25 +30,25 @@ def _get_newest_file(files: List[Path], name: str) -> Path:
 
 
 class Fileset:
-    def __init__(self, parent: Path, name: str):
+    def __init__(self, parent: Path, fpk: FilesetPrivateKey):
         self.parent = parent
-        self.name = name
+        self.fpk = fpk
 
         self.real_file: Optional[Path] = None
 
         # `files` are all files related to the current item, the real one
         # and the surrogates
         self.all_files = [p for p in self.parent.glob('*')
-                          if name_matches_encoded(self.name, p.name)]
+                          if pk_matches_codename(self.fpk, p.name)]
 
         reals = [p for p in self.all_files
-                 if name_matches_header(self.name, p)]
+                 if pk_matches_header(self.fpk, p)]
 
         if len(reals) == 1:
             self.real_file = reals[0]
         elif len(reals) > 1:
             # todo test
-            self.real_file = _get_newest_file(reals, name)
+            self.real_file = _get_newest_file(reals, fpk)
         else:
             assert len(reals) == 0
             self.real_file = None
@@ -91,7 +92,7 @@ def _shuffle_so_creating_before_deleting(tasks: List[Task]):
             break
 
 
-def update_fileset(source_file: Path, name: str, target_dir: Path):
+def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
     # we will remove and add some surrogates, and also remove old real file
     # add new real file. We will do this in random order, so as not to give
     # out which files are real and which are surrogates
@@ -100,7 +101,7 @@ def update_fileset(source_file: Path, name: str, target_dir: Path):
 
     source_file_size = source_file.stat().st_size
 
-    old_files = Fileset(target_dir, name)
+    old_files = Fileset(target_dir, fpk)
 
     max_to_delete = 4
     max_to_fake = max_to_delete-1  # +1 real file will be written
@@ -125,10 +126,10 @@ def update_fileset(source_file: Path, name: str, target_dir: Path):
 
     for task in tasks:
         if isinstance(task, WriteRealTask):
-            encrypt_to_dir(source_file, name, target_dir)
+            encrypt_to_dir(source_file, fpk, target_dir)
             real_written = True
         elif isinstance(task, WriteFakeTask):
-            create_surrogate(name=name,
+            create_surrogate(fpk,
                              target_dir=target_dir,
                              ref_size=source_file_size)
         elif isinstance(task, DeleteTask):
