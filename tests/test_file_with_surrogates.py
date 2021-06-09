@@ -11,7 +11,7 @@ from ksf._20_key_derivation import FasterKeys
 from ksf._40_imprint import name_matches_encoded
 from ksf._50_sur import create_surrogate
 from ksf._61_encryption import encrypt_to_dir, DecryptedFile
-from ksf._70_navigator import FileAndSurrogates, write_with_surrogates
+from ksf._70_navigator import Fileset, update_fileset
 
 
 class TestFileWithFakes(unittest.TestCase):
@@ -70,7 +70,7 @@ class TestFileWithFakes(unittest.TestCase):
                 create_surrogate(NAME, 2000, td)
             real = encrypt_to_dir(source_file, NAME, td)
 
-            correct = FileAndSurrogates(td, NAME)
+            correct = Fileset(td, NAME)
             # we have 7 files total (including the source)
             self.assertEqual(sum(1 for _ in td.glob('*')), 7)
             # 6 files corresponding to the name
@@ -80,7 +80,7 @@ class TestFileWithFakes(unittest.TestCase):
             # one real file
             self.assertEqual(correct.real_file, real)
 
-            incorrect = FileAndSurrogates(td, "incorrect name")
+            incorrect = Fileset(td, "incorrect name")
             self.assertEqual(len(incorrect.all_files), 0)
             self.assertEqual(incorrect.real_file, None)
 
@@ -88,22 +88,33 @@ class TestFileWithFakes(unittest.TestCase):
         with TemporaryDirectory() as tds:
             td = Path(tds)
 
-            NAME = "abc"
-            fas = FileAndSurrogates(td, NAME)
+            NAME_A = "some name"
+            NAME_B = "other name"
+            fas = Fileset(td, NAME_A)
             self.assertEqual(len(fas.all_files), 0)
 
-            # todo in windows this test probably needs two-seconds pause
+            for _ in range(32):
+                the_data_a = get_fast_random_bytes(100)
+                source_file_a = td / "a"
+                source_file_a.write_bytes(the_data_a)
 
-            for _ in range(10):
-                the_data = get_fast_random_bytes(100)
+                the_data_b = get_fast_random_bytes(50)
+                source_file_b = td / "b"
+                source_file_b.write_bytes(the_data_b)
 
-                source_file = td / "source"
-                source_file.write_bytes(the_data)
-
-                write_with_surrogates(source_file, NAME, td)
+                # rewriting two filesets at once
+                update_fileset(source_file_a, NAME_A, td)
+                update_fileset(source_file_b, NAME_B, td)
 
                 # finding the latest file and checking it has the new contents
-                fas = FileAndSurrogates(td, NAME)
+                fas = Fileset(td, NAME_B)
                 self.assertGreaterEqual(len(fas.all_files), 2)
-                self.assertEqual(DecryptedFile(fas.real_file, NAME).data,
-                                 the_data)
+                self.assertEqual(DecryptedFile(fas.real_file, NAME_B).data,
+                                 the_data_b)
+
+                # finding the latest file and checking it has the new contents
+                fas = Fileset(td, NAME_A)
+                self.assertGreaterEqual(len(fas.all_files), 2)
+                self.assertEqual(DecryptedFile(fas.real_file, NAME_A).data,
+                                 the_data_a)
+

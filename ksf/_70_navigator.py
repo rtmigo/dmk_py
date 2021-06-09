@@ -28,7 +28,7 @@ def _get_newest_file(files: List[Path], name: str) -> Path:
     return latest_files[0]
 
 
-class FileAndSurrogates:
+class Fileset:
     def __init__(self, parent: Path, name: str):
         self.parent = parent
         self.name = name
@@ -59,17 +59,17 @@ class Task:
     pass
 
 
-class CreateSurrogateTask(Task):
+class WriteFakeTask(Task):
     pass
 
 
-class DeleteFileTask(Task):
+class DeleteTask(Task):
     def __init__(self, path: Path, is_real: bool):
         self.file = path
         self.is_real = is_real
 
 
-class EncryptRealFileTask(Task):
+class WriteRealTask(Task):
     pass
 
 
@@ -80,18 +80,18 @@ def _shuffle_so_creating_before_deleting(tasks: List[Task]):
         random.shuffle(tasks)
         index_of_delete = next(
             (idx for idx, task in enumerate(tasks)
-             if isinstance(task, DeleteFileTask) and task.is_real),
+             if isinstance(task, DeleteTask) and task.is_real),
             None)
         if index_of_delete is None:
             break
         index_of_create = next(idx for idx, task in enumerate(tasks)
-                               if isinstance(task, EncryptRealFileTask))
+                               if isinstance(task, WriteRealTask))
         assert index_of_create != index_of_delete
         if index_of_create < index_of_delete:
             break
 
 
-def write_with_surrogates(source_file: Path, name: str, target_dir: Path):
+def update_fileset(source_file: Path, name: str, target_dir: Path):
     # we will remove and add some surrogates, and also remove old real file
     # add new real file. We will do this in random order, so as not to give
     # out which files are real and which are surrogates
@@ -100,31 +100,39 @@ def write_with_surrogates(source_file: Path, name: str, target_dir: Path):
 
     source_file_size = source_file.stat().st_size
 
-    old_files = FileAndSurrogates(target_dir, name)
+    old_files = Fileset(target_dir, name)
+
+    max_to_delete = 4
+    max_to_fake = max_to_delete-1  # +1 real file will be written
 
     # we will remove random number of files
-
     if len(old_files.all_files) > 0:
-        n = random.randint(1, len(old_files.all_files))
-        files_to_delete = random.sample(old_files.all_files, n)
+        max_to_delete = min(max_to_delete, len(old_files.all_files))
+        num_to_delete = random.randint(1, max_to_delete)
+        files_to_delete = random.sample(old_files.all_files, num_to_delete)
         for f in files_to_delete:
-            is_the_real = (f == old_files.real_file)
-            tasks.append(DeleteFileTask(f, is_the_real))
+            tasks.append(DeleteTask(
+                path=f,
+                is_real=(f == old_files.real_file)))
 
-    for _ in range(random.randint(1, 3)):
-        tasks.append(CreateSurrogateTask())
-    tasks.append(EncryptRealFileTask())
+    for _ in range(random.randint(1, max_to_fake)):
+        tasks.append(WriteFakeTask())
+    tasks.append(WriteRealTask())
 
     _shuffle_so_creating_before_deleting(tasks)
 
+    real_written = False
+
     for task in tasks:
-        if isinstance(task, DeleteFileTask):
-            os.remove(str(task.file))
-        elif isinstance(task, CreateSurrogateTask):
+        if isinstance(task, WriteRealTask):
+            encrypt_to_dir(source_file, name, target_dir)
+            real_written = True
+        elif isinstance(task, WriteFakeTask):
             create_surrogate(name=name,
                              target_dir=target_dir,
                              ref_size=source_file_size)
-        elif isinstance(task, EncryptRealFileTask):
-            encrypt_to_dir(source_file, name, target_dir)
+        elif isinstance(task, DeleteTask):
+            assert real_written or not task.is_real
+            os.remove(str(task.file))
         else:
             raise TypeError
