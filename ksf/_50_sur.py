@@ -9,7 +9,7 @@ from pathlib import Path
 from Crypto.Random import get_random_bytes
 
 from ksf._40_imprint import Imprint, HashCollision, \
-    name_matches_hash
+    name_matches_imprint_bytes
 from ksf._wtf import WritingToTempFile
 
 MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000 * 1000
@@ -52,7 +52,7 @@ def create_surrogate(name: str, ref_size: int, target_dir: Path):
     size = ref_size + random.randint(int(-ref_size * 0.75),
                                      int(ref_size * 0.75))
     non_matching_header = get_random_bytes(Imprint.FULL_LEN)
-    if name_matches_hash(name, non_matching_header):
+    if name_matches_imprint_bytes(name, non_matching_header):
         raise HashCollision
 
     with WritingToTempFile(target_file) as wtf:

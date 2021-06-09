@@ -9,10 +9,21 @@ from tempfile import TemporaryDirectory
 
 from ksf._10_randoms import get_fast_random_bytes
 from ksf._51_encryption import _encrypt_file_to_file, encrypt_to_dir, \
-    MacCheckFailed, DecryptedFile, name_matches_header
+    ChecksumMismatch, DecryptedFile, name_matches_header
+from ksf.key_derivation import FasterKeys
 
 
 class TestEncryptDecrypt(unittest.TestCase):
+    faster: FasterKeys
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.faster = FasterKeys()
+        cls.faster.start()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.faster.end()
 
     def test_name_matches_header(self):
         with TemporaryDirectory() as tds:
@@ -43,6 +54,22 @@ class TestEncryptDecrypt(unittest.TestCase):
             # the same way we can find original content in the original file
             self.assertNotIn(body, encrypted_file.read_bytes())
 
+    def test_encrypted_files_have_different_sizes_plain(self):
+        with TemporaryDirectory() as tds:
+            td = Path(tds)
+            source_file = td / "source"
+            body = b'qwertyuiop!qwertyuiop'
+            source_file.write_bytes(body)
+
+            files = [encrypt_to_dir(source_file, 'some_name', td)
+                     for _ in range(10)]
+
+            self.assertEqual(len(set(str(f) for f in files)), 10)
+
+            sizes = set([f.stat().st_size for f in files])
+            print(sizes)
+            self.assertGreater(len(sizes), 3)
+
     def test_on_random_data(self):
         for _ in range(100):
             name_len = random.randint(1, 99)
@@ -52,7 +79,7 @@ class TestEncryptDecrypt(unittest.TestCase):
             body = get_fast_random_bytes(body_len)
             self._encrypt_decrypt(name, body)
 
-    def _encrypt_decrypt(self, name: str, body: bytes):
+    def _encrypt_decrypt(self, name: str, body: bytes, check_wrong=False):
         with TemporaryDirectory() as tds:
             td = Path(tds)
             source_file = td / "source"
@@ -69,8 +96,9 @@ class TestEncryptDecrypt(unittest.TestCase):
 
             self.assertTrue(encrypted_file.exists())
 
-            with self.assertRaises(MacCheckFailed):
-                DecryptedFile(encrypted_file, 'wrong_item_name')
+            if check_wrong:
+                with self.assertRaises(ChecksumMismatch):
+                    DecryptedFile(encrypted_file, 'wrong_item_name')
 
             df = DecryptedFile(encrypted_file, name)
             self.assertEqual(df.body, body)
@@ -86,3 +114,9 @@ class TestEncryptDecrypt(unittest.TestCase):
             self.assertEqual(decrypted_file.read_bytes(), body)
             self.assertEqual(decrypted_file.stat().st_mtime,
                              source_file.stat().st_mtime)
+
+
+if __name__ == "__main__":
+    TestEncryptDecrypt()._encrypt_decrypt('abcdef', b'qwertyuiop',
+                                          check_wrong=False)
+    print("OK")
