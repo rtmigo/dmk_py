@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 from typing import Optional
 
 from Crypto.Protocol.KDF import scrypt
@@ -32,7 +36,7 @@ class FasterKeys:
         self.end()
 
 
-_cache = LRUCache(10000)
+_cache: LRUCache[str, bytes] = LRUCache(9999)
 
 
 def password_to_key(password: str, salt: bytes, size: int = 16):
