@@ -19,30 +19,37 @@ class TestPtk(unittest.TestCase):
         PWD = "password"
         SALT = bytes([1, 2, 3])
         POWER = KeyDerivationSettings.power
+        KL = 24
 
-        p = password_to_key(PWD, SALT)
+        p = password_to_key(PWD, SALT, KL)
         self.assertNotIn(p, seen)
         seen.add(p)
 
         # different password
-        p = password_to_key("other password", SALT)
+        p = password_to_key("other password", SALT, KL)
         self.assertNotIn(p, seen)
         seen.add(p)
 
         # different salt
-        p = password_to_key(PWD, bytes([99, 88, 77]))
+        p = password_to_key(PWD, bytes([99, 88, 77]), KL)
         self.assertNotIn(p, seen)
         seen.add(p)
+
+        # different key length
+        p = password_to_key(PWD, SALT, 16)
+        self.assertNotIn(p, seen)
+        seen.add(p)
+
 
         try:
             KeyDerivationSettings.power -= 1
 
             # different power
-            p = password_to_key(PWD, SALT)
+            p = password_to_key(PWD, SALT, KL)
             self.assertNotIn(p, seen)
             seen.add(p)
 
         finally:
             KeyDerivationSettings.power = POWER
 
-        self.assertEqual(len(seen), 4)
+        self.assertEqual(len(seen), 5)
