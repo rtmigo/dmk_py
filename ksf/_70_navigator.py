@@ -54,16 +54,6 @@ class FileAndSurrogates:
         self.surrogates = [f for f in self.all_files if f != self.real_file]
 
 
-# class Timing(IntEnum):
-#    anytime = auto()
-#    earlier = auto()
-#    later = auto()
-
-
-# class Task(NamedTuple):
-#    timing: Timing
-#    func: Callable
-
 class Task:
     pass
 
