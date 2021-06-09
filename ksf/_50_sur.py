@@ -50,7 +50,7 @@ def create_surrogate(fpk: FilesetPrivateKey, ref_size: int, target_dir: Path):
     target_file = target_dir / Imprint(fpk).as_str
     if target_file.exists():
         raise HashCollision
-    size = randomized_size(ref_size)
+    size = randomized_size(ref_size) # todo
     non_matching_header = get_random_bytes(Imprint.FULL_LEN)
     if pk_matches_imprint_bytes(fpk, non_matching_header):
         raise HashCollision

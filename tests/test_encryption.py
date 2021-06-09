@@ -8,9 +8,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ksf._00_randoms import get_fast_random_bytes
+from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
 from ksf._61_encryption import _encrypt_file_to_file, encrypt_to_dir, \
     ChecksumMismatch, DecryptedFile, pk_matches_header
-from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
 
 
 class TestEncryptDecrypt(unittest.TestCase):
@@ -38,7 +38,8 @@ class TestEncryptDecrypt(unittest.TestCase):
             # name_to_hash(NAME)
             _encrypt_file_to_file(source, FilesetPrivateKey(NAME), right)
             self.assertTrue(pk_matches_header(FilesetPrivateKey(NAME), right))
-            self.assertFalse(pk_matches_header(FilesetPrivateKey('labuda'), right))
+            self.assertFalse(
+                pk_matches_header(FilesetPrivateKey('labuda'), right))
 
     def test_encrypted_does_not_contain_plain(self):
         with TemporaryDirectory() as tds:
@@ -46,7 +47,8 @@ class TestEncryptDecrypt(unittest.TestCase):
             source_file = td / "source"
             body = b'qwertyuiop!qwertyuiop'
             source_file.write_bytes(body)
-            encrypted_file = encrypt_to_dir(source_file, FilesetPrivateKey('some_name'), td)
+            encrypted_file = encrypt_to_dir(source_file,
+                                            FilesetPrivateKey('some_name'), td)
 
             # checking that the original content can be found in original file,
             # but not in the encrypted file
@@ -137,8 +139,11 @@ class TestEncryptDecrypt(unittest.TestCase):
             self.assertEqual(df.data, None)
 
 
+
+
+
 if __name__ == "__main__":
     unittest.main()
-    #TestEncryptDecrypt()._encrypt_decrypt('abcdef', b'qwertyuiop',
-     #                                     check_wrong=False)
-    #print("OK")
+    # TestEncryptDecrypt()._encrypt_decrypt('abcdef', b'qwertyuiop',
+    #                                     check_wrong=False)
+    # print("OK")
