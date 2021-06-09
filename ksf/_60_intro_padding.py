@@ -6,7 +6,7 @@ import random
 from typing import BinaryIO
 
 from ksf._00_common import read_or_fail
-from ksf._00_randoms import get_fast_random_bytes
+from ksf._00_randoms import get_noncrypt_random_bytes
 
 
 def _is_power_of_two(n: int) -> bool:
@@ -54,7 +54,7 @@ class IntroPadding:
 
         # generating the random padding
         if length > 0:
-            result += get_fast_random_bytes(length)
+            result += get_noncrypt_random_bytes(length)
 
         assert 1 <= len(result) <= 64
         return result

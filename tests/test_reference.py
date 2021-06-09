@@ -13,7 +13,7 @@ from tempfile import TemporaryDirectory
 #
 #         pk = FilesetPrivateKey(name)
 #         update_fileset(source_file, pk, target_dir)
-from ksf._80_dir import Dir
+from ksf._80_dir import CryptoDir
 
 ref_content = [
     ('one', bytes([11, 22, 33])),
@@ -34,7 +34,7 @@ def generate_references():
 
     refs_dir.mkdir(parents=True)
 
-    d = Dir(refs_dir)
+    d = CryptoDir(refs_dir)
 
     for name, data in ref_content:
         with TemporaryDirectory() as tds:
@@ -46,7 +46,7 @@ def generate_references():
 
 class TestRefs(unittest.TestCase):
     def test(self):
-        d = Dir(refs_dir)
+        d = CryptoDir(refs_dir)
         for name, data in ref_content:
             self.assertEqual(d.get(name).data, data)
 

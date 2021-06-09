@@ -4,5 +4,5 @@
 import random
 
 
-def get_fast_random_bytes(n: int):
+def get_noncrypt_random_bytes(n: int):
     return bytes(random.getrandbits(8) for _ in range(n))

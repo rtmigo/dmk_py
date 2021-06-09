@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf._00_randoms import get_fast_random_bytes
+from ksf._00_randoms import get_noncrypt_random_bytes
 from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_surrogate
@@ -96,11 +96,11 @@ class TestFileWithFakes(unittest.TestCase):
             self.assertEqual(len(fas.all_files), 0)
 
             for _ in range(32):
-                the_data_a = get_fast_random_bytes(100)
+                the_data_a = get_noncrypt_random_bytes(100)
                 source_file_a = td / "a"
                 source_file_a.write_bytes(the_data_a)
 
-                the_data_b = get_fast_random_bytes(50)
+                the_data_b = get_noncrypt_random_bytes(50)
                 source_file_b = td / "b"
                 source_file_b.write_bytes(the_data_b)
 
