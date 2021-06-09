@@ -2,6 +2,8 @@ from typing import Optional
 
 from Crypto.Protocol.KDF import scrypt
 
+from ksf.lru_cache import LRUCache
+
 
 class KeyDerivationSettings:
     power = 17
@@ -30,7 +32,22 @@ class FasterKeys:
         self.end()
 
 
+_cache = LRUCache(10000)
+
+
 def password_to_key(password: str, salt: bytes, size: int = 16):
+    cache_key = '\0'.join((password,
+                           str(salt),
+                           str(size),
+                           str(KeyDerivationSettings.power)))
+    x = _cache.get(cache_key)
+    if x is None:
+        x = _password_to_key_noncached(password, salt, size)
+        _cache.put(cache_key, x)
+    return x
+
+
+def _password_to_key_noncached(password: str, salt: bytes, size: int = 16):
     # https://nitratine.net/blog/post/python-gcm-encryption-tutorial/
     # noinspection PyTypeChecker
     return scrypt(password,

@@ -7,7 +7,7 @@ from typing import Tuple, Optional
 
 from Crypto.Random import get_random_bytes
 
-from ksf.key_derivation import password_to_key
+from ksf._20_key_derivation import password_to_key
 
 
 def bytes_to_str(data: bytes) -> str:

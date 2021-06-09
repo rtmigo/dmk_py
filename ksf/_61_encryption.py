@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 import os
-import random
 import struct
+import time
 import zlib
 from pathlib import Path
 from typing import Optional
@@ -11,12 +11,12 @@ from typing import Optional
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
-from ksf._05_common import read_or_fail, InsufficientData
+from ksf._00_common import read_or_fail, InsufficientData
+from ksf._00_wtf import WritingToTempFile
+from ksf._20_key_derivation import password_to_key
 from ksf._40_imprint import Imprint, HashCollision, name_matches_imprint_bytes
-from ksf._50_sur import set_random_last_modified
-from ksf._wtf import WritingToTempFile
-from ksf.intro_padding import IntroPadding
-from ksf.key_derivation import password_to_key
+from ksf._50_sur import set_random_last_modified, randomized_size
+from ksf._60_intro_padding import IntroPadding
 
 _DEBUG_PRINT = False
 
@@ -67,6 +67,7 @@ MAC_LEN = 16
 HEADER_CHECKSUM_LEN = 4
 VERSION_LEN = 1
 SRC_MTIME_LEN = 8
+TIMESTAMP_LEN = 8
 SRC_SIZE_LEN = 3
 
 
@@ -106,16 +107,6 @@ class Cryptographer:
         ])
 
 
-def randomized_size(real_size: int) -> int:
-    return real_size + random.randint(0, round(real_size / 2))
-
-
-# def two_random_bytes_sum_0xFF() -> bytes:
-#     a = random.randint(0, 0xFF)
-#     b = 0xFF - a
-#     assert a + b == 0xFF
-
-
 def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
     """
     File format
@@ -127,6 +118,7 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
         <header>
             format version: byte
             timestamp: double
+            mtime: double
             body size: uint24
         </header>
         header crc-32: uint32
@@ -157,6 +149,9 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
     src_mtime_bytes = double_to_bytes(stat.st_mtime)
     assert len(src_mtime_bytes) == SRC_MTIME_LEN
 
+    timestamp_bytes = double_to_bytes(time.time())
+    assert len(timestamp_bytes) == TIMESTAMP_LEN
+
     src_size_bytes = stat.st_size.to_bytes(SRC_SIZE_LEN,
                                            byteorder='big',
                                            signed=False)
@@ -164,6 +159,7 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
 
     header_bytes = b''.join((
         version_bytes,
+        timestamp_bytes,
         src_mtime_bytes,
         src_size_bytes,
     ))
@@ -223,8 +219,9 @@ class DecryptedFile:
     def __init__(self, source_file: Path, name: str, decrypt_body=True):
 
         with source_file.open('rb') as f:
-            imprint_bytes = f.read(Imprint.FULL_LEN)
-
+            # reading and the imprint and checking that the name
+            # matches this imprint
+            imprint_bytes = read_or_fail(f, Imprint.FULL_LEN)
             if not name_matches_imprint_bytes(name, imprint_bytes):
                 raise ChecksumMismatch("The name does not match the imprint.")
 
@@ -247,51 +244,56 @@ class DecryptedFile:
                     raise InsufficientData
                 return cfg.cipher.decrypt(encrypted)
 
+            # skipping the padding
             ip_first = read_and_decrypt(1)[0]
             ip_len = _intro_padding_64.first_byte_to_len(ip_first)
             if ip_len > 0:
                 read_and_decrypt(ip_len)
 
-            # version
+            # VERSION is always 1
             version_bytes = read_and_decrypt(VERSION_LEN)
             version = version_bytes[0]
             assert version == 1
 
-            # mtime
+            # TIMESTAMP is the time when the data was encrypted
+            ts_bytes = read_and_decrypt(TIMESTAMP_LEN)
+            self.timestamp = bytes_to_double(ts_bytes)
+
+            # MTIME is the last modification time of original file
             mtime_bytes = read_and_decrypt(SRC_MTIME_LEN)
             self.mtime = bytes_to_double(mtime_bytes)
 
-            # size
+            # SIZE is the size of original file
             body_size_bytes = read_and_decrypt(SRC_SIZE_LEN)
-            body_size = int.from_bytes(body_size_bytes,
+            self.size = int.from_bytes(body_size_bytes,
                                        byteorder='big',
                                        signed=False)
 
+            # reading and checking the header checksum
             header_crc = int.from_bytes(
                 read_and_decrypt(HEADER_CHECKSUM_LEN),
                 byteorder='big',
                 signed=False)
-
-            header_bytes = version_bytes + mtime_bytes + body_size_bytes
+            header_bytes = (version_bytes + ts_bytes +
+                            mtime_bytes + body_size_bytes)
             if zlib.crc32(header_bytes) != header_crc:
                 raise ChecksumMismatch("Header CRC mismatch.")
 
-            # body
-            self.body: Optional[bytes]
+            # DATA is the content of original file
+            self.data: Optional[bytes]
             if decrypt_body:
-                body = read_and_decrypt(body_size)
+                body = read_and_decrypt(self.size)
                 body_crc = bytes_to_uint32(read_and_decrypt(4))
                 if zlib.crc32(body) != body_crc:
                     raise ChecksumMismatch("Body CRC mismatch.")
-                self.body = body
+                self.data = body
             else:
-                # todo test
-                self.body = None
+                self.data = None
 
     def write(self, target: Path):
-        if self.body is None:
+        if self.data is None:
             raise RuntimeError("Body is not set.")
-        target.write_bytes(self.body)
+        target.write_bytes(self.data)
         os.utime(str(target), (self.mtime, self.mtime))
         # set_file_last_modified(target, self.mtime)
 

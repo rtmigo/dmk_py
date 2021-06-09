@@ -10,7 +10,7 @@ from Crypto.Random import get_random_bytes
 
 from ksf._40_imprint import Imprint, HashCollision, \
     name_matches_imprint_bytes
-from ksf._wtf import WritingToTempFile
+from ksf._00_wtf import WritingToTempFile
 
 MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000 * 1000
 assert datetime.timedelta(microseconds=MICROSECONDS_PER_DAY) \
@@ -49,8 +49,7 @@ def create_surrogate(name: str, ref_size: int, target_dir: Path):
     target_file = target_dir / Imprint(name).as_str
     if target_file.exists():
         raise HashCollision
-    size = ref_size + random.randint(int(-ref_size * 0.75),
-                                     int(ref_size * 0.75))
+    size = randomized_size(ref_size)
     non_matching_header = get_random_bytes(Imprint.FULL_LEN)
     if name_matches_imprint_bytes(name, non_matching_header):
         raise HashCollision
@@ -60,3 +59,8 @@ def create_surrogate(name: str, ref_size: int, target_dir: Path):
         wtf.dirty.write_bytes(get_random_bytes(size))  # todo chunks?
         set_random_last_modified(wtf.dirty)
         wtf.replace()
+
+
+def randomized_size(real_size: int) -> int:
+    # must be used when creating both surrogates and real files
+    return real_size + random.randint(0, round(real_size / 2))

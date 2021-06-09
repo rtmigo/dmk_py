@@ -5,7 +5,7 @@ import unittest
 
 from ksf._40_imprint import bytes_to_str, str_to_bytes, \
     name_matches_encoded, Imprint
-from ksf.key_derivation import FasterKeys
+from ksf._20_key_derivation import FasterKeys
 
 
 class Test(unittest.TestCase):
