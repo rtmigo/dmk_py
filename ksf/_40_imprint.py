@@ -5,9 +5,10 @@ import binascii
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from typing import Tuple, Optional
 
+from Crypto.Hash import BLAKE2b
 from Crypto.Random import get_random_bytes
 
-from ksf._20_key_derivation import password_to_key
+from ksf._20_key_derivation import FilesetPrivateKey
 
 
 def bytes_to_str(data: bytes) -> str:
@@ -28,17 +29,24 @@ def half_n_half(salt: bytes) -> Tuple[bytes, bytes]:
     return a, b
 
 
+def _blake192(data: bytes, salt: bytes) -> bytes:
+    h_obj = BLAKE2b.new(digest_bits=192)
+    a, b = half_n_half(salt)
+    h_obj.update(a + data + b)
+    return h_obj.digest()
+
+
 class Imprint:
-    """Each name has a conventionally infinite number of imprints
+    """Each PK has a conventionally infinite number of imprints
     (2^192 or six octodecillion).
 
-    Each new imprint is unique, although the name is the same.
+    Each new imprint is unique, although the PK is the same.
 
-    Knowing the name, we can tell if the imprint belongs to it.
+    Knowing the PK, we can tell if the imprint belongs to it.
 
-    Without knowing the name, we can hardly do anything. We cannot
-    reconstruct a name from an imprint, or even suggest it. We cannot say
-    whether two imprints correspond to the same name or to different ones.
+    Without knowing the PK, we can hardly do anything. We cannot
+    reconstruct a PK from an imprint, or even suggest it. We cannot say
+    whether two imprints correspond to the same PK or to different ones.
 
     ==
 
@@ -50,26 +58,26 @@ class Imprint:
     neither will happen.
     """
 
-    __slots__ = ['__name', '__salt', '__as_bytes', '__as_str']
+    __slots__ = ['__private_key', '__salt', '__as_bytes', '__as_str']
 
     NONCE_LEN = 24
     DIGEST_LEN = 24
     FULL_LEN = NONCE_LEN + DIGEST_LEN
 
-    def __init__(self, name: str, nonce: bytes = None):
-        if len(name) < 1:
-            raise ValueError("Name must not be empty")
-        self.__name = name
+    def __init__(self, pk: FilesetPrivateKey, nonce: bytes = None):
+        if not isinstance(pk, FilesetPrivateKey):
+            raise TypeError
+        self.__private_key = pk
         self.__salt: Optional[bytes] = nonce
         self.__as_bytes: Optional[bytes] = None
         self.__as_str: Optional[str] = None
 
     @property
-    def name(self):
-        return self.__name
+    def private_key(self) -> FilesetPrivateKey:
+        return self.__private_key
 
     @property
-    def salt(self):
+    def nonce(self):
         if self.__salt is None:
             self.__salt = get_random_bytes(Imprint.NONCE_LEN)
         return self.__salt
@@ -77,18 +85,9 @@ class Imprint:
     @property
     def as_bytes(self) -> bytes:
         if self.__as_bytes is None:
-            digest = password_to_key(
-                password=self.name,
-                salt=self.salt,
-                size=Imprint.DIGEST_LEN)
-            # digest = scrypt(self.name,
-            #                 self.salt,
-            #                 key_len=Imprint.DIGEST_LEN,
-            #                 N=2 ** 10,  # 17,
-            #                 r=8, p=1)
-            result = digest + self.salt
-            assert len(result) == Imprint.FULL_LEN
-            self.__as_bytes = result
+            self.__as_bytes = \
+                _blake192(self.private_key.as_bytes, self.nonce) + self.nonce
+            assert len(self.__as_bytes) == Imprint.FULL_LEN
         return self.__as_bytes
 
     @property
@@ -106,9 +105,9 @@ class Imprint:
         return h[-Imprint.NONCE_LEN:]
 
 
-def name_matches_encoded(name: str, encoded: str) -> bool:
+def pk_matches_codename(pk: FilesetPrivateKey, codename: str) -> bool:
     try:
-        bts = str_to_bytes(encoded)
+        bts = str_to_bytes(codename)
     except binascii.Error:
         return False
 
@@ -118,12 +117,12 @@ def name_matches_encoded(name: str, encoded: str) -> bool:
     nonce = Imprint.bytes_to_nonce(bts)
 
     assert len(nonce) == Imprint.NONCE_LEN
-    return encoded == Imprint(name, nonce=nonce).as_str
+    return codename == Imprint(pk, nonce=nonce).as_str
 
 
-def name_matches_imprint_bytes(name: str, imprint: bytes) -> bool:
+def pk_matches_imprint_bytes(pk: FilesetPrivateKey, imprint: bytes) -> bool:
     nonce = Imprint.bytes_to_nonce(imprint)
-    return Imprint(name, nonce=nonce).as_bytes == imprint
+    return Imprint(pk, nonce=nonce).as_bytes == imprint
 
 
 class HashCollision(Exception):

@@ -8,9 +8,10 @@ from pathlib import Path
 
 from Crypto.Random import get_random_bytes
 
-from ksf._40_imprint import Imprint, HashCollision, \
-    name_matches_imprint_bytes
 from ksf._00_wtf import WritingToTempFile
+from ksf._20_key_derivation import FilesetPrivateKey
+from ksf._40_imprint import Imprint, HashCollision, \
+    pk_matches_imprint_bytes
 
 MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000 * 1000
 assert datetime.timedelta(microseconds=MICROSECONDS_PER_DAY) \
@@ -32,7 +33,7 @@ def set_random_last_modified(file: Path):
     _set_file_last_modified(file, _random_datetime())
 
 
-def create_surrogate(name: str, ref_size: int, target_dir: Path):
+def create_surrogate(fpk: FilesetPrivateKey, ref_size: int, target_dir: Path):
     """Creates a surrogate file.
 
     The file name of the surrogate will be the correct imprint from the
@@ -46,12 +47,12 @@ def create_surrogate(name: str, ref_size: int, target_dir: Path):
     ref_size: The size of the real file. The surrogate file will have
     similar size but randomized.
     """
-    target_file = target_dir / Imprint(name).as_str
+    target_file = target_dir / Imprint(fpk).as_str
     if target_file.exists():
         raise HashCollision
     size = randomized_size(ref_size)
     non_matching_header = get_random_bytes(Imprint.FULL_LEN)
-    if name_matches_imprint_bytes(name, non_matching_header):
+    if pk_matches_imprint_bytes(fpk, non_matching_header):
         raise HashCollision
 
     with WritingToTempFile(target_file) as wtf:
