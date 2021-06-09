@@ -7,7 +7,7 @@ from base64 import b64encode
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf._00_randoms import get_fast_random_bytes
+from ksf._00_randoms import get_noncrypt_random_bytes
 from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
 from ksf._61_encryption import _encrypt_file_to_file, encrypt_to_dir, \
     ChecksumMismatch, DecryptedFile, pk_matches_header
@@ -76,12 +76,13 @@ class TestEncryptDecrypt(unittest.TestCase):
             self.assertGreater(len(sizes), 3)
 
     def test_on_random_data(self):
+        random.seed(55, version=2)
         for _ in range(100):
             name_len = random.randint(1, 99)
-            name = b64encode(get_fast_random_bytes(name_len)).decode()
+            name = b64encode(get_noncrypt_random_bytes(name_len)).decode()
 
             body_len = random.randint(0, 9999)
-            body = get_fast_random_bytes(body_len)
+            body = get_noncrypt_random_bytes(body_len)
             self._encrypt_decrypt(name, body)
 
     def _encrypt_decrypt(self, name: str, body: bytes, check_wrong=False):
@@ -137,9 +138,6 @@ class TestEncryptDecrypt(unittest.TestCase):
             self.assertEqual(df.size, source_file.stat().st_size)
             # but there is no body
             self.assertEqual(df.data, None)
-
-
-
 
 
 if __name__ == "__main__":

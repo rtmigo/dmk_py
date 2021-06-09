@@ -6,7 +6,7 @@ from ksf._61_encryption import DecryptedFile
 from ksf._70_navigator import update_fileset, Fileset
 
 
-class Dir:
+class CryptoDir:
     def __init__(self, directory: Path):
         self.directory = directory
 
