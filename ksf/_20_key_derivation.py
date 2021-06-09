@@ -32,7 +32,7 @@ class FilesetPrivateKey:
 
     __slots__ = ["as_bytes"]
 
-    _power = 17  # larger values = slower function, better protection
+    _power = 18  # larger values = slower function, better protection
 
     salt = b"\xef\x87\xffr_\xed\xe2\xc5\x92\x11\x8e'F\xe6-C\xf1" \
            b"\xa9\xd4\x9fu\xc8\x05Y\x8b\xc3\x94\xd1\xbd\x10#B"
