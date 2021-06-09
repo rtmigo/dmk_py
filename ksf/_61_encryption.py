@@ -179,9 +179,9 @@ def _encrypt_file_to_file(source_file: Path, name: str, target_file: Path):
 
     if _DEBUG_PRINT:
         print("---")
-    print("ENCRYPTION:")
-    print(cryptographer)
-    print("---")
+        print("ENCRYPTION:")
+        print(cryptographer)
+        print("---")
 
     encrypted_bytes = cryptographer.cipher.encrypt(decrypted_bytes)
 
