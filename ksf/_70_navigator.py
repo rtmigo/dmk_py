@@ -9,7 +9,7 @@ from typing import List, Optional
 from ksf._20_key_derivation import FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_fake
-from ksf._61_encryption import pk_matches_header, encrypt_to_dir, \
+from ksf._61_encryption import fpk_matches_header, encrypt_to_dir, \
     DecryptedFile
 from ksf.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file
@@ -44,7 +44,7 @@ class Fileset:
                           if pk_matches_codename(self.fpk, p.name)]
 
         reals = [p for p in self.all_files
-                 if pk_matches_header(self.fpk, p)]
+                 if fpk_matches_header(self.fpk, p)]
 
         if len(reals) == 1:
             self.real_file = reals[0]
