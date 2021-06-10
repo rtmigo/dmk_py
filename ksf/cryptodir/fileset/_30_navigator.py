@@ -1,18 +1,17 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-
+import io
 import os
 import random
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, BinaryIO
 
 from ksf._common import MIN_DATA_FILE_SIZE
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_fakes import create_fake
 from ksf.cryptodir.fileset._10_imprint import pk_matches_codename
 from ksf.cryptodir.fileset._20_encryption import fpk_matches_header, \
-    encrypt_file_to_dir, \
-    _DecryptedFile
+    _DecryptedFile, encrypt_io_to_dir
 from ksf.cryptodir.fileset.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file
 
@@ -120,12 +119,16 @@ def increased_data_version(fileset: Fileset) -> int:
     return random.randint(1, 999999)
 
 
-def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
+def update_fileset(source_io: BinaryIO,
+                   fpk: FilesetPrivateKey,
+                   target_dir: Path):
     # we will remove and add some surrogates, and also remove old real file
     # add new real file. We will do this in random order, so as not to give
     # out which files are real and which are surrogates
 
-    source_file_size = source_file.stat().st_size
+    source_file_size = source_io.seek(0, io.SEEK_END)
+    source_io.seek(0, io.SEEK_SET)
+
     all_file_sizes = dir_to_file_sizes(target_dir)
 
     def fake_size():
@@ -164,7 +167,7 @@ def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
 
     for task in tasks:
         if isinstance(task, WriteRealTask):
-            encrypt_file_to_dir(source_file, fpk, target_dir, new_data_version)
+            encrypt_io_to_dir(source_io, fpk, target_dir, new_data_version)
             real_written = True
         elif isinstance(task, WriteFakeTask):
             create_fake(fpk,
@@ -175,3 +178,10 @@ def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
             os.remove(str(task.file))
         else:
             raise TypeError
+
+
+def update_fileset_old(source_file: Path, fpk: FilesetPrivateKey,
+                       target_dir: Path):
+    # todo remove from code
+    with source_file.open('rb') as f:
+        update_fileset(f, fpk, target_dir)
