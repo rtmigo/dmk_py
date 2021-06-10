@@ -32,7 +32,18 @@ class FilesetPrivateKey:
 
     __slots__ = ["as_bytes"]
 
-    _power = 18  # larger values = slower function, better protection
+    _power = 17  # larger values = slower function, better protection
+
+    # pow | Intel i7-8700K | AMD A9-9420e
+    # ----|----------------|--------------
+    #  18 | 0.65 sec       | 1.17 sec
+    #  17 | 0.32 sec       |
+
+    # power = 17:
+
+    # power = 18:
+    #   0.65 seconds on Intel i7-8700K
+    #   1.17 seconds on AMD A9-9420e
 
     salt = b"\xef\x87\xffr_\xed\xe2\xc5\x92\x11\x8e'F\xe6-C\xf1" \
            b"\xa9\xd4\x9fu\xc8\x05Y\x8b\xc3\x94\xd1\xbd\x10#B"
