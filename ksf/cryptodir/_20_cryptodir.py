@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Optional
 
-from ksf.cryptodir._10_kdf import FilesetPrivateKey
-from ksf.cryptodir.fileset import update_fileset, Fileset, DecryptedIo
-from ksf.cryptodir._10_salt import find_salt_in_dir, write_salt
+from ._10_kdf import FilesetPrivateKey
+from ._10_salt import find_salt_in_dir, write_salt
+from .fileset import update_fileset, Fileset, DecryptedIo
 
 
 class CryptoDir:

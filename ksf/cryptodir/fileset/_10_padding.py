@@ -5,8 +5,8 @@
 import random
 from typing import BinaryIO
 
-from ksf._00_common import read_or_fail
-from ksf._00_randoms import get_noncrypt_random_bytes
+from ksf._common import read_or_fail
+from ksf.utils.randoms import get_noncrypt_random_bytes
 
 
 def _is_power_of_two(n: int) -> bool:

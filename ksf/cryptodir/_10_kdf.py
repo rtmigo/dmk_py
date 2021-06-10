@@ -6,25 +6,8 @@ from typing import Optional
 
 from Crypto.Protocol.KDF import scrypt
 
-# class SaltPrivateKey:
-#     """
-#     This key is generated based on a password and a constant salt value.
-#     Knowing this key, we can find and decrypt the file with a more secret
-#     (non-const) salt.
-#     """
-#     __slots__ = ["as_bytes"]
-#     _power = 16
-#
-#     _salt_const = b"\xef\x87\xffr_\xed\xe2\xc5\x92\x11\x8e'F\xe6-C\xf1" \
-#                   b"\xa9\xd4\x9fu\xc8\x05Y\x8b\xc3\x94\xd1\xbd\x10#B"
-#
-#     def __init__(self, password: str):
-#         self.as_bytes = _password_to_key_cached(
-#             password,
-#             self._salt_const,
-#             size=32,
-#             pwr=self._power)
-from ksf._00_common import PK_SALT_SIZE
+
+from ksf._common import PK_SALT_SIZE
 
 
 class FilesetPrivateKey:

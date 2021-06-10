@@ -10,9 +10,9 @@ from typing import Optional, BinaryIO, NamedTuple
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
-from ksf._00_common import read_or_fail, InsufficientData, \
+from ksf._common import read_or_fail, InsufficientData, \
     looks_like_our_basename
-from ksf._00_wtf import WritingToTempFile
+from ksf.utils.dirty_file import WritingToTempFile
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
     pk_matches_imprint_bytes

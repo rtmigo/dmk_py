@@ -6,7 +6,7 @@ import random
 from pathlib import Path
 from typing import List, Optional
 
-from ksf._00_common import MIN_DATA_FILE_SIZE
+from ksf._common import MIN_DATA_FILE_SIZE
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_imprint import pk_matches_codename
 from ksf.cryptodir.fileset._10_fakes import create_fake

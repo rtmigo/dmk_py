@@ -6,7 +6,7 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from ksf._00_common import bytes_to_fn_str, fnstr_to_bytes, blake192
+from ksf._common import bytes_to_fn_str, fnstr_to_bytes, blake192
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 
 
