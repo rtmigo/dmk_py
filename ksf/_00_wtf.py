@@ -5,6 +5,8 @@
 import os
 from pathlib import Path
 
+from ksf._00_common import looks_like_our_basename
+
 
 class WritingToTempFile:
     """We will write data to a temporary file first, and when it's
@@ -17,6 +19,7 @@ class WritingToTempFile:
     def __init__(self, file: Path):
         self.final = file
         self.dirty = file.parent / (file.name + ".tmp")
+        assert not looks_like_our_basename(self.dirty.name)
 
     def __enter__(self):
         return self

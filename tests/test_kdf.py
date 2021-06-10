@@ -4,24 +4,25 @@
 import unittest
 
 from ksf._20_kdf import FilesetPrivateKey
+from tests.common import testing_salt
 
 
-class TestPtk(unittest.TestCase):
+class TestKdf(unittest.TestCase):
 
     def test_constant(self):
         assert FilesetPrivateKey._power >= 16
         # self.assertEqual(FilesetPrivateKey('password'))
         # self.assertEqual(len(FilesetPrivateKey.salt), 32)
 
-    def test_salt_len(self):
-        self.assertEqual(len(FilesetPrivateKey.salt), 32)
+    # def test_salt_len(self):
+    #     self.assertEqual(len(FilesetPrivateKey.salt), 32)
 
     def test_key_len(self):
-        self.assertEqual(len(FilesetPrivateKey('pass').as_bytes), 32)
+        self.assertEqual(len(FilesetPrivateKey('pass', testing_salt).as_bytes), 32)
 
     def test_keys_are_different(self):
-        self.assertNotEqual(FilesetPrivateKey('abc').as_bytes,
-                            FilesetPrivateKey('d').as_bytes)
+        self.assertNotEqual(FilesetPrivateKey('abc', testing_salt).as_bytes,
+                            FilesetPrivateKey('d', testing_salt).as_bytes)
 
     def test(self):
         # the password to key returns cached values, so we
@@ -33,13 +34,13 @@ class TestPtk(unittest.TestCase):
 
         PWD = "password"
         POWER = FilesetPrivateKey._power
-        p = FilesetPrivateKey(PWD)
+        p = FilesetPrivateKey(PWD, testing_salt)
         self.assertNotIn(p.as_bytes, seen)
         seen.add(p.as_bytes)
         self.assertIn(p.as_bytes, seen)
 
         # different password
-        p = FilesetPrivateKey("other password")
+        p = FilesetPrivateKey("other password", testing_salt)
         self.assertNotIn(p.as_bytes, seen)
         seen.add(p.as_bytes)
 
@@ -48,7 +49,7 @@ class TestPtk(unittest.TestCase):
             FilesetPrivateKey._power -= 1
 
             # different power
-            p = FilesetPrivateKey(PWD)
+            p = FilesetPrivateKey(PWD, testing_salt)
             self.assertNotIn(p.as_bytes, seen)
             seen.add(p.as_bytes)
 

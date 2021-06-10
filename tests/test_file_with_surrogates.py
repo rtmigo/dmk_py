@@ -13,6 +13,7 @@ from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_fake
 from ksf._61_encryption import encrypt_to_dir, _DecryptedFile
 from ksf._70_navigator import Fileset, update_fileset
+from tests.common import testing_salt
 
 
 class TestFileWithFakes(unittest.TestCase):
@@ -32,7 +33,7 @@ class TestFileWithFakes(unittest.TestCase):
             td = Path(tds)
 
             N = 10
-            pk = FilesetPrivateKey('abc')
+            pk = FilesetPrivateKey('abc', testing_salt)
             for _ in range(N):
                 create_fake(pk, 2000, td)
 
@@ -68,7 +69,7 @@ class TestFileWithFakes(unittest.TestCase):
             source_file.write_bytes(bytes([77, 88, 99]))
 
             NAME = "abc"
-            pk = FilesetPrivateKey(NAME)
+            pk = FilesetPrivateKey(NAME, testing_salt)
             for _ in range(5):
                 create_fake(pk, 2000, td)
             real = encrypt_to_dir(source_file, pk, td)
@@ -83,7 +84,7 @@ class TestFileWithFakes(unittest.TestCase):
             # one real file
             self.assertEqual(correct.real_file, real)
 
-            incorrect = Fileset(td, FilesetPrivateKey("incorrect name"))
+            incorrect = Fileset(td, FilesetPrivateKey("incorrect name", testing_salt))
             self.assertEqual(len(incorrect.all_files), 0)
             self.assertEqual(incorrect.real_file, None)
 
@@ -93,7 +94,7 @@ class TestFileWithFakes(unittest.TestCase):
         unique_sizes = set()
         with TemporaryDirectory() as tds:
             td = Path(tds)
-            fpk_a = FilesetPrivateKey("some name")
+            fpk_a = FilesetPrivateKey("some name", testing_salt)
             for _ in range(8):
                 source_file_a = td / "a"
                 source_file_a.write_bytes(b'abcdef')
@@ -107,8 +108,8 @@ class TestFileWithFakes(unittest.TestCase):
         with TemporaryDirectory() as tds:
             td = Path(tds)
 
-            fpk_a = FilesetPrivateKey("some name")
-            fpk_b = FilesetPrivateKey("other name")
+            fpk_a = FilesetPrivateKey("some name", testing_salt)
+            fpk_b = FilesetPrivateKey("other name", testing_salt)
             fas = Fileset(td, fpk_a)
             self.assertEqual(len(fas.all_files), 0)
 

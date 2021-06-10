@@ -14,7 +14,7 @@ class TestSaltFile(unittest.TestCase):
 
     def test_reads_correct(self):
         with TemporaryDirectory() as tds:
-            salt_file = write_salt(Path(tds))
+            _, salt_file = write_salt(Path(tds))
             self.assertTrue(salt_file.exists())
             salt = read_salt(salt_file)
             self.assertIsInstance(salt, bytes)
@@ -35,14 +35,14 @@ class TestSaltFile(unittest.TestCase):
 
     def test_fails_too_large(self):
         with TemporaryDirectory() as tds:
-            salt_file = write_salt(Path(tds))
+            _, salt_file = write_salt(Path(tds))
             salt_file.write_bytes(b'1' * (MAX_SALT_FILE_SIZE + 1))
             with self.assertRaises(TooLargeForSaltFile):
                 read_salt(salt_file)
 
     def test_fails_insufficient(self):
         with TemporaryDirectory() as tds:
-            salt_file = write_salt(Path(tds))
+            _, salt_file = write_salt(Path(tds))
             salt_file.write_bytes(b'123')
             with self.assertRaises(InsufficientData):
                 read_salt(salt_file)
@@ -50,7 +50,7 @@ class TestSaltFile(unittest.TestCase):
     def test_sizes(self):
         sizes = set()
         with TemporaryDirectory() as tds:
-            salt_file = write_salt(Path(tds))
+            _, salt_file = write_salt(Path(tds))
             sizes.add(salt_file.stat().st_size)
 
         self.assertLessEqual(max(sizes), MAX_SALT_FILE_SIZE)

@@ -4,9 +4,11 @@
 import unittest
 from difflib import SequenceMatcher
 
-from ksf._20_kdf import FasterKeys, FilesetPrivateKey
-from ksf._40_imprint import pk_matches_codename, Imprint, pk_matches_imprint_bytes
 from ksf._00_common import bytes_to_fn_str, fnstr_to_bytes
+from ksf._20_kdf import FasterKeys, FilesetPrivateKey
+from ksf._40_imprint import pk_matches_codename, Imprint, \
+    pk_matches_imprint_bytes
+from tests.common import testing_salt
 
 
 def lccs(a, b):
@@ -16,14 +18,9 @@ def lccs(a, b):
         .find_longest_match(0, len(a), 0, len(b)) \
         .size
 
-    # return max(len(ss) for ss in find_common_subsequences(a, b))
 
-
-# assert lccs('abc123def', 'qweqwe123zz') == 3
-# assert lccs('abc123def', 'qweqwe1x2x3zz') == 1
-#
-# print(lccs('abc123def', 'qweqwe123zz'))
-# exit()
+assert lccs('abc123def', 'qweqwe123zz') == 3
+assert lccs('abc123def', 'qweqwe1x2x3zz') == 1
 
 
 class Test(unittest.TestCase):
@@ -47,13 +44,13 @@ class Test(unittest.TestCase):
         self.assertEqual(fnstr_to_bytes(encoded), b)
 
     def test_key_not_in_imprint(self):
-        pk = FilesetPrivateKey("pass")
+        pk = FilesetPrivateKey("pass", testing_salt)
         imp = Imprint(pk)
 
         self.assertLess(lccs(pk.as_bytes, imp.as_bytes), 4)
 
     def test_bytes_to_nonce(self):
-        pk = FilesetPrivateKey("pass")
+        pk = FilesetPrivateKey("pass", testing_salt)
         imp = Imprint(pk)
 
         self.assertIsInstance(imp.nonce, bytes)
@@ -63,37 +60,41 @@ class Test(unittest.TestCase):
 
     def test_match_codename(self):
         name = 'abc.txt'
-        pk = FilesetPrivateKey(name)
+        pk = FilesetPrivateKey(name, testing_salt)
         encoded = Imprint(pk).as_str
 
         self.assertTrue(
             pk_matches_codename(pk, encoded))
         self.assertFalse(
-            pk_matches_codename(FilesetPrivateKey('other.txt'), encoded))
+            pk_matches_codename(FilesetPrivateKey('other.txt', testing_salt),
+                                encoded))
         self.assertFalse(
-            pk_matches_codename(FilesetPrivateKey('another.txt'), encoded))
+            pk_matches_codename(FilesetPrivateKey('another.txt', testing_salt),
+                                encoded))
 
     def test_match_bytes(self):
         name = 'abc.txt'
-        pk = FilesetPrivateKey(name)
+        pk = FilesetPrivateKey(name, testing_salt)
         imp_bytes = Imprint(pk).as_bytes
 
         self.assertTrue(pk_matches_imprint_bytes(pk, imp_bytes))
         self.assertFalse(
-            pk_matches_imprint_bytes(FilesetPrivateKey('other.txt'), imp_bytes))
+            pk_matches_imprint_bytes(
+                FilesetPrivateKey('other.txt', testing_salt), imp_bytes))
         self.assertFalse(
-            pk_matches_imprint_bytes(FilesetPrivateKey('another.txt'),
-                                     imp_bytes))
+            pk_matches_imprint_bytes(
+                FilesetPrivateKey('another.txt', testing_salt),
+                imp_bytes))
 
     def test_imporint_string_not_too_long(self):
         with FasterKeys():
             for i in range(50):
                 name = f'abc{i}.txt'
-                pk = FilesetPrivateKey(name)
+                pk = FilesetPrivateKey(name, testing_salt)
                 self.assertLess(len(Imprint(pk).as_str), 65)
 
     def test_encode_each_time_different(self):
-        pk = FilesetPrivateKey('the_same_key')
+        pk = FilesetPrivateKey('the_same_key', testing_salt)
         with FasterKeys():
             s = set()
             for _ in range(10):
@@ -103,7 +104,7 @@ class Test(unittest.TestCase):
     def test_hash_each_time_different(self):
         with FasterKeys():
             s = set()
-            pk = FilesetPrivateKey('the_same_key')
+            pk = FilesetPrivateKey('the_same_key', testing_salt)
             for _ in range(10):
                 s.add(Imprint(pk).as_bytes)
             self.assertEqual(len(s), 10)

@@ -22,6 +22,7 @@ without having at least one password, it is impossible to prove.
 import random
 from collections import Iterable
 from pathlib import Path
+from typing import Optional, Tuple
 
 from Crypto.Random import get_random_bytes
 
@@ -42,7 +43,7 @@ class TooLargeForSaltFile(CannotReadSalt):
     pass
 
 
-def write_salt(parent: Path) -> Path:
+def write_salt(parent: Path) -> Tuple[bytes, Path]:
     basename_bytes = get_random_bytes(BASENAME_SIZE)
     basename = bytes_to_fn_str(basename_bytes)
 
@@ -64,7 +65,7 @@ def write_salt(parent: Path) -> Path:
     assert not file.exists()
     file.write_bytes(data)
 
-    return file
+    return salt, file
 
 
 def read_salt(file: Path):
@@ -89,3 +90,18 @@ def iter_salts_in_dir(parent: Path) -> Iterable[bytes]:
             yield read_salt(fn)
         except (CannotReadSalt, InsufficientData):
             continue
+
+
+class MoreThanOneSalt(Exception):
+    pass
+
+
+def find_salt_in_dir(parent: Path) -> Optional[bytes]:
+    salts = list(iter_salts_in_dir(parent))
+    if len(salts) > 1:
+        raise MoreThanOneSalt
+    if len(salts) <= 0:
+        return None
+    salt = salts[0]
+    assert len(salt) == PK_SALT_SIZE
+    return salt
