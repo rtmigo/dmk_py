@@ -170,7 +170,6 @@ class Encrypt:
         body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
 
         cryptographer = Cryptographer(fpk=self.fpk,
-                                      # №name_salt=header_imprint.nonce,
                                       nonce=None)
 
         if _DEBUG_PRINT:
@@ -228,6 +227,13 @@ class Header(NamedTuple):
 
 
 class DecryptedIo:
+    """
+    Reads encrypted data in a "lazy manner".
+
+    After the object is created, only the imprint is read and checked.
+    After accessing the `header` property, the header is read.
+    After calling read_data() - the data itself.
+    """
     def __init__(self,
                  fpk: FilesetPrivateKey,
                  source: BinaryIO):
@@ -263,14 +269,6 @@ class DecryptedIo:
         return self._header
 
     def __read_header(self) -> Header:
-        # f = self.source
-        # # reading and the imprint and checking that the name
-        # # matches this imprint
-        # imprint_bytes = read_or_fail(f, Imprint.FULL_LEN)
-        # if not pk_matches_imprint_bytes(self.fpk, imprint_bytes):
-        #     raise ChecksumMismatch("The name does not match the imprint.")
-        #
-        # nonce = read_or_fail(f, ENCRYPTION_NONCE_LEN)
 
         self.cfg = Cryptographer(fpk=self.fpk, nonce=self.__nonce)
 
