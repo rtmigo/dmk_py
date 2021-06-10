@@ -101,13 +101,11 @@ def dir_to_file_sizes(d: Path) -> List[int]:
     return [f.stat().st_size for f in d.glob('*') if f.is_file]
 
 
-# MAX_UINT32 = (2 ** 32) - 1
-MAX_INT64 = 0x7FFFFFFFFFFFFFFF
-
-
-def increased_data_version(fileset: Fileset) -> Optional[int]:
+def increased_data_version(fileset: Fileset) -> int:
+    MAX_INT64 = 0x7FFFFFFFFFFFFFFF
     if fileset.real_file:
         df = DecryptedFile(fileset.real_file, fileset.fpk, decrypt_body=False)
+        assert df.data_version >= 1
         ver = df.data_version + random.randint(1, 999)
         if ver > MAX_INT64:
             # this will never happen
@@ -115,7 +113,9 @@ def increased_data_version(fileset: Fileset) -> Optional[int]:
                              f"cannot be saved as INT64")
         assert ver > df.data_version
         return ver
-    return None
+    # this is the first time we are saving this item. We assign it
+    # a random version value.
+    return random.randint(1, 999999)
 
 
 def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
