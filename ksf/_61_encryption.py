@@ -232,7 +232,7 @@ class DecryptedIo:
 
     After the object is created, only the imprint is read and checked.
     After accessing the `header` property, the header is read.
-    After calling read_data() - the data itself.
+    After calling read_data() - the data itself (and the header).
     """
     def __init__(self,
                  fpk: FilesetPrivateKey,
