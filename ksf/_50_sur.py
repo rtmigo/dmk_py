@@ -33,14 +33,14 @@ def set_random_last_modified(file: Path):
     _set_file_last_modified(file, _random_datetime())
 
 
-def create_surrogate(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
-    """Creates a surrogate file.
+def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
+    """Creates a fake file.
 
-    The file name of the surrogate will be the correct imprint from the
-    [name]. But the file content is random, so the file header is not
-    a correct imprint from [name].
+    The file name of the will be the correct imprint from the [fpk]. But the
+    file content is random, so the file header is not a correct imprint
+    from [fpk].
 
-    Knowing the name we can easily find all the surrogates and real files
+    Knowing the name we can easily find all the fakes and real files
     for the name. We can differentiate the real file from the surrogate
     by the header (only for real files it contains the imprint).
 
