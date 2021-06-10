@@ -2,38 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 import binascii
-from base64 import urlsafe_b64encode, urlsafe_b64decode
-from typing import Tuple, Optional
+from typing import Optional
 
-from Crypto.Hash import BLAKE2b
 from Crypto.Random import get_random_bytes
 
-from ksf._20_key_derivation import FilesetPrivateKey
-
-
-def bytes_to_str(data: bytes) -> str:
-    return urlsafe_b64encode(data).decode('ascii')
-
-
-def str_to_bytes(data: str) -> bytes:
-    return urlsafe_b64decode(data.encode('ascii'))
-
-
-def half_n_half(salt: bytes) -> Tuple[bytes, bytes]:
-    """Splits bytes array in two equal parts (if the array length is even),
-    or almost equal (if it's odd)"""
-    half = len(salt) >> 1
-    a = salt[:half]
-    b = salt[half:]
-    assert abs(len(a) - len(b)) <= 1
-    return a, b
-
-
-def _blake192(data: bytes, salt: bytes) -> bytes:
-    h_obj = BLAKE2b.new(digest_bits=192)
-    a, b = half_n_half(salt)
-    h_obj.update(a + data + b)
-    return h_obj.digest()
+from ksf._00_common import bytes_to_fn_str, fnstr_to_bytes, blake192
+from ksf._20_kdf import FilesetPrivateKey
 
 
 class Imprint:
@@ -43,7 +17,7 @@ class Imprint:
     Each new imprint is unique, although the PK is the same.
 
     Knowing the PK, we can tell if the imprint belongs to it.
-
+ и
     Without knowing the PK, we can hardly do anything. We cannot
     reconstruct a PK from an imprint, or even suggest it. We cannot say
     whether two imprints correspond to the same PK or to different ones.
@@ -86,7 +60,7 @@ class Imprint:
     def as_bytes(self) -> bytes:
         if self.__as_bytes is None:
             self.__as_bytes = \
-                _blake192(self.private_key.as_bytes, self.nonce) + self.nonce
+                blake192(self.private_key.as_bytes, self.nonce) + self.nonce
             assert len(self.__as_bytes) == Imprint.FULL_LEN
         return self.__as_bytes
 
@@ -95,7 +69,7 @@ class Imprint:
         """Returns the imprint as a string that can be used
         as a filename."""
         if self.__as_str is None:
-            self.__as_str = bytes_to_str(self.as_bytes)
+            self.__as_str = bytes_to_fn_str(self.as_bytes)
         return self.__as_str
 
     @staticmethod
@@ -107,7 +81,7 @@ class Imprint:
 
 def pk_matches_codename(pk: FilesetPrivateKey, codename: str) -> bool:
     try:
-        bts = str_to_bytes(codename)
+        bts = fnstr_to_bytes(codename)
     except binascii.Error:
         return False
 

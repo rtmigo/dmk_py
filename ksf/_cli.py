@@ -2,7 +2,7 @@ import time
 
 import click
 
-from ksf._20_key_derivation import FilesetPrivateKey
+from ksf._20_kdf import FilesetPrivateKey
 
 
 @click.command()
