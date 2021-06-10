@@ -21,7 +21,7 @@ class CryptoDir:
         pk = FilesetPrivateKey(name, self.salt)
         update_fileset(source, pk, self.directory)
 
-    def get(self, name: str, body=True) -> Optional[bytes]:
+    def get(self, name: str) -> Optional[bytes]:
         pk = FilesetPrivateKey(name, self.salt)
         fs = Fileset(self.directory, pk)
         if fs.real_file is None:
