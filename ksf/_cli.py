@@ -59,7 +59,7 @@ def get(name: str):
               hide_input=True)
 def eval(name: str):
     """Gets item data as string and executes it as shell command."""
-    s = Main().eval(name)
+    Main().eval(name)
 
 
 @click.command()
