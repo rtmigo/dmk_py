@@ -5,7 +5,7 @@ import random
 import unittest
 from io import BytesIO
 
-from ksf.fileset._10_padding import IntroPadding
+from ksf.cryptodir.fileset._10_padding import IntroPadding
 
 
 class TestIntro(unittest.TestCase):

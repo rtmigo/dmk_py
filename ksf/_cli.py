@@ -4,7 +4,7 @@ import click
 
 from ksf._00_common import PK_SALT_SIZE
 from ksf._00_randoms import get_noncrypt_random_bytes
-from ksf._10_kdf import FilesetPrivateKey
+from ksf.cryptodir._10_kdf import FilesetPrivateKey
 
 
 @click.command()
