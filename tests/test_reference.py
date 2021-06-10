@@ -19,7 +19,7 @@ refs_dir = Path(__file__).parent / "data_refs"
 def generate_references():
     assert FilesetPrivateKey._power >= 17
 
-    if not input(f"Really replace {refs_dir}? (y/n) ").lower().startswith('y'):
+    if not input(f"Really replace {refs_dir} (y/N)? ").lower().startswith('y'):
         print("Canceled")
         return
     if refs_dir.exists():
@@ -37,17 +37,19 @@ def generate_references():
             source_file.write_bytes(data)
             t = time.monotonic()
             d.set_from_file(name, source_file)
-            print(f"Written in {time.monotonic()-t}")
+            print(f"Written in {time.monotonic() - t}")
 
 
-@unittest.skip('changing format')
 class TestRefs(unittest.TestCase):
     def test(self):
         d = CryptoDir(refs_dir)
         for name, data in ref_content:
-            self.assertEqual(d.get(name).data, data)
+            self.assertEqual(d.get(name), data)
 
 
 if __name__ == "__main__":
     # unittest.main()
     generate_references()
+    print("Testing")
+    TestRefs().test()
+    print("OK")
