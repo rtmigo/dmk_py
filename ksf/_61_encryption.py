@@ -1,12 +1,11 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-
+import io
 import os
-import random
 import struct
 import zlib
 from pathlib import Path
-from typing import Optional
+from typing import Optional, BinaryIO
 
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
@@ -105,10 +104,10 @@ class Cryptographer:
         ])
 
 
-def _encrypt_file_to_file(source_file: Path,
-                          fpk: FilesetPrivateKey,
-                          target_file: Path,
-                          data_version: int = None):
+def _encrypt_io_to_file(source: BinaryIO,
+                        fpk: FilesetPrivateKey,
+                        target_file: Path,
+                        data_version: int = 0):
     """
     File format
     -----------
@@ -143,21 +142,14 @@ def _encrypt_file_to_file(source_file: Path,
 
     header_imprint = Imprint(fpk)
 
-    stat = source_file.stat()
-
     version_bytes = bytes([1])
 
-    if data_version is None:
-        data_version = random.randint(0, 999999)
     data_version_bytes = int64_to_bytes(data_version)
 
-    # src_mtime_bytes = double_to_bytes(stat.st_mtime)
-    # assert len(src_mtime_bytes) == SRC_MTIME_LEN
-    #
-    # timestamp_bytes = double_to_bytes(time.time())
-    # assert len(timestamp_bytes) == TIMESTAMP_LEN
+    src_size = source.seek(0, io.SEEK_END)
+    source.seek(0, io.SEEK_SET)
 
-    src_size_bytes = uint32_to_bytes(stat.st_size)
+    src_size_bytes = uint32_to_bytes(src_size)
 
     format_identifier = 'AG'.encode('ascii')
     assert len(format_identifier) == 2
@@ -166,16 +158,12 @@ def _encrypt_file_to_file(source_file: Path,
         format_identifier,
         version_bytes,
         data_version_bytes,
-        # timestamp_bytes,
-        # src_mtime_bytes,
         src_size_bytes,
     ))
 
-    # todo
-
     header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
-    body_bytes = source_file.read_bytes()
+    body_bytes = source.read()
     body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
 
     cryptographer = Cryptographer(fpk=fpk,
@@ -229,6 +217,14 @@ def _encrypt_file_to_file(source_file: Path,
         wtf.replace()
 
 
+def _encrypt_file_to_file(source_file: Path,
+                          fpk: FilesetPrivateKey,
+                          target_file: Path,
+                          data_version: int = 0):
+    with source_file.open('rb') as source_io:
+        _encrypt_io_to_file(source_io, fpk, target_file, data_version)
+
+
 class DecryptedFile:
 
     def __init__(self,
@@ -245,11 +241,7 @@ class DecryptedFile:
 
             nonce = read_or_fail(f, ENCRYPTION_NONCE_LEN)
 
-            cfg = Cryptographer(
-                fpk=fpk,
-                # name=name,
-                # name_salt=Imprint.bytes_to_nonce(imprint_bytes),
-                nonce=nonce)
+            cfg = Cryptographer(fpk=fpk, nonce=nonce)
 
             if _DEBUG_PRINT:
                 print("---")
@@ -272,25 +264,13 @@ class DecryptedFile:
             format_id = read_and_decrypt(2)
             assert format_id.decode('ascii') == "AG"
 
-            # VERSION is always 1
-            version_bytes = read_and_decrypt(VERSION_LEN)
-            version = version_bytes[0]
-            assert version == 1
+            # FORMAT VERSION is always 1
+            format_version_bytes = read_and_decrypt(VERSION_LEN)
+            format_version = format_version_bytes[0]
+            assert format_version == 1
 
             data_version_bytes = read_and_decrypt(8)
             self.data_version = bytes_to_int64(data_version_bytes)
-
-            # self.size = int.from_bytes(body_size_bytes,
-            #                            byteorder='big',
-            #                            signed=False)
-
-            # # TIMESTAMP is the time when the data was encrypted
-            # ts_bytes = read_and_decrypt(TIMESTAMP_LEN)
-            # self.timestamp = bytes_to_double(ts_bytes)
-            #
-            # # MTIME is the last modification time of original file
-            # mtime_bytes = read_and_decrypt(SRC_MTIME_LEN)
-            # self.mtime = bytes_to_double(mtime_bytes)
 
             # SIZE is the size of original file
             body_size_bytes = read_and_decrypt(4)
@@ -302,7 +282,7 @@ class DecryptedFile:
                 byteorder='big',
                 signed=False)
             header_bytes = (format_id +
-                            version_bytes +
+                            format_version_bytes +
                             data_version_bytes +
                             body_size_bytes)
             if zlib.crc32(header_bytes) != header_crc:
@@ -323,13 +303,11 @@ class DecryptedFile:
         if self.data is None:
             raise RuntimeError("Body is not set.")
         target.write_bytes(self.data)
-        # os.utime(str(target), (self.mtime, self.mtime))
-        # set_file_last_modified(target, self.mtime)
 
 
 def encrypt_to_dir(source_file: Path, fpk: FilesetPrivateKey,
                    target_dir: Path,
-                   data_version: Optional[int] = None
+                   data_version: int = 0
                    ) -> Path:
     """The file contains two imprints: one in the file name, and the other
     at the beginning of the file.
