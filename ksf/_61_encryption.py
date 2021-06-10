@@ -117,8 +117,9 @@ def _encrypt_file_to_file(source_file: Path,
     <encrypted>
         intro padding: bytes (1-64 bytes)
         <header>
-            format version: byte
-            data_version: uint32
+            'AG': two bytes
+            format version: byte (always 1)
+            data_version: int64 (increases on each write)
             body size: uint32
         </header>
         header crc-32: uint32
@@ -158,8 +159,11 @@ def _encrypt_file_to_file(source_file: Path,
 
     src_size_bytes = uint32_to_bytes(stat.st_size)
 
+    format_identifier = 'AG'.encode('ascii')
+    assert len(format_identifier) == 2
+
     header_bytes = b''.join((
-        'AG'.encode('ascii'),
+        format_identifier,
         version_bytes,
         data_version_bytes,
         # timestamp_bytes,
@@ -167,14 +171,12 @@ def _encrypt_file_to_file(source_file: Path,
         src_size_bytes,
     ))
 
+    # todo
+
     header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
     body_bytes = source_file.read_bytes()
     body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
-
-    decrypted_bytes = (_intro_padding_64.gen_bytes() +
-                       header_bytes + header_crc_bytes +
-                       body_bytes + body_crc_bytes)
 
     cryptographer = Cryptographer(fpk=fpk,
                                   # №name_salt=header_imprint.nonce,
@@ -186,12 +188,12 @@ def _encrypt_file_to_file(source_file: Path,
         print(cryptographer)
         print("---")
 
-    encrypted_bytes = cryptographer.cipher.encrypt(decrypted_bytes)
+    # encrypted_bytes = cryptographer.cipher.encrypt(decrypted_bytes)
 
     # mac = get_fast_random_bytes(MAC_LEN)
-    if _DEBUG_PRINT:
-        print(f"ENC: Original {bytes_to_str(decrypted_bytes)}")
-        print(f"ENC: Encrypted {bytes_to_str(encrypted_bytes)}")
+    # if _DEBUG_PRINT:
+    #     print(f"ENC: Original {bytes_to_str(decrypted_bytes)}")
+    #     #print(f"ENC: Encrypted {bytes_to_str(encrypted_bytes)}")
 
     with WritingToTempFile(target_file) as wtf:
         # must be the same as writing a fake file
@@ -202,9 +204,17 @@ def _encrypt_file_to_file(source_file: Path,
             assert len(cryptographer.nonce) == ENCRYPTION_NONCE_LEN, \
                 f"Unexpected nonce length: {len(cryptographer.nonce)}"
 
-            # writing nonce, header+crc and body+crc
             outfile.write(cryptographer.nonce)
-            outfile.write(encrypted_bytes)
+
+            def encrypt_and_write(data: bytes):
+                outfile.write(cryptographer.cipher.encrypt(data))
+
+            encrypt_and_write(_intro_padding_64.gen_bytes())
+            encrypt_and_write(header_bytes)
+            encrypt_and_write(header_crc_bytes)
+            # todo chunked r/w
+            encrypt_and_write(body_bytes)
+            encrypt_and_write(body_crc_bytes)
 
             # adding random data to the end of file.
             # This data is not encrypted, it's from urandom (is it ok?)
@@ -219,7 +229,9 @@ def _encrypt_file_to_file(source_file: Path,
 
 class DecryptedFile:
 
-    def __init__(self, source_file: Path, fpk: FilesetPrivateKey,
+    def __init__(self,
+                 source_file: Path,
+                 fpk: FilesetPrivateKey,
                  decrypt_body=True):
 
         with source_file.open('rb') as f:
