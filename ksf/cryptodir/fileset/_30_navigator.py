@@ -8,9 +8,10 @@ from typing import List, Optional
 
 from ksf._common import MIN_DATA_FILE_SIZE
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
-from ksf.cryptodir.fileset._10_imprint import pk_matches_codename
 from ksf.cryptodir.fileset._10_fakes import create_fake
-from ksf.cryptodir.fileset._20_encryption import fpk_matches_header, encrypt_file_to_dir, \
+from ksf.cryptodir.fileset._10_imprint import pk_matches_codename
+from ksf.cryptodir.fileset._20_encryption import fpk_matches_header, \
+    encrypt_file_to_dir, \
     _DecryptedFile
 from ksf.cryptodir.fileset.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file

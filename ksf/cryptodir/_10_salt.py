@@ -21,13 +21,13 @@ than 512 bytes.
 
 import random
 from pathlib import Path
-from typing import Optional, Tuple, Iterable, List
+from typing import Optional, Tuple, List
 
 from Crypto.Random import get_random_bytes
 
 from ksf._common import PK_SALT_SIZE, BASENAME_SIZE, \
     bytes_to_fn_str, MAX_SALT_FILE_SIZE, read_or_fail, \
-    InsufficientData, looks_like_our_basename
+    looks_like_our_basename
 
 
 class CannotReadSalt(Exception):
@@ -72,7 +72,7 @@ def write_salt_and_fakes(parent: Path) -> Tuple[bytes, Path]:
     for _ in range(random.randint(1, 8)):
         basename_bytes = get_random_bytes(BASENAME_SIZE)
         basename = bytes_to_fn_str(basename_bytes)
-        salt_and_fakes.append(parent/basename)
+        salt_and_fakes.append(parent / basename)
     salt_and_fakes.sort()
 
     # writing salt to the first file
@@ -97,29 +97,16 @@ def read_salt(file: Path):
 
     with file.open('rb') as f:
         salt = read_or_fail(f, PK_SALT_SIZE)
-        # if not read_or_fail(f, BASENAME_SIZE) == basename_bytes:
-        #    raise SaltVerificationFailed
 
     assert len(salt) == PK_SALT_SIZE
     return salt
 
 
-# def iter_salts_in_dir(parent: Path) -> Iterable[bytes]:
-#     for fn in parent.glob('*'):
-#         try:
-#             yield read_salt(fn)
-#         except (CannotReadSalt, InsufficientData):
-#             continue
-
-
-class MoreThanOneSalt(Exception):
-    pass
-
-
 def find_salt_in_dir(parent: Path) -> Optional[bytes]:
     salt_file: Optional[Path] = None
     for fn in sorted(parent.glob('*')):
-        if looks_like_our_basename(fn.name) and fn.stat().st_size <= MAX_SALT_FILE_SIZE:
+        if looks_like_our_basename(
+                fn.name) and fn.stat().st_size <= MAX_SALT_FILE_SIZE:
             salt_file = fn
             break
 
@@ -127,13 +114,3 @@ def find_salt_in_dir(parent: Path) -> Optional[bytes]:
         return None
 
     return read_salt(salt_file)
-    #
-    #
-    # salts = list(iter_salts_in_dir(parent))
-    # if len(salts) > 1:
-    #     raise MoreThanOneSalt
-    # if len(salts) <= 0:
-    #     return None
-    # salt = salts[0]
-    # assert len(salt) == PK_SALT_SIZE
-    # return salt
