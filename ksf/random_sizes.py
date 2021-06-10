@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 import random
 from typing import Iterable, Optional
 
@@ -41,7 +45,7 @@ def random_size_like_others_in_dir(file_sizes: Iterable[int]) -> Optional[int]:
 
 def random_size_like_file(reference_size: int) -> int:
     # must be used when creating both surrogates and real files
-    result = reference_size + random.randint(0, round(reference_size / 2))
-    #result = max(_MIN_SIZE, result)
-    #assert result >= _MIN_SIZE
+    radius = round(reference_size / 2)
+    delta = random.randint(-radius, radius)
+    result = reference_size + delta
     return _not_too_small(result)  # todo test
