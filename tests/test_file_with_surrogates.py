@@ -6,20 +6,22 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ksf._00_common import MIN_DATA_FILE_SIZE
 from ksf._00_randoms import get_noncrypt_random_bytes
-from ksf._20_kdf import FasterKeys, FilesetPrivateKey
+from ksf._20_kdf import FasterKDF, FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_fake
 from ksf._61_encryption import encrypt_to_dir, _DecryptedFile
 from ksf._70_navigator import Fileset, update_fileset
+from tests.common import testing_salt
 
 
 class TestFileWithFakes(unittest.TestCase):
-    faster: FasterKeys
+    faster: FasterKDF
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.faster = FasterKeys()
+        cls.faster = FasterKDF()
         cls.faster.start()
 
     @classmethod
@@ -31,7 +33,7 @@ class TestFileWithFakes(unittest.TestCase):
             td = Path(tds)
 
             N = 10
-            pk = FilesetPrivateKey('abc')
+            pk = FilesetPrivateKey('abc', testing_salt)
             for _ in range(N):
                 create_fake(pk, 2000, td)
 
@@ -67,7 +69,7 @@ class TestFileWithFakes(unittest.TestCase):
             source_file.write_bytes(bytes([77, 88, 99]))
 
             NAME = "abc"
-            pk = FilesetPrivateKey(NAME)
+            pk = FilesetPrivateKey(NAME, testing_salt)
             for _ in range(5):
                 create_fake(pk, 2000, td)
             real = encrypt_to_dir(source_file, pk, td)
@@ -82,32 +84,32 @@ class TestFileWithFakes(unittest.TestCase):
             # one real file
             self.assertEqual(correct.real_file, real)
 
-            incorrect = Fileset(td, FilesetPrivateKey("incorrect name"))
+            incorrect = Fileset(td, FilesetPrivateKey("incorrect name", testing_salt))
             self.assertEqual(len(incorrect.all_files), 0)
             self.assertEqual(incorrect.real_file, None)
 
     def test_write_with_surrogates_sizes(self):
         # random.seed(9, version=2)
+
+        unique_sizes = set()
         with TemporaryDirectory() as tds:
             td = Path(tds)
-            fpk_a = FilesetPrivateKey("some name")
-
-            all_sizes_ever = set()
-
+            fpk_a = FilesetPrivateKey("some name", testing_salt)
             for _ in range(8):
                 source_file_a = td / "a"
                 source_file_a.write_bytes(b'abcdef')
                 update_fileset(source_file_a, fpk_a, td)
-                all_sizes_ever.update(f.stat().st_size for f in td.glob('*'))
+                unique_sizes.update(f.stat().st_size for f in td.glob('*'))
 
-            self.assertGreater(len(all_sizes_ever), 5)
+        self.assertGreater(len(unique_sizes), 5)
+        #self.assertTrue(all(x >= MIN_DATA_FILE_SIZE for x in unique_sizes))
 
     def test_write_with_surrogates(self):
         with TemporaryDirectory() as tds:
             td = Path(tds)
 
-            fpk_a = FilesetPrivateKey("some name")
-            fpk_b = FilesetPrivateKey("other name")
+            fpk_a = FilesetPrivateKey("some name", testing_salt)
+            fpk_b = FilesetPrivateKey("other name", testing_salt)
             fas = Fileset(td, fpk_a)
             self.assertEqual(len(fas.all_files), 0)
 

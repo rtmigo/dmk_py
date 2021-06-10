@@ -7,18 +7,20 @@ from base64 import b64encode
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ksf._00_common import MIN_DATA_FILE_SIZE
 from ksf._00_randoms import get_noncrypt_random_bytes
-from ksf._20_kdf import FasterKeys, FilesetPrivateKey
+from ksf._20_kdf import FasterKDF, FilesetPrivateKey
 from ksf._61_encryption import Encrypt, encrypt_to_dir, \
     ChecksumMismatch, _DecryptedFile, fpk_matches_header
+from tests.common import testing_salt
 
 
 class TestEncryptDecrypt(unittest.TestCase):
-    faster: FasterKeys
+    faster: FasterKDF
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.faster = FasterKeys()
+        cls.faster = FasterKDF()
         cls.faster.start()
 
     @classmethod
@@ -36,10 +38,10 @@ class TestEncryptDecrypt(unittest.TestCase):
             right = td / "irrelevant"
             NAME = 'abc'
             # name_to_hash(NAME)
-            Encrypt(FilesetPrivateKey(NAME)).file_to_file(source, right)
-            self.assertTrue(fpk_matches_header(FilesetPrivateKey(NAME), right))
+            Encrypt(FilesetPrivateKey(NAME, testing_salt)).file_to_file(source, right)
+            self.assertTrue(fpk_matches_header(FilesetPrivateKey(NAME, testing_salt), right))
             self.assertFalse(
-                fpk_matches_header(FilesetPrivateKey('labuda'), right))
+                fpk_matches_header(FilesetPrivateKey('labuda', testing_salt), right))
 
     def test_encrypted_does_not_contain_plain(self):
         with TemporaryDirectory() as tds:
@@ -48,7 +50,7 @@ class TestEncryptDecrypt(unittest.TestCase):
             body = b'qwertyuiop!qwertyuiop'
             source_file.write_bytes(body)
             encrypted_file = encrypt_to_dir(source_file,
-                                            FilesetPrivateKey('some_name'), td)
+                                            FilesetPrivateKey('some_name', testing_salt), td)
 
             # checking that the original content can be found in original file,
             # but not in the encrypted file
@@ -64,7 +66,7 @@ class TestEncryptDecrypt(unittest.TestCase):
             body = b'qwertyuiop!qwertyuiop'
             source_file.write_bytes(body)
 
-            fpk = FilesetPrivateKey('some_name')
+            fpk = FilesetPrivateKey('some_name', testing_salt)
 
             files = [encrypt_to_dir(source_file, fpk, td)
                      for _ in range(10)]
@@ -72,8 +74,9 @@ class TestEncryptDecrypt(unittest.TestCase):
             self.assertEqual(len(set(str(f) for f in files)), 10)
 
             sizes = set([f.stat().st_size for f in files])
-            print(sizes)
+            # at least three different file sizes
             self.assertGreater(len(sizes), 3)
+            self.assertTrue(all(x >= MIN_DATA_FILE_SIZE for x in sizes))
 
     def test_on_random_data(self):
         random.seed(55, version=2)
@@ -91,7 +94,7 @@ class TestEncryptDecrypt(unittest.TestCase):
             source_file = td / "source"
             source_file.write_bytes(body)
 
-            fpk = FilesetPrivateKey(name)
+            fpk = FilesetPrivateKey(name, testing_salt)
 
             encrypted_file = encrypt_to_dir(source_file, fpk, td)
 
@@ -107,7 +110,7 @@ class TestEncryptDecrypt(unittest.TestCase):
             if check_wrong:
                 with self.assertRaises(ChecksumMismatch):
                     _DecryptedFile(encrypted_file,
-                                   FilesetPrivateKey('wrong_item_name'))
+                                   FilesetPrivateKey('wrong_item_name', testing_salt))
 
             df = _DecryptedFile(encrypted_file, fpk)
             self.assertEqual(df.data, body)
@@ -130,7 +133,7 @@ class TestEncryptDecrypt(unittest.TestCase):
             source_file = td / "source"
             source_file.write_bytes(b'abc')
             NAME = "thename"
-            pk = FilesetPrivateKey(NAME)
+            pk = FilesetPrivateKey(NAME, testing_salt)
             encrypted_file = encrypt_to_dir(source_file, pk, td)
             df = _DecryptedFile(encrypted_file, pk, decrypt_body=False)
 

@@ -10,7 +10,8 @@ from typing import Optional, BinaryIO, NamedTuple
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
-from ksf._00_common import read_or_fail, InsufficientData
+from ksf._00_common import read_or_fail, InsufficientData, \
+    looks_like_our_basename
 from ksf._00_wtf import WritingToTempFile
 from ksf._20_kdf import FilesetPrivateKey
 from ksf._40_imprint import Imprint, HashCollision, pk_matches_imprint_bytes
@@ -369,7 +370,9 @@ def encrypt_to_dir(source_file: Path, fpk: FilesetPrivateKey,
     """
 
     imprint = Imprint(fpk)
+
     fn = target_dir / imprint.as_str
+    assert looks_like_our_basename(fn.name)
     if fn.exists():
         raise HashCollision
     Encrypt(fpk, data_version).file_to_file(source_file, fn)

@@ -7,30 +7,29 @@ from typing import Optional
 from Crypto.Protocol.KDF import scrypt
 
 
-class SaltPrivateKey:
-    """
-    This key is generated based on a password and a constant salt value.
-    Knowing this key, we can find and decrypt the file with a more secret
-    (non-const) salt.
-    """
-    __slots__ = ["as_bytes"]
-    _power = 16
-
-    _salt_const = b"\xef\x87\xffr_\xed\xe2\xc5\x92\x11\x8e'F\xe6-C\xf1" \
-                  b"\xa9\xd4\x9fu\xc8\x05Y\x8b\xc3\x94\xd1\xbd\x10#B"
-
-    def __init__(self, password: str):
-        self.as_bytes = _password_to_key_cached(
-            password,
-            self._salt_const,
-            size=32,
-            pwr=self._power)
+# class SaltPrivateKey:
+#     """
+#     This key is generated based on a password and a constant salt value.
+#     Knowing this key, we can find and decrypt the file with a more secret
+#     (non-const) salt.
+#     """
+#     __slots__ = ["as_bytes"]
+#     _power = 16
+#
+#     _salt_const = b"\xef\x87\xffr_\xed\xe2\xc5\x92\x11\x8e'F\xe6-C\xf1" \
+#                   b"\xa9\xd4\x9fu\xc8\x05Y\x8b\xc3\x94\xd1\xbd\x10#B"
+#
+#     def __init__(self, password: str):
+#         self.as_bytes = _password_to_key_cached(
+#             password,
+#             self._salt_const,
+#             size=32,
+#             pwr=self._power)
+from ksf._00_common import PK_SALT_SIZE
 
 
 class FilesetPrivateKey:
     """The 256-bit private key.
-
-    ---
 
     Fileset is a set of files related to the same item. One of these
     files contains encrypted item data, others are fake or contain outdated
@@ -42,16 +41,6 @@ class FilesetPrivateKey:
     The private key is derived from the item name. Computing a private key
     from a name is resource-intensive. We will do this at most once. After
     that, instead of a name, we always use the key or its derivatives.
-
-    ----
-
-    The salt here is a constant common to all instances of the application.
-    This makes the password sufficient to obtain the private key on any
-    computer.
-
-    In theory, it would be better for each user to have their own salt. But
-    while the number of users is small, and the app is not a tempting target,
-    keeping salt as a constant common to all is a rational compromise.
     """
 
     __slots__ = ["as_bytes"]
@@ -63,13 +52,12 @@ class FilesetPrivateKey:
     #  17 | 0.32 sec       | 0.58 sec
     #  18 | 0.65 sec       | 1.17 sec
 
-    salt = b"\xef\x87\xffr_\xed\xe2\xc5\x92\x11\x8e'F\xe6-C\xf1" \
-           b"\xa9\xd4\x9fu\xc8\x05Y\x8b\xc3\x94\xd1\xbd\x10#B"
-
-    def __init__(self, password: str):
+    def __init__(self, password: str, salt: bytes):
+        if len(salt) != PK_SALT_SIZE:
+            raise ValueError("Wrong salt length")
         self.as_bytes = _password_to_key_cached(
             password,
-            self.salt,
+            salt,
             size=32,
             pwr=FilesetPrivateKey._power)
 
@@ -89,7 +77,7 @@ def _password_to_key_noncached(password: str, salt: bytes, size: int, pwr: int):
                   r=8, p=1)
 
 
-class FasterKeys:
+class FasterKDF:
     """The slower the key derivation function, the more reliable it is.
     However, it is very difficult to test slow functions. If the tests do not
     depend on specific hash values, you can use this context manager, which
@@ -112,7 +100,7 @@ class FasterKeys:
         self.end()
 
 
-if __name__ == "__main__":
-    from Crypto.Random import get_random_bytes
-
-    print(tuple(get_random_bytes(32)))
+# if __name__ == "__main__":
+#     from Crypto.Random import get_random_bytes
+#
+#     #print(tuple(get_random_bytes(32)))

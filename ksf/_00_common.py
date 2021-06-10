@@ -10,7 +10,9 @@ PK_SIZE = 32
 BASENAME_SIZE = 48
 
 MAX_SALT_FILE_SIZE = 1023
+MIN_DATA_FILE_SIZE = MAX_SALT_FILE_SIZE + 1
 
+assert MIN_DATA_FILE_SIZE > MAX_SALT_FILE_SIZE
 assert PK_SIZE * 8 == 256
 
 
@@ -21,12 +23,20 @@ def read_or_fail(f: BinaryIO, n: int) -> bytes:
     return result
 
 
+def looks_like_our_basename(txt: str) -> bool:
+    try:
+        bytes = fnstr_to_bytes(txt)
+        return len(bytes) == BASENAME_SIZE
+    except ValueError:
+        return False
+
+
 class InsufficientData(Exception):
     pass
 
 
 def bytes_to_fn_str(data: bytes) -> str:
-    #if len(data) != IMPRINT_SIZE:
+    # if len(data) != IMPRINT_SIZE:
     #    raise ValueError
     return urlsafe_b64encode(data).decode('ascii')
 

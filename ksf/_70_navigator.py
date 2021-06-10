@@ -6,6 +6,7 @@ import random
 from pathlib import Path
 from typing import List, Optional
 
+from ksf._00_common import MIN_DATA_FILE_SIZE
 from ksf._20_kdf import FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_fake
@@ -130,6 +131,7 @@ def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
         result = random_size_like_others_in_dir(all_file_sizes)
         if result is None:
             result = random_size_like_file(source_file_size)
+        assert result >= MIN_DATA_FILE_SIZE
         return result
 
     tasks: List[Task] = list()
