@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 from ksf._00_randoms import get_noncrypt_random_bytes
 from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
 from ksf._61_encryption import _encrypt_file_to_file, encrypt_to_dir, \
-    ChecksumMismatch, DecryptedFile, pk_matches_header
+    ChecksumMismatch, DecryptedFile, fpk_matches_header
 
 
 class TestEncryptDecrypt(unittest.TestCase):
@@ -37,9 +37,9 @@ class TestEncryptDecrypt(unittest.TestCase):
             NAME = 'abc'
             # name_to_hash(NAME)
             _encrypt_file_to_file(source, FilesetPrivateKey(NAME), right)
-            self.assertTrue(pk_matches_header(FilesetPrivateKey(NAME), right))
+            self.assertTrue(fpk_matches_header(FilesetPrivateKey(NAME), right))
             self.assertFalse(
-                pk_matches_header(FilesetPrivateKey('labuda'), right))
+                fpk_matches_header(FilesetPrivateKey('labuda'), right))
 
     def test_encrypted_does_not_contain_plain(self):
         with TemporaryDirectory() as tds:

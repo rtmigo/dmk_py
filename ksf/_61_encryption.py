@@ -224,6 +224,8 @@ def _encrypt_file_to_file(source_file: Path,
             assert padding_size >= 0
             outfile.write(get_random_bytes(padding_size))
             set_random_last_modified(wtf.dirty)  # todo test it
+
+        # dirty file is written AND closed (important for Windows)
         wtf.replace()
 
 
@@ -345,7 +347,7 @@ def encrypt_to_dir(source_file: Path, fpk: FilesetPrivateKey,
     return fn
 
 
-def pk_matches_header(fpk: FilesetPrivateKey, file: Path) -> bool:
+def fpk_matches_header(fpk: FilesetPrivateKey, file: Path) -> bool:
     """Returns True if the header imprint (written into the file) matches
     the `name`."""
     with file.open('rb') as f:
