@@ -5,7 +5,7 @@
 import os
 from pathlib import Path
 
-from ksf._00_common import looks_like_our_basename
+from ksf._common import looks_like_our_basename
 
 
 class WritingToTempFile:

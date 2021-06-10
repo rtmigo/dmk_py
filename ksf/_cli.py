@@ -2,8 +2,8 @@ import time
 
 import click
 
-from ksf._00_common import PK_SALT_SIZE
-from ksf._00_randoms import get_noncrypt_random_bytes
+from ksf._common import PK_SALT_SIZE
+from ksf.utils.randoms import get_noncrypt_random_bytes
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 
 

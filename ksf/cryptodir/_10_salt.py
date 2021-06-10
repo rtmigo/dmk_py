@@ -25,7 +25,7 @@ from typing import Optional, Tuple, Iterable
 
 from Crypto.Random import get_random_bytes
 
-from ksf._00_common import PK_SALT_SIZE, BASENAME_SIZE, \
+from ksf._common import PK_SALT_SIZE, BASENAME_SIZE, \
     bytes_to_fn_str, MAX_SALT_FILE_SIZE, read_or_fail, \
     InsufficientData, looks_like_our_basename
 

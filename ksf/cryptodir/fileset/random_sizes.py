@@ -5,7 +5,7 @@
 import random
 from typing import Iterable, Optional
 
-from ksf._00_common import MIN_DATA_FILE_SIZE
+from ksf._common import MIN_DATA_FILE_SIZE
 
 
 def _not_too_small(size: int) -> int:
