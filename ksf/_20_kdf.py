@@ -6,7 +6,6 @@ from typing import Optional
 
 from Crypto.Protocol.KDF import scrypt
 
-
 # class SaltPrivateKey:
 #     """
 #     This key is generated based on a password and a constant salt value.
@@ -98,7 +97,6 @@ class FasterKDF:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.end()
-
 
 # if __name__ == "__main__":
 #     from Crypto.Random import get_random_bytes

@@ -14,9 +14,10 @@ from ksf._00_common import read_or_fail, InsufficientData, \
     looks_like_our_basename
 from ksf._00_wtf import WritingToTempFile
 from ksf._20_kdf import FilesetPrivateKey
-from ksf._40_imprint import Imprint, HashCollision, pk_matches_imprint_bytes
-from ksf._50_sur import set_random_last_modified
-from ksf._60_intro_padding import IntroPadding
+from ksf.fset._40_imprint import Imprint, HashCollision, \
+    pk_matches_imprint_bytes
+from ksf.fset._50_sur import set_random_last_modified
+from ksf.fset._60_intro_padding import IntroPadding
 from ksf.random_sizes import random_size_like_file_greater
 
 _DEBUG_PRINT = False
@@ -235,6 +236,7 @@ class DecryptedIo:
     After accessing the `header` property, the header is read.
     After calling read_data() - the data itself (and the header).
     """
+
     def __init__(self,
                  fpk: FilesetPrivateKey,
                  source: BinaryIO):
@@ -320,8 +322,7 @@ class DecryptedIo:
         if self._data_read:
             raise RuntimeError("Cannot read data more than once")
 
-        if self._header is None:
-            self.__read_header()
+        _ = self.header
 
         body = self.__read_and_decrypt(self.header.data_size)
         body_crc = bytes_to_uint32(self.__read_and_decrypt(4))

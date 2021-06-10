@@ -2,8 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from ksf._20_kdf import FilesetPrivateKey
-from ksf._61_encryption import _DecryptedFile
-from ksf._70_navigator import update_fileset, Fileset
+from ksf.fset import update_fileset, Fileset, DecryptedIo
 from ksf.hidden_salt import find_salt_in_dir, write_salt
 
 
@@ -22,9 +21,11 @@ class CryptoDir:
         pk = FilesetPrivateKey(name, self.salt)
         update_fileset(source, pk, self.directory)
 
-    def get(self, name: str, body=True) -> Optional[_DecryptedFile]:
+    def get(self, name: str) -> Optional[bytes]:
         pk = FilesetPrivateKey(name, self.salt)
         fs = Fileset(self.directory, pk)
         if fs.real_file is None:
             return None
-        return _DecryptedFile(fs.real_file, pk, decrypt_body=body)
+
+        with fs.real_file.open('rb') as f:
+            return DecryptedIo(pk, f).read_data()
