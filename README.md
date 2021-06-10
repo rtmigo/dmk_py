@@ -1,6 +1,6 @@
 [![Generic badge](https://img.shields.io/badge/Status-Experimental-red.svg)](#)
 [![Generic badge](https://img.shields.io/badge/Python-3.7+-blue.svg)](#)
-[![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS-blue.svg)](#)
+[![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS%20|%20Windows-blue.svg)](#)
 
 Experimental cloud file encryption app.
 
