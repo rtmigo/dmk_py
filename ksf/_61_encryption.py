@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 import os
+import random
 import struct
-import time
 import zlib
 from pathlib import Path
 from typing import Optional
@@ -16,8 +16,8 @@ from ksf._00_wtf import WritingToTempFile
 from ksf._20_key_derivation import FilesetPrivateKey
 from ksf._40_imprint import Imprint, HashCollision, pk_matches_imprint_bytes
 from ksf._50_sur import set_random_last_modified
-from ksf.random_sizes import random_size_like_file
 from ksf._60_intro_padding import IntroPadding
+from ksf.random_sizes import random_size_like_file
 
 _DEBUG_PRINT = False
 
@@ -37,11 +37,23 @@ def bytes_to_double(b: bytes) -> float:
 
 
 def bytes_to_uint32(data: bytes) -> int:
+    if len(data) != 4:
+        raise ValueError
     return int.from_bytes(data, byteorder='big', signed=False)
+
+
+def bytes_to_int64(data: bytes) -> int:
+    if len(data) != 8:
+        raise ValueError
+    return int.from_bytes(data, byteorder='big', signed=True)
 
 
 def uint32_to_bytes(x: int) -> bytes:
     return x.to_bytes(4, byteorder='big', signed=False)
+
+
+def int64_to_bytes(x: int) -> bytes:
+    return x.to_bytes(8, byteorder='big', signed=True)
 
 
 _intro_padding_64 = IntroPadding(64)
@@ -50,9 +62,11 @@ ENCRYPTION_NONCE_LEN = 8
 MAC_LEN = 16
 HEADER_CHECKSUM_LEN = 4
 VERSION_LEN = 1
-SRC_MTIME_LEN = 8
-TIMESTAMP_LEN = 8
-SRC_SIZE_LEN = 3
+
+
+# SRC_MTIME_LEN = 8
+# TIMESTAMP_LEN = 8
+# SRC_SIZE_LEN = 3
 
 
 def bytes_to_str(lst: bytes):
@@ -91,7 +105,10 @@ class Cryptographer:
         ])
 
 
-def _encrypt_file_to_file(source_file: Path, fpk: FilesetPrivateKey, target_file: Path):
+def _encrypt_file_to_file(source_file: Path,
+                          fpk: FilesetPrivateKey,
+                          target_file: Path,
+                          data_version: int = None):
     """
     File format
     -----------
@@ -101,9 +118,8 @@ def _encrypt_file_to_file(source_file: Path, fpk: FilesetPrivateKey, target_file
         intro padding: bytes (1-64 bytes)
         <header>
             format version: byte
-            timestamp: double
-            mtime: double
-            body size: uint24
+            data_version: uint32
+            body size: uint32
         </header>
         header crc-32: uint32
         body: bytes
@@ -130,21 +146,24 @@ def _encrypt_file_to_file(source_file: Path, fpk: FilesetPrivateKey, target_file
 
     version_bytes = bytes([1])
 
-    src_mtime_bytes = double_to_bytes(stat.st_mtime)
-    assert len(src_mtime_bytes) == SRC_MTIME_LEN
+    if data_version is None:
+        data_version = random.randint(0, 999999)
+    data_version_bytes = int64_to_bytes(data_version)
 
-    timestamp_bytes = double_to_bytes(time.time())
-    assert len(timestamp_bytes) == TIMESTAMP_LEN
+    # src_mtime_bytes = double_to_bytes(stat.st_mtime)
+    # assert len(src_mtime_bytes) == SRC_MTIME_LEN
+    #
+    # timestamp_bytes = double_to_bytes(time.time())
+    # assert len(timestamp_bytes) == TIMESTAMP_LEN
 
-    src_size_bytes = stat.st_size.to_bytes(SRC_SIZE_LEN,
-                                           byteorder='big',
-                                           signed=False)
-    assert len(src_size_bytes) == SRC_SIZE_LEN
+    src_size_bytes = uint32_to_bytes(stat.st_size)
 
     header_bytes = b''.join((
+        'AG'.encode('ascii'),
         version_bytes,
-        timestamp_bytes,
-        src_mtime_bytes,
+        data_version_bytes,
+        # timestamp_bytes,
+        # src_mtime_bytes,
         src_size_bytes,
     ))
 
@@ -158,7 +177,7 @@ def _encrypt_file_to_file(source_file: Path, fpk: FilesetPrivateKey, target_file
                        body_bytes + body_crc_bytes)
 
     cryptographer = Cryptographer(fpk=fpk,
-                                  #№name_salt=header_imprint.nonce,
+                                  # №name_salt=header_imprint.nonce,
                                   nonce=None)
 
     if _DEBUG_PRINT:
@@ -236,32 +255,42 @@ class DecryptedFile:
             if ip_len > 0:
                 read_and_decrypt(ip_len)
 
+            format_id = read_and_decrypt(2)
+            assert format_id.decode('ascii') == "AG"
+
             # VERSION is always 1
             version_bytes = read_and_decrypt(VERSION_LEN)
             version = version_bytes[0]
             assert version == 1
 
-            # TIMESTAMP is the time when the data was encrypted
-            ts_bytes = read_and_decrypt(TIMESTAMP_LEN)
-            self.timestamp = bytes_to_double(ts_bytes)
+            data_version_bytes = read_and_decrypt(8)
+            self.data_version = bytes_to_int64(data_version_bytes)
 
-            # MTIME is the last modification time of original file
-            mtime_bytes = read_and_decrypt(SRC_MTIME_LEN)
-            self.mtime = bytes_to_double(mtime_bytes)
+            # self.size = int.from_bytes(body_size_bytes,
+            #                            byteorder='big',
+            #                            signed=False)
+
+            # # TIMESTAMP is the time when the data was encrypted
+            # ts_bytes = read_and_decrypt(TIMESTAMP_LEN)
+            # self.timestamp = bytes_to_double(ts_bytes)
+            #
+            # # MTIME is the last modification time of original file
+            # mtime_bytes = read_and_decrypt(SRC_MTIME_LEN)
+            # self.mtime = bytes_to_double(mtime_bytes)
 
             # SIZE is the size of original file
-            body_size_bytes = read_and_decrypt(SRC_SIZE_LEN)
-            self.size = int.from_bytes(body_size_bytes,
-                                       byteorder='big',
-                                       signed=False)
+            body_size_bytes = read_and_decrypt(4)
+            self.size = bytes_to_uint32(body_size_bytes)
 
             # reading and checking the header checksum
             header_crc = int.from_bytes(
                 read_and_decrypt(HEADER_CHECKSUM_LEN),
                 byteorder='big',
                 signed=False)
-            header_bytes = (version_bytes + ts_bytes +
-                            mtime_bytes + body_size_bytes)
+            header_bytes = (format_id +
+                            version_bytes +
+                            data_version_bytes +
+                            body_size_bytes)
             if zlib.crc32(header_bytes) != header_crc:
                 raise ChecksumMismatch("Header CRC mismatch.")
 
@@ -280,11 +309,14 @@ class DecryptedFile:
         if self.data is None:
             raise RuntimeError("Body is not set.")
         target.write_bytes(self.data)
-        os.utime(str(target), (self.mtime, self.mtime))
+        # os.utime(str(target), (self.mtime, self.mtime))
         # set_file_last_modified(target, self.mtime)
 
 
-def encrypt_to_dir(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path) -> Path:
+def encrypt_to_dir(source_file: Path, fpk: FilesetPrivateKey,
+                   target_dir: Path,
+                   data_version: Optional[int] = None
+                   ) -> Path:
     """The file contains two imprints: one in the file name, and the other
     at the beginning of the file.
 
@@ -297,7 +329,7 @@ def encrypt_to_dir(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path) 
     if fn.exists():
         raise HashCollision
 
-    _encrypt_file_to_file(source_file, fpk, fn)
+    _encrypt_file_to_file(source_file, fpk, fn, data_version=data_version)
     return fn
 
 
@@ -310,5 +342,3 @@ def pk_matches_header(fpk: FilesetPrivateKey, file: Path) -> bool:
             return False
         nonce = Imprint.bytes_to_nonce(header_bytes)
     return Imprint(fpk, nonce=nonce).as_bytes == header_bytes
-
-
