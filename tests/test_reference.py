@@ -37,7 +37,7 @@ def generate_references():
             d.set_from_file(name, source_file)
 
 
-#@unittest.skip('changing format')
+# @unittest.skip('changing format')
 class TestRefs(unittest.TestCase):
     def test(self):
         d = CryptoDir(refs_dir)
@@ -45,7 +45,6 @@ class TestRefs(unittest.TestCase):
             self.assertEqual(d.get(name).data, data)
 
 
-
 if __name__ == "__main__":
-    unittest.main()
-    #generate_references()
+    # unittest.main()
+    generate_references()
