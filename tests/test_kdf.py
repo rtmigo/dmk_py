@@ -3,7 +3,7 @@
 
 import unittest
 
-from ksf._10_kdf import FilesetPrivateKey
+from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from tests.common import testing_salt
 
 

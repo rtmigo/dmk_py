@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf._10_kdf import FilesetPrivateKey
+from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir._20_cryptodir import CryptoDir
 
 ref_content = [

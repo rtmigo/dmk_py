@@ -7,11 +7,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ksf._00_randoms import get_noncrypt_random_bytes
-from ksf._10_kdf import FasterKDF, FilesetPrivateKey
-from ksf.fileset._10_imprint import pk_matches_codename
-from ksf.fileset._10_fakes import create_fake
-from ksf.fileset._20_encryption import encrypt_to_dir, _DecryptedFile
-from ksf.fileset._30_navigator import Fileset, update_fileset
+from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
+from ksf.cryptodir.fileset._10_imprint import pk_matches_codename
+from ksf.cryptodir.fileset._10_fakes import create_fake
+from ksf.cryptodir.fileset._20_encryption import encrypt_to_dir, _DecryptedFile
+from ksf.cryptodir.fileset._30_navigator import Fileset, update_fileset
 from tests.common import testing_salt
 
 

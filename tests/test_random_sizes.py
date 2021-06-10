@@ -4,7 +4,7 @@
 
 import unittest
 
-from ksf.fileset.random_sizes import random_size_like_others_in_dir, \
+from ksf.cryptodir.fileset.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file, random_size_like_file_greater
 
 
