@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from ksf._00_randoms import get_noncrypt_random_bytes
 from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
-from ksf._50_sur import create_surrogate
+from ksf._50_sur import create_fake
 from ksf._61_encryption import encrypt_to_dir, DecryptedFile
 from ksf._70_navigator import Fileset, update_fileset
 
@@ -33,7 +33,7 @@ class TestFileWithFakes(unittest.TestCase):
             N = 10
             pk = FilesetPrivateKey('abc')
             for _ in range(N):
-                create_surrogate(pk, 2000, td)
+                create_fake(pk, 2000, td)
 
             # check we really created 10 files with unique names
             files = list(td.glob('*'))
@@ -69,7 +69,7 @@ class TestFileWithFakes(unittest.TestCase):
             NAME = "abc"
             pk = FilesetPrivateKey(NAME)
             for _ in range(5):
-                create_surrogate(pk, 2000, td)
+                create_fake(pk, 2000, td)
             real = encrypt_to_dir(source_file, pk, td)
 
             correct = Fileset(td, pk)

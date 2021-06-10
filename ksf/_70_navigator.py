@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from ksf._20_key_derivation import FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
-from ksf._50_sur import create_surrogate
+from ksf._50_sur import create_fake
 from ksf._61_encryption import pk_matches_header, encrypt_to_dir, \
     DecryptedFile
 from ksf.random_sizes import random_size_like_others_in_dir, \
@@ -157,9 +157,9 @@ def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
             encrypt_to_dir(source_file, fpk, target_dir, new_data_version)
             real_written = True
         elif isinstance(task, WriteFakeTask):
-            create_surrogate(fpk,
-                             target_dir=target_dir,
-                             target_size=task.size)
+            create_fake(fpk,
+                        target_dir=target_dir,
+                        target_size=task.size)
         elif isinstance(task, DeleteTask):
             assert real_written or not task.is_real
             os.remove(str(task.file))
