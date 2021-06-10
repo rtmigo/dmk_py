@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
+import random
 import unittest
 from io import BytesIO
-import random
 
 from ksf._60_intro_padding import IntroPadding
 

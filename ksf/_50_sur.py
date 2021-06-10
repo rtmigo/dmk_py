@@ -50,7 +50,7 @@ def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
     target_file = target_dir / Imprint(fpk).as_str
     if target_file.exists():
         raise HashCollision
-    #size = randomized_size(target_size) # todo
+    # size = randomized_size(target_size) # todo
     non_matching_header = get_random_bytes(Imprint.FULL_LEN)
     if pk_matches_imprint_bytes(fpk, non_matching_header):
         raise HashCollision
@@ -60,5 +60,3 @@ def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
         wtf.dirty.write_bytes(get_random_bytes(target_size))  # todo chunks?
         set_random_last_modified(wtf.dirty)
         wtf.replace()
-
-

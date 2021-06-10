@@ -5,7 +5,7 @@ from typing import Iterable, Optional
 def random_size_like_others_in_dir(file_sizes: Iterable[int]) -> Optional[int]:
     # todo test
     sizes = list(set(file_sizes))
-    if len(sizes)<2:
+    if len(sizes) < 2:
         return None
 
     sizes.sort()
