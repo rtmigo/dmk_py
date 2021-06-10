@@ -117,7 +117,7 @@ def _encrypt_file_to_file(source_file: Path,
     <encrypted>
         intro padding: bytes (1-64 bytes)
         <header>
-            'AG': two bytes
+            'AG': format identifier, two bytes
             format version: byte (always 1)
             data_version: int64 (increases on each write)
             body size: uint32
