@@ -10,8 +10,8 @@ from Crypto.Random import get_random_bytes
 
 from ksf._00_common import MIN_DATA_FILE_SIZE, looks_like_our_basename
 from ksf._00_wtf import WritingToTempFile
-from ksf._20_kdf import FilesetPrivateKey
-from ksf.fset._40_imprint import Imprint, HashCollision, \
+from ksf._10_kdf import FilesetPrivateKey
+from ksf.fileset._10_imprint import Imprint, HashCollision, \
     pk_matches_imprint_bytes
 
 MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000 * 1000

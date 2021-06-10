@@ -5,8 +5,8 @@ import unittest
 from difflib import SequenceMatcher
 
 from ksf._00_common import bytes_to_fn_str, fnstr_to_bytes
-from ksf._20_kdf import FasterKDF, FilesetPrivateKey
-from ksf.fset._40_imprint import pk_matches_codename, Imprint, \
+from ksf._10_kdf import FasterKDF, FilesetPrivateKey
+from ksf.fileset._10_imprint import pk_matches_codename, Imprint, \
     pk_matches_imprint_bytes
 from tests.common import testing_salt
 
