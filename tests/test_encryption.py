@@ -111,7 +111,7 @@ class TestEncryptDecrypt(unittest.TestCase):
 
             df = DecryptedFile(encrypted_file, fpk)
             self.assertEqual(df.data, body)
-            #№self.assertEqual(df.mtime, source_file.stat().st_mtime)
+            # №self.assertEqual(df.mtime, source_file.stat().st_mtime)
 
             # writing the decrypted data to disk checking the saved file is
             # the same as the original

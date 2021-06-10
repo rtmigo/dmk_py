@@ -82,7 +82,8 @@ class Test(unittest.TestCase):
         self.assertFalse(
             pk_matches_imprint_bytes(FilesetPrivateKey('other.txt'), imp_bytes))
         self.assertFalse(
-            pk_matches_imprint_bytes(FilesetPrivateKey('another.txt'), imp_bytes))
+            pk_matches_imprint_bytes(FilesetPrivateKey('another.txt'),
+                                     imp_bytes))
 
     def test_imporint_string_not_too_long(self):
         with FasterKeys():
