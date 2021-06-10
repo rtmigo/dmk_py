@@ -7,7 +7,7 @@ from typing import Optional
 from Crypto.Random import get_random_bytes
 
 from ksf._00_common import bytes_to_fn_str, fnstr_to_bytes, blake192
-from ksf._20_kdf import FilesetPrivateKey
+from ksf._10_kdf import FilesetPrivateKey
 
 
 class Imprint:

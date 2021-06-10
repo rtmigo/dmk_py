@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 from ksf._00_common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, InsufficientData, \
     bytes_to_fn_str, BASENAME_SIZE, looks_like_our_basename
 from ksf._00_randoms import get_noncrypt_random_bytes
-from ksf.hidden_salt import write_salt, read_salt, NotSaltFilename, \
+from ksf.cryptodir._10_salt import write_salt, read_salt, NotSaltFilename, \
     iter_salts_in_dir, TooLargeForSaltFile
 
 

@@ -7,12 +7,12 @@ from pathlib import Path
 from typing import List, Optional
 
 from ksf._00_common import MIN_DATA_FILE_SIZE
-from ksf._20_kdf import FilesetPrivateKey
-from ksf.fset._40_imprint import pk_matches_codename
-from ksf.fset._50_sur import create_fake
-from ksf.fset._61_encryption import fpk_matches_header, encrypt_to_dir, \
+from ksf._10_kdf import FilesetPrivateKey
+from ksf.fileset._10_imprint import pk_matches_codename
+from ksf.fileset._10_fakes import create_fake
+from ksf.fileset._20_encryption import fpk_matches_header, encrypt_to_dir, \
     _DecryptedFile
-from ksf.random_sizes import random_size_like_others_in_dir, \
+from ksf.fileset.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file
 
 

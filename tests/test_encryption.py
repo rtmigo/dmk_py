@@ -9,8 +9,8 @@ from tempfile import TemporaryDirectory
 
 from ksf._00_common import MIN_DATA_FILE_SIZE
 from ksf._00_randoms import get_noncrypt_random_bytes
-from ksf._20_kdf import FasterKDF, FilesetPrivateKey
-from ksf.fset._61_encryption import Encrypt, encrypt_to_dir, \
+from ksf._10_kdf import FasterKDF, FilesetPrivateKey
+from ksf.fileset._20_encryption import Encrypt, encrypt_to_dir, \
     ChecksumMismatch, _DecryptedFile, fpk_matches_header
 from tests.common import testing_salt
 

@@ -1,13 +1,13 @@
 from pathlib import Path
 from typing import Optional
 
-from ksf._20_kdf import FilesetPrivateKey
-from ksf.fset import update_fileset, Fileset, DecryptedIo
-from ksf.hidden_salt import find_salt_in_dir, write_salt
+from ksf._10_kdf import FilesetPrivateKey
+from ksf.fileset import update_fileset, Fileset, DecryptedIo
+from ksf.cryptodir._10_salt import find_salt_in_dir, write_salt
 
 
 class CryptoDir:
-    # todo test re-reading and finding salt
+
     def __init__(self, directory: Path):
         self.directory = directory
 

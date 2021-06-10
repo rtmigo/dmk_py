@@ -13,12 +13,12 @@ from Crypto.Random import get_random_bytes
 from ksf._00_common import read_or_fail, InsufficientData, \
     looks_like_our_basename
 from ksf._00_wtf import WritingToTempFile
-from ksf._20_kdf import FilesetPrivateKey
-from ksf.fset._40_imprint import Imprint, HashCollision, \
+from ksf._10_kdf import FilesetPrivateKey
+from ksf.fileset._10_imprint import Imprint, HashCollision, \
     pk_matches_imprint_bytes
-from ksf.fset._50_sur import set_random_last_modified
-from ksf.fset._60_intro_padding import IntroPadding
-from ksf.random_sizes import random_size_like_file_greater
+from ksf.fileset._10_fakes import set_random_last_modified
+from ksf.fileset._10_padding import IntroPadding
+from ksf.fileset.random_sizes import random_size_like_file_greater
 
 _DEBUG_PRINT = False
 
@@ -336,7 +336,7 @@ class DecryptedIo:
 class _DecryptedFile:
     """It is better to always use DecryptedIO instead of this class.
     The class is kept for temporary compatibility with tests."""
-
+    # todo remove all usages of this class
     def __init__(self,
                  source_file: Path,
                  fpk: FilesetPrivateKey,
