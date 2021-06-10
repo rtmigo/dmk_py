@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 import random
 from typing import Iterable, Optional
 
@@ -11,7 +15,6 @@ def _not_too_small(size: int) -> int:
 
 
 def random_size_like_others_in_dir(file_sizes: Iterable[int]) -> Optional[int]:
-    # todo test
     sizes = list(set(file_sizes))
     if len(sizes) < 2:
         return None
@@ -36,12 +39,19 @@ def random_size_like_others_in_dir(file_sizes: Iterable[int]) -> Optional[int]:
     assert result >= middle - radius
     assert result <= middle + radius
 
-    return _not_too_small(result)  # todo test
+    return _not_too_small(result)
 
 
-def random_size_like_file(reference_size: int) -> int:
-    # must be used when creating both surrogates and real files
-    result = reference_size + random.randint(0, round(reference_size / 2))
-    #result = max(_MIN_SIZE, result)
-    #assert result >= _MIN_SIZE
-    return _not_too_small(result)  # todo test
+def random_size_like_file(ref_size: int) -> int:
+    radius = round(ref_size / 2)
+    delta = random.randint(-radius, radius)
+    result = ref_size + delta
+    return _not_too_small(result)
+
+
+def random_size_like_file_greater(ref_size: int) -> int:
+    for _ in range(999999):
+        result = random_size_like_file(ref_size)
+        if result > ref_size:
+            return result
+    raise RuntimeError("Dead loop prevented")
