@@ -1,15 +1,24 @@
 import random
+from collections import Iterable
 from pathlib import Path
 
 from Crypto.Random import get_random_bytes
 
 from ksf._00_common import PK_SALT_SIZE, BASENAME_SIZE, \
-    bytes_to_fn_str, MAX_SALT_FILE_SIZE, fnstr_to_bytes, read_or_fail
+    bytes_to_fn_str, MAX_SALT_FILE_SIZE, fnstr_to_bytes, read_or_fail, \
+    InsufficientData
 
 
-# def salt_filename(spk: SaltPrivateKey, parent: Path):
-#     if not isinstance(spk, SaltPrivateKey):
-#         raise TypeError
+class CannotReadSalt(Exception):
+    pass
+
+
+class NotSaltFilename(CannotReadSalt):
+    pass
+
+
+class SaltVerificationFailed(CannotReadSalt):
+    pass
 
 
 def write_salt(parent: Path) -> Path:
@@ -37,18 +46,6 @@ def write_salt(parent: Path) -> Path:
     return file
 
 
-class SaltFileProblem(Exception):
-    pass
-
-
-class NotSaltFilename(SaltFileProblem):
-    pass
-
-
-class SaltVerificationFailed(SaltFileProblem):
-    pass
-
-
 def read_salt(file: Path):
     basename_bytes = fnstr_to_bytes(file.name)
     if len(basename_bytes) != BASENAME_SIZE:
@@ -61,3 +58,11 @@ def read_salt(file: Path):
 
     assert len(salt) == PK_SALT_SIZE
     return salt
+
+
+def iter_salts_in_dir(parent: Path) -> Iterable[bytes]:
+    for fn in parent.glob('*'):
+        try:
+            return read_salt(fn)
+        except (CannotReadSalt, InsufficientData):
+            continue
