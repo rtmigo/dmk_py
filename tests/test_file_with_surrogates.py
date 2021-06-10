@@ -10,7 +10,7 @@ from ksf._00_randoms import get_noncrypt_random_bytes
 from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_fake
-from ksf._61_encryption import encrypt_to_dir, DecryptedFile
+from ksf._61_encryption import encrypt_to_dir, _DecryptedFile
 from ksf._70_navigator import Fileset, update_fileset
 
 
@@ -127,11 +127,11 @@ class TestFileWithFakes(unittest.TestCase):
                 # finding the latest file and checking it has the new contents
                 fas = Fileset(td, fpk_b)
                 self.assertGreaterEqual(len(fas.all_files), 2)
-                self.assertEqual(DecryptedFile(fas.real_file, fpk_b).data,
+                self.assertEqual(_DecryptedFile(fas.real_file, fpk_b).data,
                                  the_data_b)
 
                 # finding the latest file and checking it has the new contents
                 fas = Fileset(td, fpk_a)
                 self.assertGreaterEqual(len(fas.all_files), 2)
-                self.assertEqual(DecryptedFile(fas.real_file, fpk_a).data,
+                self.assertEqual(_DecryptedFile(fas.real_file, fpk_a).data,
                                  the_data_a)

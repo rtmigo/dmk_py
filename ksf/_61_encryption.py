@@ -5,7 +5,7 @@ import os
 import struct
 import zlib
 from pathlib import Path
-from typing import Optional, BinaryIO
+from typing import Optional, BinaryIO, NamedTuple
 
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
@@ -22,6 +22,10 @@ _DEBUG_PRINT = False
 
 
 class ChecksumMismatch(Exception):
+    pass
+
+
+class ImprintMismatch(Exception):
     pass
 
 
@@ -63,11 +67,6 @@ HEADER_CHECKSUM_LEN = 4
 VERSION_LEN = 1
 
 
-# SRC_MTIME_LEN = 8
-# TIMESTAMP_LEN = 8
-# SRC_SIZE_LEN = 3
-
-
 def bytes_to_str(lst: bytes):
     result = '['
     if len(lst) > 0:
@@ -104,128 +103,239 @@ class Cryptographer:
         ])
 
 
-def _encrypt_io_to_file(source: BinaryIO,
-                        fpk: FilesetPrivateKey,
-                        target_file: Path,
-                        data_version: int = 0):
-    """
-    File format
-    -----------
+class Encrypt:
+    def __init__(self, fpk, data_version: int = 0):
+        self.fpk = fpk
+        self.data_version = data_version
 
-    <imprint/>
-    <encrypted>
-        intro padding: bytes (1-64 bytes)
-        <header>
-            'AG': format identifier, two bytes
-            format version: byte (always 1)
-            data_version: int64 (increases on each write)
-            body size: uint32
-        </header>
-        header crc-32: uint32
-        body: bytes
-        body crc-32: uint32
-    </encrypted>
-    <random-padding/>
-    ****
+    def io_to_io(self,
+                 source: BinaryIO,
+                 outfile: BinaryIO):
+        """
+        File format
+        -----------
 
-
-    When decrypting, we will check the name against the imprint. After that,
-    we assume that the name is correct and the data can be successfully
-    decrypted by this name.
-
-    Instead of cryptographic MAC algorithms, we will use CRC32 for header
-    and CRC32 for body. This will help us verify that the program is working
-    as expected and that the contents of the file is correct. The CRC values
-    themselves will be encrypted.
-
-    """
-
-    header_imprint = Imprint(fpk)
-
-    version_bytes = bytes([1])
-
-    data_version_bytes = int64_to_bytes(data_version)
-
-    src_size = source.seek(0, io.SEEK_END)
-    source.seek(0, io.SEEK_SET)
-
-    src_size_bytes = uint32_to_bytes(src_size)
-
-    format_identifier = 'AG'.encode('ascii')
-    assert len(format_identifier) == 2
-
-    header_bytes = b''.join((
-        format_identifier,
-        version_bytes,
-        data_version_bytes,
-        src_size_bytes,
-    ))
-
-    header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
-
-    body_bytes = source.read()
-    body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
-
-    cryptographer = Cryptographer(fpk=fpk,
-                                  # №name_salt=header_imprint.nonce,
-                                  nonce=None)
-
-    if _DEBUG_PRINT:
-        print("---")
-        print("ENCRYPTION:")
-        print(cryptographer)
-        print("---")
-
-    # encrypted_bytes = cryptographer.cipher.encrypt(decrypted_bytes)
-
-    # mac = get_fast_random_bytes(MAC_LEN)
-    # if _DEBUG_PRINT:
-    #     print(f"ENC: Original {bytes_to_str(decrypted_bytes)}")
-    #     #print(f"ENC: Encrypted {bytes_to_str(encrypted_bytes)}")
-
-    with WritingToTempFile(target_file) as wtf:
-        # must be the same as writing a fake file
-        with wtf.dirty.open('wb') as outfile:
-            # writing the imprint. It is not encrypted, but it's a hash +
-            # random nonce. It's indistinguishable from any random rubbish
-            outfile.write(header_imprint.as_bytes)
-            assert len(cryptographer.nonce) == ENCRYPTION_NONCE_LEN, \
-                f"Unexpected nonce length: {len(cryptographer.nonce)}"
-
-            outfile.write(cryptographer.nonce)
-
-            def encrypt_and_write(data: bytes):
-                outfile.write(cryptographer.cipher.encrypt(data))
-
-            encrypt_and_write(_intro_padding_64.gen_bytes())
-            encrypt_and_write(header_bytes)
-            encrypt_and_write(header_crc_bytes)
-            # todo chunked r/w
-            encrypt_and_write(body_bytes)
-            encrypt_and_write(body_crc_bytes)
-
-            # adding random data to the end of file.
-            # This data is not encrypted, it's from urandom (is it ok?)
-            current_size = outfile.seek(0, os.SEEK_CUR)
-            target_size = random_size_like_file_greater(current_size)
-            padding_size = target_size - current_size
-            assert padding_size >= 0
-            outfile.write(get_random_bytes(padding_size))
-            set_random_last_modified(wtf.dirty)  # todo test it
-
-        # dirty file is written AND closed (important for Windows)
-        wtf.replace()
+        <imprint/>
+        <encrypted>
+            intro padding: bytes (1-64 bytes)
+            <header>
+                'AG': format identifier, two bytes
+                format version: byte (always 1)
+                data_version: int64 (increases on each write)
+                body size: uint32
+            </header>
+            header crc-32: uint32
+            body: bytes
+            body crc-32: uint32
+        </encrypted>
+        <random-padding/>
+        ****
 
 
-def _encrypt_file_to_file(source_file: Path,
-                          fpk: FilesetPrivateKey,
-                          target_file: Path,
-                          data_version: int = 0):
-    with source_file.open('rb') as source_io:
-        _encrypt_io_to_file(source_io, fpk, target_file, data_version)
+        When decrypting, we will check the name against the imprint. After that,
+        we assume that the name is correct and the data can be successfully
+        decrypted by this name.
+
+        Instead of cryptographic MAC algorithms, we will use CRC32 for header
+        and CRC32 for body. This will help us verify that the program is working
+        as expected and that the contents of the file is correct. The CRC values
+        themselves will be encrypted.
+
+        """
+
+        header_imprint = Imprint(self.fpk)
+
+        version_bytes = bytes([1])
+
+        data_version_bytes = int64_to_bytes(self.data_version)
+
+        src_size = source.seek(0, io.SEEK_END)
+        source.seek(0, io.SEEK_SET)
+
+        src_size_bytes = uint32_to_bytes(src_size)
+
+        format_identifier = 'AG'.encode('ascii')
+        assert len(format_identifier) == 2
+
+        header_bytes = b''.join((
+            format_identifier,
+            version_bytes,
+            data_version_bytes,
+            src_size_bytes,
+        ))
+
+        header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
+
+        body_bytes = source.read()
+        body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
+
+        cryptographer = Cryptographer(fpk=self.fpk,
+                                      # №name_salt=header_imprint.nonce,
+                                      nonce=None)
+
+        if _DEBUG_PRINT:
+            print("---")
+            print("ENCRYPTION:")
+            print(cryptographer)
+            print("---")
+
+        # writing the imprint. It is not encrypted, but it's a hash +
+        # random nonce. It's indistinguishable from any random rubbish
+        outfile.write(header_imprint.as_bytes)
+        assert len(cryptographer.nonce) == ENCRYPTION_NONCE_LEN, \
+            f"Unexpected nonce length: {len(cryptographer.nonce)}"
+
+        outfile.write(cryptographer.nonce)
+
+        def encrypt_and_write(data: bytes):
+            outfile.write(cryptographer.cipher.encrypt(data))
+
+        encrypt_and_write(_intro_padding_64.gen_bytes())
+        encrypt_and_write(header_bytes)
+        encrypt_and_write(header_crc_bytes)
+        # todo chunked r/w
+        encrypt_and_write(body_bytes)
+        encrypt_and_write(body_crc_bytes)
+
+        # adding random data to the end of file.
+        # This data is not encrypted, it's from urandom (is it ok?)
+        current_size = outfile.seek(0, os.SEEK_CUR)
+        target_size = random_size_like_file_greater(current_size)
+        padding_size = target_size - current_size
+        assert padding_size >= 0
+        outfile.write(get_random_bytes(padding_size))
+
+    def io_to_file(self,
+                   source_io: BinaryIO,
+                   target_file: Path):
+        with WritingToTempFile(target_file) as wtf:
+            # must be the same as writing a fake file
+            with wtf.dirty.open('wb') as outfile:
+                self.io_to_io(source_io, outfile)
+                set_random_last_modified(wtf.dirty)  # todo test it
+            # dirty file is written AND closed (important for Windows)
+            wtf.replace()
+
+    def file_to_file(self, source_file: Path, target_file: Path):
+        with source_file.open('rb') as source_io:
+            self.io_to_file(source_io, target_file)
 
 
-class DecryptedFile:
+class Header(NamedTuple):
+    format_version: int
+    data_version: int
+    data_size: int
+
+
+class DecryptedIo:
+    def __init__(self,
+                 fpk: FilesetPrivateKey,
+                 source: BinaryIO):
+        self.fpk = fpk
+        self.source = source
+
+        self._header: Optional[Header] = None
+        self._data_read = False
+
+        self.__read_imprint()
+
+    def __read_and_decrypt(self, n: int) -> bytes:
+        encrypted = self.source.read(n)
+        if len(encrypted) < n:
+            raise InsufficientData
+        return self.cfg.cipher.decrypt(encrypted)
+
+    def __read_imprint(self):
+        f = self.source
+        # reading and the imprint and checking that the name
+        # matches this imprint
+        imprint_bytes = read_or_fail(f, Imprint.FULL_LEN)
+        if not pk_matches_imprint_bytes(self.fpk, imprint_bytes):
+            raise ImprintMismatch("The private key does not match the imprint.")
+
+        self.__nonce = read_or_fail(f, ENCRYPTION_NONCE_LEN)
+
+    @property
+    def header(self) -> Header:
+        if self._header is None:
+            self._header = self.__read_header()
+        assert self._header is not None
+        return self._header
+
+    def __read_header(self) -> Header:
+        # f = self.source
+        # # reading and the imprint and checking that the name
+        # # matches this imprint
+        # imprint_bytes = read_or_fail(f, Imprint.FULL_LEN)
+        # if not pk_matches_imprint_bytes(self.fpk, imprint_bytes):
+        #     raise ChecksumMismatch("The name does not match the imprint.")
+        #
+        # nonce = read_or_fail(f, ENCRYPTION_NONCE_LEN)
+
+        self.cfg = Cryptographer(fpk=self.fpk, nonce=self.__nonce)
+
+        if _DEBUG_PRINT:
+            print("---")
+            print("DECRYPTION:")
+            print(self.cfg)
+            print("---")
+
+        # skipping the padding
+        ip_first = self.__read_and_decrypt(1)[0]
+        ip_len = _intro_padding_64.first_byte_to_len(ip_first)
+        if ip_len > 0:
+            self.__read_and_decrypt(ip_len)
+
+        format_id = self.__read_and_decrypt(2)
+        assert format_id.decode('ascii') == "AG"
+
+        # FORMAT VERSION is always 1
+        format_version_bytes = self.__read_and_decrypt(VERSION_LEN)
+        format_version = format_version_bytes[0]
+        assert format_version == 1
+
+        data_version_bytes = self.__read_and_decrypt(8)
+        data_version = bytes_to_int64(data_version_bytes)
+
+        # SIZE is the size of original file
+        body_size_bytes = self.__read_and_decrypt(4)
+        size = bytes_to_uint32(body_size_bytes)
+
+        # reading and checking the header checksum
+        header_crc = int.from_bytes(
+            self.__read_and_decrypt(HEADER_CHECKSUM_LEN),
+            byteorder='big',
+            signed=False)
+        header_bytes = (format_id +
+                        format_version_bytes +
+                        data_version_bytes +
+                        body_size_bytes)
+        if zlib.crc32(header_bytes) != header_crc:
+            raise ChecksumMismatch("Header CRC mismatch.")
+
+        return Header(data_version=data_version,
+                      format_version=format_version,
+                      data_size=size)
+
+    def read_data(self) -> bytes:
+        if self._data_read:
+            raise RuntimeError("Cannot read data more than once")
+
+        if self._header is None:
+            self.__read_header()
+
+        body = self.__read_and_decrypt(self.header.data_size)
+        body_crc = bytes_to_uint32(self.__read_and_decrypt(4))
+        if zlib.crc32(body) != body_crc:
+            raise ChecksumMismatch("Body CRC mismatch.")
+
+        self._data_read = True
+        return body
+
+
+class _DecryptedFile:
+    """It is better to always use DecryptedIO instead of this class.
+    The class is kept for temporary compatibility with tests."""
 
     def __init__(self,
                  source_file: Path,
@@ -233,69 +343,13 @@ class DecryptedFile:
                  decrypt_body=True):
 
         with source_file.open('rb') as f:
-            # reading and the imprint and checking that the name
-            # matches this imprint
-            imprint_bytes = read_or_fail(f, Imprint.FULL_LEN)
-            if not pk_matches_imprint_bytes(fpk, imprint_bytes):
-                raise ChecksumMismatch("The name does not match the imprint.")
+            di = DecryptedIo(fpk, f)
+            self.data_version = di.header.data_version
+            self.size = di.header.data_size
 
-            nonce = read_or_fail(f, ENCRYPTION_NONCE_LEN)
-
-            cfg = Cryptographer(fpk=fpk, nonce=nonce)
-
-            if _DEBUG_PRINT:
-                print("---")
-                print("DECRYPTION:")
-                print(cfg)
-                print("---")
-
-            def read_and_decrypt(n: int) -> bytes:
-                encrypted = f.read(n)
-                if len(encrypted) < n:
-                    raise InsufficientData
-                return cfg.cipher.decrypt(encrypted)
-
-            # skipping the padding
-            ip_first = read_and_decrypt(1)[0]
-            ip_len = _intro_padding_64.first_byte_to_len(ip_first)
-            if ip_len > 0:
-                read_and_decrypt(ip_len)
-
-            format_id = read_and_decrypt(2)
-            assert format_id.decode('ascii') == "AG"
-
-            # FORMAT VERSION is always 1
-            format_version_bytes = read_and_decrypt(VERSION_LEN)
-            format_version = format_version_bytes[0]
-            assert format_version == 1
-
-            data_version_bytes = read_and_decrypt(8)
-            self.data_version = bytes_to_int64(data_version_bytes)
-
-            # SIZE is the size of original file
-            body_size_bytes = read_and_decrypt(4)
-            self.size = bytes_to_uint32(body_size_bytes)
-
-            # reading and checking the header checksum
-            header_crc = int.from_bytes(
-                read_and_decrypt(HEADER_CHECKSUM_LEN),
-                byteorder='big',
-                signed=False)
-            header_bytes = (format_id +
-                            format_version_bytes +
-                            data_version_bytes +
-                            body_size_bytes)
-            if zlib.crc32(header_bytes) != header_crc:
-                raise ChecksumMismatch("Header CRC mismatch.")
-
-            # DATA is the content of original file
             self.data: Optional[bytes]
             if decrypt_body:
-                body = read_and_decrypt(self.size)
-                body_crc = bytes_to_uint32(read_and_decrypt(4))
-                if zlib.crc32(body) != body_crc:
-                    raise ChecksumMismatch("Body CRC mismatch.")
-                self.data = body
+                self.data = di.read_data()
             else:
                 self.data = None
 
@@ -320,8 +374,7 @@ def encrypt_to_dir(source_file: Path, fpk: FilesetPrivateKey,
     fn = target_dir / imprint.as_str
     if fn.exists():
         raise HashCollision
-
-    _encrypt_file_to_file(source_file, fpk, fn, data_version=data_version)
+    Encrypt(fpk, data_version).file_to_file(source_file, fn)
     return fn
 
 
@@ -329,8 +382,8 @@ def fpk_matches_header(fpk: FilesetPrivateKey, file: Path) -> bool:
     """Returns True if the header imprint (written into the file) matches
     the `name`."""
     with file.open('rb') as f:
-        header_bytes = f.read(Imprint.FULL_LEN)
-        if len(header_bytes) < Imprint.FULL_LEN:
+        try:
+            DecryptedIo(fpk, f)
+            return True
+        except ImprintMismatch:
             return False
-        nonce = Imprint.bytes_to_nonce(header_bytes)
-    return Imprint(fpk, nonce=nonce).as_bytes == header_bytes

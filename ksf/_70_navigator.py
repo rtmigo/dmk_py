@@ -10,7 +10,7 @@ from ksf._20_key_derivation import FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_fake
 from ksf._61_encryption import fpk_matches_header, encrypt_to_dir, \
-    DecryptedFile
+    _DecryptedFile
 from ksf.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file
 
@@ -19,7 +19,7 @@ def _get_newest_file(files: List[Path], pk: FilesetPrivateKey) -> Path:
     # we are reading not the file last-modified timestamp, but a timestamp
     # stored inside the encrypted file content
     times_and_files = [
-        (DecryptedFile(fp, pk, decrypt_body=False).data_version, fp)
+        (_DecryptedFile(fp, pk, decrypt_body=False).data_version, fp)
         for fp in files]
 
     latest_timestamp = max(ts for ts, _ in times_and_files)
@@ -104,7 +104,7 @@ def dir_to_file_sizes(d: Path) -> List[int]:
 def increased_data_version(fileset: Fileset) -> int:
     MAX_INT64 = 0x7FFFFFFFFFFFFFFF
     if fileset.real_file:
-        df = DecryptedFile(fileset.real_file, fileset.fpk, decrypt_body=False)
+        df = _DecryptedFile(fileset.real_file, fileset.fpk, decrypt_body=False)
         assert df.data_version >= 1
         ver = df.data_version + random.randint(1, 999)
         if ver > MAX_INT64:
