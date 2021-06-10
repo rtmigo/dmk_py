@@ -10,7 +10,7 @@ from ksf.utils.randoms import get_noncrypt_random_bytes
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from ksf.cryptodir.fileset._10_imprint import pk_matches_codename
 from ksf.cryptodir.fileset._10_fakes import create_fake
-from ksf.cryptodir.fileset._20_encryption import encrypt_to_dir, _DecryptedFile
+from ksf.cryptodir.fileset._20_encryption import encrypt_file_to_dir, _DecryptedFile
 from ksf.cryptodir.fileset._30_navigator import Fileset, update_fileset
 from tests.common import testing_salt
 
@@ -71,7 +71,7 @@ class TestFileWithFakes(unittest.TestCase):
             pk = FilesetPrivateKey(NAME, testing_salt)
             for _ in range(5):
                 create_fake(pk, 2000, td)
-            real = encrypt_to_dir(source_file, pk, td)
+            real = encrypt_file_to_dir(source_file, pk, td)
 
             correct = Fileset(td, pk)
             # we have 7 files total (including the source)
