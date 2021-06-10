@@ -9,8 +9,8 @@ from tempfile import TemporaryDirectory
 
 from ksf._00_randoms import get_noncrypt_random_bytes
 from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
-from ksf._61_encryption import _encrypt_file_to_file, encrypt_to_dir, \
-    ChecksumMismatch, DecryptedFile, fpk_matches_header
+from ksf._61_encryption import Encrypt, encrypt_to_dir, \
+    ChecksumMismatch, _DecryptedFile, fpk_matches_header
 
 
 class TestEncryptDecrypt(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestEncryptDecrypt(unittest.TestCase):
             right = td / "irrelevant"
             NAME = 'abc'
             # name_to_hash(NAME)
-            _encrypt_file_to_file(source, FilesetPrivateKey(NAME), right)
+            Encrypt(FilesetPrivateKey(NAME)).file_to_file(source, right)
             self.assertTrue(fpk_matches_header(FilesetPrivateKey(NAME), right))
             self.assertFalse(
                 fpk_matches_header(FilesetPrivateKey('labuda'), right))
@@ -106,10 +106,10 @@ class TestEncryptDecrypt(unittest.TestCase):
 
             if check_wrong:
                 with self.assertRaises(ChecksumMismatch):
-                    DecryptedFile(encrypted_file,
-                                  FilesetPrivateKey('wrong_item_name'))
+                    _DecryptedFile(encrypted_file,
+                                   FilesetPrivateKey('wrong_item_name'))
 
-            df = DecryptedFile(encrypted_file, fpk)
+            df = _DecryptedFile(encrypted_file, fpk)
             self.assertEqual(df.data, body)
             # №self.assertEqual(df.mtime, source_file.stat().st_mtime)
 
@@ -132,7 +132,7 @@ class TestEncryptDecrypt(unittest.TestCase):
             NAME = "thename"
             pk = FilesetPrivateKey(NAME)
             encrypted_file = encrypt_to_dir(source_file, pk, td)
-            df = DecryptedFile(encrypted_file, pk, decrypt_body=False)
+            df = _DecryptedFile(encrypted_file, pk, decrypt_body=False)
 
             # meta-data is loaded
             self.assertEqual(df.size, source_file.stat().st_size)
