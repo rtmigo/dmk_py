@@ -5,7 +5,7 @@
 import unittest
 
 from ksf.random_sizes import random_size_like_others_in_dir, \
-    random_size_like_file
+    random_size_like_file, random_size_like_file_greater
 
 
 class TestRandomSizes(unittest.TestCase):
@@ -34,10 +34,27 @@ class TestRandomSizes(unittest.TestCase):
             all_values.add(s)
         self.assertGreater(len(all_values), 50)
 
+    def test_like_file_greater(self):
+        all_values = set()
+        for _ in range(100):
+            s = random_size_like_file_greater(10000)
+            self.assertGreater(s, 10000)
+            self.assertLess(s, 16000)
+            all_values.add(s)
+        self.assertGreater(len(all_values), 50)
+
     def test_like_file_at_least_kb(self):
         unique_values = set()
         for _ in range(100):
             s = random_size_like_file(5)
+            self.assertGreaterEqual(s, 1024)
+            unique_values.add(s)
+        self.assertGreater(len(unique_values), 3)
+
+    def test_like_file_greater_at_least_kb(self):
+        unique_values = set()
+        for _ in range(100):
+            s = random_size_like_file_greater(5)
             self.assertGreaterEqual(s, 1024)
             unique_values.add(s)
         self.assertGreater(len(unique_values), 3)

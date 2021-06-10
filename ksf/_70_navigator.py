@@ -101,7 +101,21 @@ def dir_to_file_sizes(d: Path) -> List[int]:
     return [f.stat().st_size for f in d.glob('*') if f.is_file]
 
 
-MAX_UINT32 = (2 ** 32) - 1
+# MAX_UINT32 = (2 ** 32) - 1
+MAX_INT64 = 0x7FFFFFFFFFFFFFFF
+
+
+def increased_data_version(fileset: Fileset) -> Optional[int]:
+    if fileset.real_file:
+        df = DecryptedFile(fileset.real_file, fileset.fpk, decrypt_body=False)
+        ver = df.data_version + random.randint(1, 999)
+        if ver > MAX_INT64:
+            # this will never happen
+            raise ValueError(f"new_data_version={ver} "
+                             f"cannot be saved as INT64")
+        assert ver > df.data_version
+        return ver
+    return None
 
 
 def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
@@ -122,14 +136,7 @@ def update_fileset(source_file: Path, fpk: FilesetPrivateKey, target_dir: Path):
 
     fileset = Fileset(target_dir, fpk)
 
-    new_data_version: Optional[int] = None
-
-    if fileset.real_file:
-        df = DecryptedFile(fileset.real_file, fpk, decrypt_body=False)
-        new_data_version = df.data_version + random.randint(1, 999)
-        if new_data_version > MAX_UINT32:
-            raise ValueError(f"new_data_version={new_data_version} "
-                             f"cannot be saved as UINT32")
+    new_data_version = increased_data_version(fileset)
 
     max_to_delete = 4
     max_to_fake = max_to_delete - 1  # +1 real file will be written
