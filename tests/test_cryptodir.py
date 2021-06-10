@@ -42,7 +42,7 @@ class TestCryptoDir(unittest.TestCase):
 
                 # reading with same instance
                 for name, data in names_and_datas:
-                    self.assertEqual(crypto_dir.get(name).data, data)
+                    self.assertEqual(crypto_dir.get(name), data)
 
                 # creating a new CryptoDir instance. This time the salt will
                 # not be randomly generated, but read from file
@@ -51,4 +51,4 @@ class TestCryptoDir(unittest.TestCase):
 
                 # reading with other instance
                 for name, data in names_and_datas:
-                    self.assertEqual(crypto_dir_b.get(name).data, data)
+                    self.assertEqual(crypto_dir_b.get(name), data)

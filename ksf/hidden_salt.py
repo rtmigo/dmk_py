@@ -20,7 +20,6 @@ without having at least one password, it is impossible to prove.
 """
 
 import random
-
 from pathlib import Path
 from typing import Optional, Tuple, Iterable
 
