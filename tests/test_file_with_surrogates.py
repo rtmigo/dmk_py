@@ -11,7 +11,7 @@ from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from ksf.cryptodir.fileset._10_imprint import pk_matches_codename
 from ksf.cryptodir.fileset._10_fakes import create_fake
 from ksf.cryptodir.fileset._20_encryption import encrypt_file_to_dir, _DecryptedFile
-from ksf.cryptodir.fileset._30_navigator import Fileset, update_fileset
+from ksf.cryptodir.fileset._30_navigator import Fileset, update_fileset_old
 from tests.common import testing_salt
 
 
@@ -97,7 +97,7 @@ class TestFileWithFakes(unittest.TestCase):
             for _ in range(8):
                 source_file_a = td / "a"
                 source_file_a.write_bytes(b'abcdef')
-                update_fileset(source_file_a, fpk_a, td)
+                update_fileset_old(source_file_a, fpk_a, td)
                 unique_sizes.update(f.stat().st_size for f in td.glob('*'))
 
         self.assertGreater(len(unique_sizes), 5)
@@ -122,8 +122,8 @@ class TestFileWithFakes(unittest.TestCase):
                 source_file_b.write_bytes(the_data_b)
 
                 # rewriting two filesets at once
-                update_fileset(source_file_a, fpk_a, td)
-                update_fileset(source_file_b, fpk_b, td)
+                update_fileset_old(source_file_a, fpk_a, td)
+                update_fileset_old(source_file_b, fpk_b, td)
 
                 # finding the latest file and checking it has the new contents
                 fas = Fileset(td, fpk_b)

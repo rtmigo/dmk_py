@@ -52,3 +52,11 @@ class TestCryptoDir(unittest.TestCase):
                 # reading with other instance
                 for name, data in names_and_datas:
                     self.assertEqual(crypto_dir_b.get(name), data)
+
+    def test_cryptodir_does_not_create_directories(self):
+        with TemporaryDirectory() as tds:
+            temp_dir = Path(tds)
+            temp_subdir = temp_dir/"sub"
+            with self.assertRaises(FileNotFoundError):
+                CryptoDir(temp_subdir)
+
