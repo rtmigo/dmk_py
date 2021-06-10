@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
+
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from typing import BinaryIO, Tuple
 
