@@ -9,18 +9,18 @@ from tempfile import TemporaryDirectory
 
 from ksf._00_common import MIN_DATA_FILE_SIZE
 from ksf._00_randoms import get_noncrypt_random_bytes
-from ksf._20_kdf import FasterKeys, FilesetPrivateKey
+from ksf._20_kdf import FasterKDF, FilesetPrivateKey
 from ksf._61_encryption import Encrypt, encrypt_to_dir, \
     ChecksumMismatch, _DecryptedFile, fpk_matches_header
 from tests.common import testing_salt
 
 
 class TestEncryptDecrypt(unittest.TestCase):
-    faster: FasterKeys
+    faster: FasterKDF
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.faster = FasterKeys()
+        cls.faster = FasterKDF()
         cls.faster.start()
 
     @classmethod

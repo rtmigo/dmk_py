@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 
 from ksf._00_common import MIN_DATA_FILE_SIZE
 from ksf._00_randoms import get_noncrypt_random_bytes
-from ksf._20_kdf import FasterKeys, FilesetPrivateKey
+from ksf._20_kdf import FasterKDF, FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_fake
 from ksf._61_encryption import encrypt_to_dir, _DecryptedFile
@@ -17,11 +17,11 @@ from tests.common import testing_salt
 
 
 class TestFileWithFakes(unittest.TestCase):
-    faster: FasterKeys
+    faster: FasterKDF
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.faster = FasterKeys()
+        cls.faster = FasterKDF()
         cls.faster.start()
 
     @classmethod

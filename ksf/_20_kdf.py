@@ -77,7 +77,7 @@ def _password_to_key_noncached(password: str, salt: bytes, size: int, pwr: int):
                   r=8, p=1)
 
 
-class FasterKeys:
+class FasterKDF:
     """The slower the key derivation function, the more reliable it is.
     However, it is very difficult to test slow functions. If the tests do not
     depend on specific hash values, you can use this context manager, which

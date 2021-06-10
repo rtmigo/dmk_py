@@ -5,7 +5,7 @@ import unittest
 from difflib import SequenceMatcher
 
 from ksf._00_common import bytes_to_fn_str, fnstr_to_bytes
-from ksf._20_kdf import FasterKeys, FilesetPrivateKey
+from ksf._20_kdf import FasterKDF, FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename, Imprint, \
     pk_matches_imprint_bytes
 from tests.common import testing_salt
@@ -26,11 +26,11 @@ assert lccs('abc123def', 'qweqwe1x2x3zz') == 1
 class Test(unittest.TestCase):
     # todo test the pk and the imprint does n
 
-    faster: FasterKeys
+    faster: FasterKDF
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.faster = FasterKeys()
+        cls.faster = FasterKDF()
         cls.faster.start()
 
     @classmethod
@@ -87,7 +87,7 @@ class Test(unittest.TestCase):
                 imp_bytes))
 
     def test_imporint_string_not_too_long(self):
-        with FasterKeys():
+        with FasterKDF():
             for i in range(50):
                 name = f'abc{i}.txt'
                 pk = FilesetPrivateKey(name, testing_salt)
@@ -95,14 +95,14 @@ class Test(unittest.TestCase):
 
     def test_encode_each_time_different(self):
         pk = FilesetPrivateKey('the_same_key', testing_salt)
-        with FasterKeys():
+        with FasterKDF():
             s = set()
             for _ in range(10):
                 s.add(Imprint(pk).as_str)
             self.assertEqual(len(s), 10)
 
     def test_hash_each_time_different(self):
-        with FasterKeys():
+        with FasterKDF():
             s = set()
             pk = FilesetPrivateKey('the_same_key', testing_salt)
             for _ in range(10):
