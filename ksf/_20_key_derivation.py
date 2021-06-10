@@ -8,7 +8,11 @@ from Crypto.Protocol.KDF import scrypt
 
 
 class FilesetPrivateKey:
-    """A fileset is a set of files related to the same item. One of these
+    """The 256-bit private key.
+
+    ---
+
+    Fileset is a set of files related to the same item. One of these
     files contains encrypted item data, others are fake or contain outdated
     data.
 
@@ -16,8 +20,8 @@ class FilesetPrivateKey:
     corresponding files, but also decrypt the data.
 
     The private key is derived from the item name. Computing a private key
-    from a name is the most resource-intensive task. We try to do this at
-    most once. After that, instead of a name, we always use only the key.
+    from a name is resource-intensive. We will do this at most once. After
+    that, instead of a name, we always use the key or its derivatives.
 
     ----
 
@@ -32,18 +36,12 @@ class FilesetPrivateKey:
 
     __slots__ = ["as_bytes"]
 
-    _power = 17  # larger values = slower function, better protection
+    _power = 17  # larger values = slower function, more secure
 
     # pow | Intel i7-8700K | AMD A9-9420e
     # ----|----------------|--------------
+    #  17 | 0.32 sec       | 0.58 sec
     #  18 | 0.65 sec       | 1.17 sec
-    #  17 | 0.32 sec       |
-
-    # power = 17:
-
-    # power = 18:
-    #   0.65 seconds on Intel i7-8700K
-    #   1.17 seconds on AMD A9-9420e
 
     salt = b"\xef\x87\xffr_\xed\xe2\xc5\x92\x11\x8e'F\xe6-C\xf1" \
            b"\xa9\xd4\x9fu\xc8\x05Y\x8b\xc3\x94\xd1\xbd\x10#B"

@@ -40,7 +40,7 @@ def generate_references():
             print(f"Written in {time.monotonic()-t}")
 
 
-@unittest.skip('changing format')
+#@unittest.skip('changing format')
 class TestRefs(unittest.TestCase):
     def test(self):
         d = CryptoDir(refs_dir)
