@@ -7,6 +7,7 @@ from base64 import b64encode
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ksf._00_common import MIN_DATA_FILE_SIZE
 from ksf._00_randoms import get_noncrypt_random_bytes
 from ksf._20_kdf import FasterKeys, FilesetPrivateKey
 from ksf._61_encryption import Encrypt, encrypt_to_dir, \
@@ -72,8 +73,9 @@ class TestEncryptDecrypt(unittest.TestCase):
             self.assertEqual(len(set(str(f) for f in files)), 10)
 
             sizes = set([f.stat().st_size for f in files])
-            print(sizes)
+            # at least three different file sizes
             self.assertGreater(len(sizes), 3)
+            self.assertTrue(all(x >= MIN_DATA_FILE_SIZE for x in sizes))
 
     def test_on_random_data(self):
         random.seed(55, version=2)

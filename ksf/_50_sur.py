@@ -8,6 +8,7 @@ from pathlib import Path
 
 from Crypto.Random import get_random_bytes
 
+from ksf._00_common import MIN_DATA_FILE_SIZE
 from ksf._00_wtf import WritingToTempFile
 from ksf._20_kdf import FilesetPrivateKey
 from ksf._40_imprint import Imprint, HashCollision, \
@@ -47,6 +48,10 @@ def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
     ref_size: The size of the real file. The surrogate file will have
     similar size but randomized.
     """
+
+    if target_size < MIN_DATA_FILE_SIZE:
+        raise ValueError
+
     target_file = target_dir / Imprint(fpk).as_str
     if target_file.exists():
         raise HashCollision

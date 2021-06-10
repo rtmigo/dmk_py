@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ksf._00_common import MIN_DATA_FILE_SIZE
 from ksf._00_randoms import get_noncrypt_random_bytes
 from ksf._20_kdf import FasterKeys, FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
@@ -88,19 +89,19 @@ class TestFileWithFakes(unittest.TestCase):
 
     def test_write_with_surrogates_sizes(self):
         # random.seed(9, version=2)
+
+        unique_sizes = set()
         with TemporaryDirectory() as tds:
             td = Path(tds)
             fpk_a = FilesetPrivateKey("some name")
-
-            all_sizes_ever = set()
-
             for _ in range(8):
                 source_file_a = td / "a"
                 source_file_a.write_bytes(b'abcdef')
                 update_fileset(source_file_a, fpk_a, td)
-                all_sizes_ever.update(f.stat().st_size for f in td.glob('*'))
+                unique_sizes.update(f.stat().st_size for f in td.glob('*'))
 
-            self.assertGreater(len(all_sizes_ever), 5)
+        self.assertGreater(len(unique_sizes), 5)
+        #self.assertTrue(all(x >= MIN_DATA_FILE_SIZE for x in unique_sizes))
 
     def test_write_with_surrogates(self):
         with TemporaryDirectory() as tds:

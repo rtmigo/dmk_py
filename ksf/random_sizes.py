@@ -5,12 +5,12 @@
 import random
 from typing import Iterable, Optional
 
-_MIN_SIZE = 1024
+from ksf._00_common import MIN_DATA_FILE_SIZE
 
 
 def _not_too_small(size: int) -> int:
-    if size < _MIN_SIZE:
-        return _MIN_SIZE + random.randint(0, 1024)
+    if size < MIN_DATA_FILE_SIZE:
+        return MIN_DATA_FILE_SIZE + random.randint(0, 1024)
     return size
 
 

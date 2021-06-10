@@ -1,3 +1,24 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
+"""The file storing the salt value is located in the same directory as the rest
+of the files. It has the same incomprehensible base64 name of the same length.
+
+The main thing that distinguishes it: the file size is less than a kilobyte
+(up to 1023 bytes).
+
+The salt is not secret - and anyone who has studied the principle of the
+program will be able to read the salt from the directory.
+
+Filename tricks make the origin of the data obscure. We will just have a
+directory with "random" data with "random" 48-byte names, and in which there
+is only one file less than a kilobyte.
+
+It can be hypothesized that this directory was created by this program, but
+without having at least one password, it is impossible to prove.
+"""
+
 import random
 from collections import Iterable
 from pathlib import Path
@@ -5,8 +26,8 @@ from pathlib import Path
 from Crypto.Random import get_random_bytes
 
 from ksf._00_common import PK_SALT_SIZE, BASENAME_SIZE, \
-    bytes_to_fn_str, MAX_SALT_FILE_SIZE, fnstr_to_bytes, read_or_fail, \
-    InsufficientData
+    bytes_to_fn_str, MAX_SALT_FILE_SIZE, read_or_fail, \
+    InsufficientData, looks_like_our_basename
 
 
 class CannotReadSalt(Exception):
@@ -17,7 +38,7 @@ class NotSaltFilename(CannotReadSalt):
     pass
 
 
-class SaltVerificationFailed(CannotReadSalt):
+class TooLargeForSaltFile(CannotReadSalt):
     pass
 
 
@@ -27,7 +48,7 @@ def write_salt(parent: Path) -> Path:
 
     # the file will start with salt continued with the bytes from filename
     salt = get_random_bytes(PK_SALT_SIZE)
-    data = salt + basename_bytes
+    data = salt  # + basename_bytes
 
     # computing the padding size
     max_padding_size = MAX_SALT_FILE_SIZE - len(data)
@@ -47,14 +68,16 @@ def write_salt(parent: Path) -> Path:
 
 
 def read_salt(file: Path):
-    basename_bytes = fnstr_to_bytes(file.name)
-    if len(basename_bytes) != BASENAME_SIZE:
+    if not looks_like_our_basename(file.name):
         raise NotSaltFilename
+
+    if file.stat().st_size > MAX_SALT_FILE_SIZE:
+        raise TooLargeForSaltFile
 
     with file.open('rb') as f:
         salt = read_or_fail(f, PK_SALT_SIZE)
-        if not read_or_fail(f, BASENAME_SIZE) == basename_bytes:
-            raise SaltVerificationFailed
+        # if not read_or_fail(f, BASENAME_SIZE) == basename_bytes:
+        #    raise SaltVerificationFailed
 
     assert len(salt) == PK_SALT_SIZE
     return salt
@@ -63,6 +86,6 @@ def read_salt(file: Path):
 def iter_salts_in_dir(parent: Path) -> Iterable[bytes]:
     for fn in parent.glob('*'):
         try:
-            return read_salt(fn)
+            yield read_salt(fn)
         except (CannotReadSalt, InsufficientData):
             continue
