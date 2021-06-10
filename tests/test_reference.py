@@ -1,4 +1,5 @@
 import shutil
+import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -16,7 +17,7 @@ refs_dir = Path(__file__).parent / "data_refs"
 
 
 def generate_references():
-    assert FilesetPrivateKey._power == 18
+    assert FilesetPrivateKey._power >= 17
 
     if not input(f"Really replace {refs_dir}? (y/n) ").lower().startswith('y'):
         print("Canceled")
@@ -34,7 +35,9 @@ def generate_references():
             td = Path(tds)
             source_file = td / "source"
             source_file.write_bytes(data)
+            t = time.monotonic()
             d.set_from_file(name, source_file)
+            print(f"Written in {time.monotonic()-t}")
 
 
 # @unittest.skip('changing format')
