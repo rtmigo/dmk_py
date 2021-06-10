@@ -13,13 +13,13 @@ from Crypto.Random import get_random_bytes
 
 from ksf._common import read_or_fail, InsufficientData, \
     looks_like_our_basename
-from ksf.utils.dirty_file import WritingToTempFile
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
+from ksf.cryptodir.fileset._10_fakes import set_random_last_modified
 from ksf.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
     pk_matches_imprint_bytes
-from ksf.cryptodir.fileset._10_fakes import set_random_last_modified
 from ksf.cryptodir.fileset._10_padding import IntroPadding
 from ksf.cryptodir.fileset.random_sizes import random_size_like_file_greater
+from ksf.utils.dirty_file import WritingToTempFile
 
 _DEBUG_PRINT = False
 
@@ -229,7 +229,7 @@ class Header(NamedTuple):
     data_size: int
 
 
-class DecryptedIo:
+class DecryptedIO:
     """
     Reads encrypted data in a "lazy manner".
 
@@ -337,6 +337,7 @@ class DecryptedIo:
 class _DecryptedFile:
     """It is better to always use DecryptedIO instead of this class.
     The class is kept for temporary compatibility with tests."""
+
     # todo remove all usages of this class
     def __init__(self,
                  source_file: Path,
@@ -344,7 +345,7 @@ class _DecryptedFile:
                  decrypt_body=True):
 
         with source_file.open('rb') as f:
-            di = DecryptedIo(fpk, f)
+            di = DecryptedIO(fpk, f)
             self.data_version = di.header.data_version
             self.size = di.header.data_size
 
@@ -360,24 +361,37 @@ class _DecryptedFile:
         target.write_bytes(self.data)
 
 
-def encrypt_to_dir(source_file: Path, fpk: FilesetPrivateKey,
-                   target_dir: Path,
-                   data_version: int = 0
-                   ) -> Path:
-    """The file contains two imprints: one in the file name, and the other
-    at the beginning of the file.
+def encrypt_file_to_dir(source_file: Path, fpk: FilesetPrivateKey,
+                        target_dir: Path,
+                        data_version: int = 0) -> Path:
+    # todo remove this method
+    with source_file.open('rb') as f:
+        return encrypt_io_to_dir(f,
+                                 fpk,
+                                 target_dir,
+                                 data_version)
 
-    Both imprints are generated from the same name, but with different
-    nonce values.
-    """
+    # imprint = Imprint(fpk)
+    #
+    # fn = target_dir / imprint.as_str
+    # assert looks_like_our_basename(fn.name)
+    # if fn.exists():
+    #     raise HashCollision
+    # Encrypt(fpk, data_version).file_to_file(source_file, fn)
+    # return fn
 
+
+def encrypt_io_to_dir(source_io: BinaryIO,
+                      fpk: FilesetPrivateKey,
+                      target_dir: Path,
+                      data_version: int = 0) -> Path:
     imprint = Imprint(fpk)
 
     fn = target_dir / imprint.as_str
     assert looks_like_our_basename(fn.name)
     if fn.exists():
         raise HashCollision
-    Encrypt(fpk, data_version).file_to_file(source_file, fn)
+    Encrypt(fpk, data_version).io_to_file(source_io, fn)
     return fn
 
 
@@ -386,7 +400,7 @@ def fpk_matches_header(fpk: FilesetPrivateKey, file: Path) -> bool:
     the `name`."""
     with file.open('rb') as f:
         try:
-            DecryptedIo(fpk, f)
+            DecryptedIO(fpk, f)
             return True
         except ImprintMismatch:
             return False

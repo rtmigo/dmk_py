@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Optional
 
 from ._10_kdf import FilesetPrivateKey
-from ._10_salt import find_salt_in_dir, write_salt
-from .fileset import update_fileset, Fileset, DecryptedIo
+from ._10_salt import find_salt_in_dir, write_salt_and_fakes
+from .fileset import update_fileset, Fileset, DecryptedIO
 
 
 class CryptoDir:
@@ -16,7 +16,7 @@ class CryptoDir:
 
         salt = find_salt_in_dir(self.directory)
         if salt is None:
-            salt, _ = write_salt(self.directory)
+            salt, _ = write_salt_and_fakes(self.directory)
         assert isinstance(salt, bytes)
         self.salt = salt
 
@@ -31,4 +31,4 @@ class CryptoDir:
             return None
 
         with fs.real_file.open('rb') as f:
-            return DecryptedIo(pk, f).read_data()
+            return DecryptedIO(pk, f).read_data()
