@@ -55,10 +55,10 @@ class TestFileWithFakes(unittest.TestCase):
             self.assertLess(min(lm_days),
                             datetime.date.today() - datetime.timedelta(days=30))
 
-            # newest file is newer than 11 months
+            # newest file is newer than 8 years
             self.assertGreater(max(lm_days),
                                datetime.date.today() - datetime.timedelta(
-                                   days=30 * 11))
+                               days=365.2425*8))
 
     def test_find(self):
         with TemporaryDirectory() as tds:

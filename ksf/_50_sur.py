@@ -18,8 +18,8 @@ assert datetime.timedelta(microseconds=MICROSECONDS_PER_DAY) \
            .total_seconds() == 60 * 60 * 24
 
 
-def _random_datetime(max_days_ago=366) -> datetime.datetime:
-    mcs = random.randint(0, MICROSECONDS_PER_DAY * max_days_ago)
+def _random_datetime(max_days_ago: float = 366) -> datetime.datetime:
+    mcs = random.randint(0, round(MICROSECONDS_PER_DAY * max_days_ago))
     delta = datetime.timedelta(microseconds=mcs)
     return datetime.datetime.now() - delta
 
@@ -30,7 +30,7 @@ def _set_file_last_modified(file: Path, dt: datetime.datetime):
 
 
 def set_random_last_modified(file: Path):
-    _set_file_last_modified(file, _random_datetime())
+    _set_file_last_modified(file, _random_datetime(max_days_ago=365.2425 * 10))
 
 
 def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
