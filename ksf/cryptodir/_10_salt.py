@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
-
 """The file storing the salt value is located in the same directory as the rest
 of the files. It has the same incomprehensible base64 name of the same length.
 

@@ -6,7 +6,7 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from ksf._common import bytes_to_fn_str, fnstr_to_bytes, blake192
+from ksf._common import bytes_to_fn_str, fnstr_to_bytes, blake192, BASENAME_SIZE
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 
 
@@ -17,7 +17,7 @@ class Imprint:
     Each new imprint is unique, although the PK is the same.
 
     Knowing the PK, we can tell if the imprint belongs to it.
- и
+
     Without knowing the PK, we can hardly do anything. We cannot
     reconstruct a PK from an imprint, or even suggest it. We cannot say
     whether two imprints correspond to the same PK or to different ones.
@@ -77,6 +77,9 @@ class Imprint:
         if len(h) != Imprint.FULL_LEN:
             raise ValueError
         return h[-Imprint.NONCE_LEN:]
+
+
+assert Imprint.FULL_LEN == BASENAME_SIZE
 
 
 def pk_matches_codename(pk: FilesetPrivateKey, codename: str) -> bool:
