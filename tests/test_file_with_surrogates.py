@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ksf._00_randoms import get_noncrypt_random_bytes
-from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
+from ksf._20_kdf import FasterKeys, FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_fake
 from ksf._61_encryption import encrypt_to_dir, _DecryptedFile

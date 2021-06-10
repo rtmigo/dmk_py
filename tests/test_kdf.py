@@ -3,10 +3,15 @@
 
 import unittest
 
-from ksf._20_key_derivation import FilesetPrivateKey
+from ksf._20_kdf import FilesetPrivateKey
 
 
 class TestPtk(unittest.TestCase):
+
+    def test_constant(self):
+        assert FilesetPrivateKey._power >= 16
+        # self.assertEqual(FilesetPrivateKey('password'))
+        # self.assertEqual(len(FilesetPrivateKey.salt), 32)
 
     def test_salt_len(self):
         self.assertEqual(len(FilesetPrivateKey.salt), 32)
@@ -51,44 +56,6 @@ class TestPtk(unittest.TestCase):
             FilesetPrivateKey._power = POWER
 
         self.assertEqual(len(seen), 3)
-
-    # №        KL = 24
-    #
-    #     p = password_to_key(PWD, SALT, KL)
-    #     self.assertNotIn(p, seen)
-    #     seen.add(p)
-    #
-    #
-    #     # different salt
-    #     p = password_to_key(PWD, bytes([99, 88, 77]), KL)
-    #     self.assertNotIn(p, seen)
-    #     seen.add(p)
-    #
-    #     # different key length
-    #     p = password_to_key(PWD, SALT, 16)
-    #     self.assertNotIn(p, seen)
-    #     seen.add(p)
-    #
-    #     try:
-    #         KdfSettings.power -= 1
-    #
-    #         # different power
-    #         p = password_to_key(PWD, SALT, KL)
-    #         self.assertNotIn(p, seen)
-    #         seen.add(p)
-    #
-    #     finally:
-    #         KdfSettings.power = POWER
-    #
-    #     self.assertEqual(len(seen), 5)
-    #
-    # def test_empty_password(self):
-    #     r = password_to_key('', bytes([1, 2, 3]))
-    #     self.assertIsInstance(r, bytes)
-    #
-    # def test_empty_salt(self):
-    #     r = password_to_key('pass', bytes([]))
-    #     self.assertIsInstance(r, bytes)
 
 
 if __name__ == "__main__":

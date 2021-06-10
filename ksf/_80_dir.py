@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from ksf._20_key_derivation import FilesetPrivateKey
+from ksf._20_kdf import FilesetPrivateKey
 from ksf._61_encryption import _DecryptedFile
 from ksf._70_navigator import update_fileset, Fileset
 

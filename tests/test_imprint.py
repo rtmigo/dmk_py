@@ -4,9 +4,9 @@
 import unittest
 from difflib import SequenceMatcher
 
-from ksf._20_key_derivation import FasterKeys, FilesetPrivateKey
-from ksf._40_imprint import bytes_to_str, str_to_bytes, \
-    pk_matches_codename, Imprint, pk_matches_imprint_bytes
+from ksf._20_kdf import FasterKeys, FilesetPrivateKey
+from ksf._40_imprint import pk_matches_codename, Imprint, pk_matches_imprint_bytes
+from ksf._00_common import bytes_to_fn_str, fnstr_to_bytes
 
 
 def lccs(a, b):
@@ -42,9 +42,9 @@ class Test(unittest.TestCase):
 
     def test_bytes_to_str_to_bytes(self):
         b = bytes([11, 33, 22, 55, 44])
-        encoded = bytes_to_str(b)
+        encoded = bytes_to_fn_str(b)
         self.assertEqual(encoded, 'CyEWNyw=')
-        self.assertEqual(str_to_bytes(encoded), b)
+        self.assertEqual(fnstr_to_bytes(encoded), b)
 
     def test_key_not_in_imprint(self):
         pk = FilesetPrivateKey("pass")

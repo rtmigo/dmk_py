@@ -6,7 +6,7 @@ import random
 from pathlib import Path
 from typing import List, Optional
 
-from ksf._20_key_derivation import FilesetPrivateKey
+from ksf._20_kdf import FilesetPrivateKey
 from ksf._40_imprint import pk_matches_codename
 from ksf._50_sur import create_fake
 from ksf._61_encryption import fpk_matches_header, encrypt_to_dir, \

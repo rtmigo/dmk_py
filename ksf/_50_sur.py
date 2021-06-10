@@ -9,7 +9,7 @@ from pathlib import Path
 from Crypto.Random import get_random_bytes
 
 from ksf._00_wtf import WritingToTempFile
-from ksf._20_key_derivation import FilesetPrivateKey
+from ksf._20_kdf import FilesetPrivateKey
 from ksf._40_imprint import Imprint, HashCollision, \
     pk_matches_imprint_bytes
 

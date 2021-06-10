@@ -12,7 +12,7 @@ from Crypto.Random import get_random_bytes
 
 from ksf._00_common import read_or_fail, InsufficientData
 from ksf._00_wtf import WritingToTempFile
-from ksf._20_key_derivation import FilesetPrivateKey
+from ksf._20_kdf import FilesetPrivateKey
 from ksf._40_imprint import Imprint, HashCollision, pk_matches_imprint_bytes
 from ksf._50_sur import set_random_last_modified
 from ksf._60_intro_padding import IntroPadding
