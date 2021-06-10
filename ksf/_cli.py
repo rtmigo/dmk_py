@@ -2,6 +2,8 @@ import time
 
 import click
 
+from ksf._00_common import PK_SALT_SIZE
+from ksf._00_randoms import get_noncrypt_random_bytes
 from ksf._20_kdf import FilesetPrivateKey
 
 
@@ -9,9 +11,10 @@ from ksf._20_kdf import FilesetPrivateKey
 def bench():
     """Measures the KDF speed: the private key computation time."""
     a = []
+    random_salt = get_noncrypt_random_bytes(PK_SALT_SIZE)
     for i in range(4):
         t = time.monotonic()
-        FilesetPrivateKey(str(i))
+        FilesetPrivateKey(str(i), random_salt)
         d = time.monotonic() - t
         a.append(d)
         print(f'{i + 1} {d:.3f} sec')

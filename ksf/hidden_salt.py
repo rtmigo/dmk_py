@@ -20,9 +20,9 @@ without having at least one password, it is impossible to prove.
 """
 
 import random
-from collections import Iterable
+
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Iterable
 
 from Crypto.Random import get_random_bytes
 
