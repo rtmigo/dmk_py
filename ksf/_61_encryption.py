@@ -224,7 +224,7 @@ def _encrypt_file_to_file(source_file: Path,
             assert padding_size >= 0
             outfile.write(get_random_bytes(padding_size))
             set_random_last_modified(wtf.dirty)  # todo test it
-            wtf.replace()
+        wtf.replace()
 
 
 class DecryptedFile:
