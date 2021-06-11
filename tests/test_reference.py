@@ -30,6 +30,7 @@ def generate_references():
 
     d = CryptoDir(refs_dir)
 
+
     for name, data in ref_content:
         with TemporaryDirectory() as tds:
             td = Path(tds)
@@ -44,13 +45,14 @@ def generate_references():
 class TestRefs(unittest.TestCase):
     def test(self):
         d = CryptoDir(refs_dir)
+        print("References salt", tuple(d.salt))
         for name, data in ref_content:
             self.assertEqual(d.get(name), data)
 
 
 if __name__ == "__main__":
     # unittest.main()
-    generate_references()
+    #generate_references()
     print("Testing")
     TestRefs().test()
     print("OK")

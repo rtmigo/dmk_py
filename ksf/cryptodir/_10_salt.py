@@ -22,12 +22,13 @@ base64-encoded random name. It contains at least one file smaller than
 import random
 import stat
 from pathlib import Path
-from typing import Optional, Tuple, List
+from typing import Optional, List, NamedTuple
 
 from Crypto.Random import get_random_bytes
 
 from ksf._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, read_or_fail, \
     looks_like_our_basename, unique_filename
+from ksf.cryptodir.fileset._10_fakes import set_random_last_modified
 
 
 class SaltFileError(Exception):
@@ -71,30 +72,44 @@ def _write_salt_to_file(target: Path) -> bytes:
     return salt
 
 
-def write_salt_and_fakes(parent: Path) -> Tuple[bytes, Path]:
+class SaltAndFakes(NamedTuple):
+    salt: bytes
+    file: Path
+    fakes: List[Path]
+
+
+def write_salt_and_fakes(parent: Path,
+                         min_fakes=1,
+                         max_fakes=8) -> SaltAndFakes:
     # generating new filenames that are not repeating
     # and do not exist as files
     salt_and_fakes: List[Path] = []
-    n = random.randint(1, 8)
+    n = random.randint(min_fakes, max_fakes)
     while len(salt_and_fakes) < n:
         fn = unique_filename(parent)
         if fn not in salt_and_fakes:
             salt_and_fakes.append(fn)
 
     # sorting alphabetically
-    salt_and_fakes.sort()
+    # (we need to sort bt name, not just sort paths, because otherwise
+    #  on Windows paths are sorted in case-insensitive manner)
+    salt_and_fakes.sort(key=lambda p: p.name)
 
     # writing salt to the first file
     salt_file = salt_and_fakes[0]
     salt_bytes = _write_salt_to_file(salt_file)
 
     # writing fakes
-    for fake_file in salt_and_fakes[1:]:
+    fakes = salt_and_fakes[1:]
+    for fake_file in fakes:
         _write_salt_to_file(fake_file)
 
     assert find_salt_in_dir(parent) == salt_bytes
 
-    return salt_bytes, salt_file
+    for f in salt_and_fakes:
+        set_random_last_modified(f)
+
+    return SaltAndFakes(salt_bytes, salt_file, fakes)
 
 
 def read_salt(file: Path):
@@ -119,7 +134,10 @@ def read_salt(file: Path):
 
 def find_salt_in_dir(parent: Path) -> Optional[bytes]:
     salt_file: Optional[Path] = None
-    for fn in sorted(parent.glob('*')):
+    # we need to sort bt name, not just sort paths, because otherwise
+    # on Windows paths are sorted in case-insensitive manner
+    for fn in sorted(parent.glob('*'), key=lambda p: p.name):
+        print(f"trying salt {fn}")
         if looks_like_our_basename(
                 fn.name) and fn.stat().st_size <= MAX_SALT_FILE_SIZE:
             salt_file = fn
