@@ -111,7 +111,8 @@ class TestEncryptDecrypt(unittest.TestCase):
             self.assertIn(body, source_file.read_bytes())
 
             # the same way we can find original content in the original file
-            self.assertNotIn(body, encrypted_file.read_bytes())
+            if len(body) > 4:
+                self.assertNotIn(body, encrypted_file.read_bytes())
 
             self.assertTrue(encrypted_file.exists())
 
