@@ -164,7 +164,7 @@ class Encrypt:
 
         src_size_bytes = uint32_to_bytes(src_size)
 
-        format_identifier = 'AG'.encode('ascii')
+        format_identifier = 'LS'.encode('ascii')  # little secret
         assert len(format_identifier) == 2
 
         header_bytes = b''.join((
@@ -338,7 +338,7 @@ class DecryptedIO:
             self.__read_and_decrypt(ip_len)
 
         format_id = self.__read_and_decrypt(2)
-        assert format_id.decode('ascii') == "AG"
+        assert format_id.decode('ascii') == "LS"
 
         # FORMAT VERSION is always 1
         format_version_bytes = self.__read_and_decrypt(VERSION_LEN)
@@ -434,10 +434,10 @@ def encrypt_io_to_dir(source_io: BinaryIO,
                       fpk: FilesetPrivateKey,
                       target_dir: Path,
                       data_version: int = 0) -> Path:
-    #imprint = Imprint(fpk)
-    #unique_filename
+    # imprint = Imprint(fpk)
+    # unique_filename
 
-    fn = unique_filename(target_dir) # / imprint.as_str
+    fn = unique_filename(target_dir)  # / imprint.as_str
     assert looks_like_our_basename(fn.name)
     if fn.exists():
         raise HashCollision
@@ -451,7 +451,7 @@ def is_file_from_group(fpk: FilesetPrivateKey, file: Path) -> bool:
             DecryptedIO(fpk, f).read_imprint_a()
             return True
         except (InsufficientData, GroupImprintMismatch) as e:
-            #print("EXC", type(e))
+            # print("EXC", type(e))
             return False
 
 
