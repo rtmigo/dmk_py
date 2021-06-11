@@ -43,6 +43,23 @@ def unique_filename(parent: Path) -> Path:
     for _ in range(999999):
         # length is not secure, but bytes are.
         # How to make the length secure?
+        basename = ''
+        for _ in range(random.randint(2, 12)):
+            # on windows files are not really case-sensitive.
+            # So we prefer lowercase
+            basename += random.choice('abcdefghijklmnopqrstuvwxyz0123456789')
+
+        # basename = bytes_to_fn_str(get_random_bytes(length))
+        file = parent / basename
+        if not file.exists():
+            return file
+    raise RuntimeError("Cannot find unique filename")
+
+
+def unique_filename_old(parent: Path) -> Path:
+    for _ in range(999999):
+        # length is not secure, but bytes are.
+        # How to make the length secure?
         length = random.randint(1, 12)
         basename = bytes_to_fn_str(get_random_bytes(length))
         file = parent / basename

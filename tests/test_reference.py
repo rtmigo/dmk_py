@@ -51,8 +51,8 @@ class TestRefs(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # unittest.main()
-    #generate_references()
+    #unittest.main()
+    generate_references()
     print("Testing")
     TestRefs().test()
     print("OK")
