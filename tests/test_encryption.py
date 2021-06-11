@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 from ksf._common import MIN_DATA_FILE_SIZE
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from ksf.cryptodir.fileset._20_encryption import Encrypt, encrypt_file_to_dir, \
-    ChecksumMismatch, _DecryptedFile, fpk_matches_header, encrypt_io_to_dir, \
+    ChecksumMismatch, _DecryptedFile, is_file_with_data, encrypt_io_to_dir, \
     DecryptedIO
 from ksf.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
@@ -43,11 +43,11 @@ class TestEncryptDecrypt(unittest.TestCase):
             Encrypt(FilesetPrivateKey(NAME, testing_salt)).file_to_file(source,
                                                                         right)
             self.assertTrue(
-                fpk_matches_header(FilesetPrivateKey(NAME, testing_salt),
-                                   right))
+                is_file_with_data(FilesetPrivateKey(NAME, testing_salt),
+                                  right))
             self.assertFalse(
-                fpk_matches_header(FilesetPrivateKey('labuda', testing_salt),
-                                   right))
+                is_file_with_data(FilesetPrivateKey('labuda', testing_salt),
+                                  right))
 
     def test_encrypted_does_not_contain_plain(self):
         with TemporaryDirectory() as tds:

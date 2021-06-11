@@ -6,8 +6,8 @@ of the files. It has the same incomprehensible base64 name of the same length.
 
 The file can be uniquely identified by the following features:
 
-1) The has the base64 name of the proper length (48 bytes)
-2) It is smaller than 1024 bytes
+1) It is smaller than 1024 bytes
+2) It's name does not contain dot
 3) Among the files that satisfy the first two conditions, this is the
    first alphabetically
 
@@ -15,30 +15,34 @@ The salt is not secret - and anyone who has studied the principle of the
 program will be able to read the salt from the directory.
 
 However, the directory looks totally "random". It is some directory with
-base64-encoded 48-byte sequences. It contains at least one file smaller
-than 512 bytes.
+base64-encoded random name. It contains at least one file smaller than
+1024 bytes.
 """
 
 import random
+import stat
 from pathlib import Path
 from typing import Optional, Tuple, List
 
 from Crypto.Random import get_random_bytes
 
-from ksf._common import PK_SALT_SIZE, BASENAME_SIZE, \
-    bytes_to_fn_str, MAX_SALT_FILE_SIZE, read_or_fail, \
-    looks_like_our_basename
+from ksf._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, read_or_fail, \
+    looks_like_our_basename, unique_filename
 
 
-class CannotReadSalt(Exception):
+class SaltFileError(Exception):
     pass
 
 
-class NotSaltFilename(CannotReadSalt):
+class SaltFileBadName(SaltFileError):
     pass
 
 
-class TooLargeForSaltFile(CannotReadSalt):
+class SaltFileIsNotFile(SaltFileError):
+    pass
+
+
+class SaltFileTooLarge(SaltFileError):
     pass
 
 
@@ -68,11 +72,16 @@ def _write_salt_to_file(target: Path) -> bytes:
 
 
 def write_salt_and_fakes(parent: Path) -> Tuple[bytes, Path]:
-    salt_and_fakes: List[Path] = list()
-    for _ in range(random.randint(1, 8)):
-        basename_bytes = get_random_bytes(BASENAME_SIZE)
-        basename = bytes_to_fn_str(basename_bytes)
-        salt_and_fakes.append(parent / basename)
+    # generating new filenames that are not repeating
+    # and do not exist as files
+    salt_and_fakes: List[Path] = []
+    n = random.randint(1, 8)
+    while len(salt_and_fakes) < n:
+        fn = unique_filename(parent)
+        if fn not in salt_and_fakes:
+            salt_and_fakes.append(fn)
+
+    # sorting alphabetically
     salt_and_fakes.sort()
 
     # writing salt to the first file
@@ -90,10 +99,16 @@ def write_salt_and_fakes(parent: Path) -> Tuple[bytes, Path]:
 
 def read_salt(file: Path):
     if not looks_like_our_basename(file.name):
-        raise NotSaltFilename
+        raise SaltFileBadName
+
+    fs = file.stat()
+    if not stat.S_ISREG(fs.st_mode):
+        raise SaltFileIsNotFile
+    # if stat.S_ISDIR(fs.st_mode) or stat.S_ISLNK(fs.st_mode) or
+    # fs.st_flags
 
     if file.stat().st_size > MAX_SALT_FILE_SIZE:
-        raise TooLargeForSaltFile
+        raise SaltFileTooLarge
 
     with file.open('rb') as f:
         salt = read_or_fail(f, PK_SALT_SIZE)

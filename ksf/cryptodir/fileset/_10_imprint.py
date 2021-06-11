@@ -6,7 +6,7 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from ksf._common import bytes_to_fn_str, fnstr_to_bytes, blake192, BASENAME_SIZE
+from ksf._common import bytes_to_fn_str, blake192, BASENAME_SIZE
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 
 
@@ -82,21 +82,21 @@ class Imprint:
 assert Imprint.FULL_LEN == BASENAME_SIZE
 
 
-def pk_matches_codename(pk: FilesetPrivateKey, codename: str) -> bool:
-    try:
-        bts = fnstr_to_bytes(codename)
-    except binascii.Error:
-        return False
-
-    if len(bts) != Imprint.FULL_LEN:
-        return False
-
-    nonce = Imprint.bytes_to_nonce(bts)
-
-    assert len(nonce) == Imprint.NONCE_LEN
-    return codename == Imprint(pk, nonce=nonce).as_str
-
-
+# def pk_matches_codename(pk: FilesetPrivateKey, codename: str) -> bool:
+#     try:
+#         bts = fnstr_to_bytes(codename)
+#     except binascii.Error:
+#         return False
+#
+#     if len(bts) != Imprint.FULL_LEN:
+#         return False
+#
+#     nonce = Imprint.bytes_to_nonce(bts)
+#
+#     assert len(nonce) == Imprint.NONCE_LEN
+#     return codename == Imprint(pk, nonce=nonce).as_str
+#
+#
 def pk_matches_imprint_bytes(pk: FilesetPrivateKey, imprint: bytes) -> bool:
     nonce = Imprint.bytes_to_nonce(imprint)
     return Imprint(pk, nonce=nonce).as_bytes == imprint

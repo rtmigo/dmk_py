@@ -9,9 +9,8 @@ from typing import List, Optional, BinaryIO
 from ksf._common import MIN_DATA_FILE_SIZE
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_fakes import create_fake
-from ksf.cryptodir.fileset._10_imprint import pk_matches_codename
-from ksf.cryptodir.fileset._20_encryption import fpk_matches_header, \
-    _DecryptedFile, encrypt_io_to_dir
+from ksf.cryptodir.fileset._20_encryption import is_file_with_data, \
+    _DecryptedFile, encrypt_io_to_dir, is_file_from_group
 from ksf.cryptodir.fileset.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file
 
@@ -32,7 +31,7 @@ def _get_newest_file(files: List[Path], pk: FilesetPrivateKey) -> Path:
     return latest_files[0]
 
 
-class Fileset:
+class Group:
     def __init__(self, parent: Path, fpk: FilesetPrivateKey):
         self.parent = parent
         self.fpk = fpk
@@ -42,10 +41,12 @@ class Fileset:
         # `files` are all files related to the current item,
         # the real one and the surrogates
         self.all_files = [p for p in self.parent.glob('*')
-                          if pk_matches_codename(self.fpk, p.name)]
+                          if p.is_file() and is_file_from_group(self.fpk, p)]
+        #
+                          #pk_matches_codename(self.fpk, p.name)]
 
         reals = [p for p in self.all_files
-                 if fpk_matches_header(self.fpk, p)]
+                 if is_file_with_data(self.fpk, p)]
 
         if len(reals) == 1:
             self.real_file = reals[0]
@@ -102,7 +103,7 @@ def dir_to_file_sizes(d: Path) -> List[int]:
     return [f.stat().st_size for f in d.glob('*') if f.is_file]
 
 
-def increased_data_version(fileset: Fileset) -> int:
+def increased_data_version(fileset: Group) -> int:
     MAX_INT64 = 0x7FFFFFFFFFFFFFFF
     if fileset.real_file:
         df = _DecryptedFile(fileset.real_file, fileset.fpk, decrypt_body=False)
@@ -140,7 +141,7 @@ def update_fileset(source_io: BinaryIO,
 
     tasks: List[Task] = list()
 
-    fileset = Fileset(target_dir, fpk)
+    fileset = Group(target_dir, fpk)
 
     new_data_version = increased_data_version(fileset)
 

@@ -5,9 +5,10 @@ from tempfile import TemporaryDirectory
 
 from ksf._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, InsufficientData, \
     bytes_to_fn_str, BASENAME_SIZE, looks_like_our_basename
+from ksf.cryptodir._10_salt import write_salt_and_fakes, read_salt, \
+    SaltFileBadName, \
+    SaltFileTooLarge, find_salt_in_dir, SaltFileIsNotFile
 from ksf.utils.randoms import get_noncrypt_random_bytes
-from ksf.cryptodir._10_salt import write_salt_and_fakes, read_salt, NotSaltFilename, \
-    TooLargeForSaltFile, find_salt_in_dir
 
 
 class TestSaltFile(unittest.TestCase):
@@ -22,8 +23,19 @@ class TestSaltFile(unittest.TestCase):
             self.assertEqual(read_salt(salt_file), salt)
 
     def test_fails_wrong_fn(self):
-        with self.assertRaises(NotSaltFilename):
-            read_salt(Path('/tmp/file'))
+        with self.assertRaises(SaltFileBadName):
+            read_salt(Path('/tmp/.file'))
+        with self.assertRaises(SaltFileBadName):
+            read_salt(Path('/tmp/thumbs.db'))
+
+    def test_fails_if_not_file(self):
+        with TemporaryDirectory() as tds:
+            sub = Path(tds) / "nameok"
+            with self.assertRaises(FileNotFoundError):
+                read_salt(sub)
+            sub.mkdir()
+            with self.assertRaises(SaltFileIsNotFile):
+                read_salt(sub)
 
     # def test_fails_too_large(self):
     #     with TemporaryDirectory() as tds:
@@ -37,7 +49,7 @@ class TestSaltFile(unittest.TestCase):
         with TemporaryDirectory() as tds:
             _, salt_file = write_salt_and_fakes(Path(tds))
             salt_file.write_bytes(b'1' * (MAX_SALT_FILE_SIZE + 1))
-            with self.assertRaises(TooLargeForSaltFile):
+            with self.assertRaises(SaltFileTooLarge):
                 read_salt(salt_file)
 
     def test_fails_insufficient(self):
@@ -70,11 +82,11 @@ class TestSaltsInDir(unittest.TestCase):
             self.assertEqual(len(salt), PK_SALT_SIZE)
 
             # writing a lot of small files with wrong names
-            for _ in range(50):
-                bn = bytes_to_fn_str(get_noncrypt_random_bytes(2))
-                assert not looks_like_our_basename(bn)
-                (temp_dir / bn).write_bytes(
-                    random_file_content(0, MAX_SALT_FILE_SIZE))
+            # for _ in range(50):
+            #     bn = bytes_to_fn_str(get_noncrypt_random_bytes(2))
+            #     assert not looks_like_our_basename(bn)
+            #     (temp_dir / bn).write_bytes(
+            #         random_file_content(0, MAX_SALT_FILE_SIZE))
 
             # writing a lot of large files with correct names
             for _ in range(50):
@@ -87,10 +99,13 @@ class TestSaltsInDir(unittest.TestCase):
             found_again = find_salt_in_dir(temp_dir)
             self.assertEqual(found_again, salt)
 
-
-            #salts = list(iter_salts_in_dir(td))
+            # salts = list(iter_salts_in_dir(td))
 
         # self.assertEqual(len(salts), 1)
         # salt = salts[0]
         # self.assertIsInstance(salt, bytes)
         # self.assertEqual(len(salt), PK_SALT_SIZE)
+
+
+if __name__ == "__main__":
+    unittest.main()

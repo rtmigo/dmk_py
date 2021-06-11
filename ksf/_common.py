@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-
+import random
 from base64 import urlsafe_b64encode, urlsafe_b64decode
+from pathlib import Path
 from typing import BinaryIO, Tuple
 
 from Crypto.Hash import BLAKE2b
+from Crypto.Random import get_random_bytes
 
 PK_SALT_SIZE = 32
 PK_SIZE = 32
@@ -25,15 +27,28 @@ def read_or_fail(f: BinaryIO, n: int) -> bytes:
 
 
 def looks_like_our_basename(txt: str) -> bool:
-    try:
-        bytes = fnstr_to_bytes(txt)
-        return len(bytes) == BASENAME_SIZE
-    except ValueError:
-        return False
+    return '.' not in txt
+    # try:
+    #     bytes = fnstr_to_bytes(txt)
+    #     return len(bytes) == BASENAME_SIZE
+    # except ValueError:
+    #     return False
 
 
 class InsufficientData(Exception):
     pass
+
+
+def unique_filename(parent: Path) -> Path:
+    for _ in range(999999):
+        # length is not secure, but bytes are.
+        # How to make the length secure?
+        length = random.randint(1, 12)
+        basename = bytes_to_fn_str(get_random_bytes(length))
+        file = parent / basename
+        if not file.exists():
+            return file
+    raise RuntimeError("Cannot find unique filename")
 
 
 def bytes_to_fn_str(data: bytes) -> str:

@@ -8,7 +8,8 @@ from pathlib import Path
 
 from Crypto.Random import get_random_bytes
 
-from ksf._common import MIN_DATA_FILE_SIZE, looks_like_our_basename
+from ksf._common import MIN_DATA_FILE_SIZE, looks_like_our_basename, \
+    unique_filename
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
     pk_matches_imprint_bytes
@@ -37,6 +38,8 @@ def set_random_last_modified(file: Path):
 def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
     """Creates a fake file.
 
+    WRONG DOC (NEEDS REWRITE)
+
     The file name of the will be the correct imprint from the [fpk]. But the
     file content is random, so the file header is not a correct imprint
     from [fpk].
@@ -52,17 +55,22 @@ def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
     if target_size < MIN_DATA_FILE_SIZE:
         raise ValueError
 
-    target_file = target_dir / Imprint(fpk).as_str
+    target_file = unique_filename(target_dir) #target_dir / Imprint(fpk).as_str  # todo random fn
     assert looks_like_our_basename(target_file.name)
-    if target_file.exists():
-        raise HashCollision
+    assert not target_file.exists()
+    #if target_file.exists():
+    #    raise HashCollision
     # size = randomized_size(target_size) # todo
-    non_matching_header = get_random_bytes(Imprint.FULL_LEN)
-    if pk_matches_imprint_bytes(fpk, non_matching_header):
-        raise HashCollision
+    # non_matching_header = get_random_bytes(Imprint.FULL_LEN)
+    # if pk_matches_imprint_bytes(fpk, non_matching_header):
+    #     raise HashCollision
+
 
     with WritingToTempFile(target_file) as wtf:
-        # must be the same as writing the real file
-        wtf.dirty.write_bytes(get_random_bytes(target_size))  # todo chunks?
+        with wtf.dirty.open('wb') as outp:
+            outp.write(Imprint(fpk).as_bytes)  # imprint_a
+            outp.write(get_random_bytes(target_size-Imprint.FULL_LEN))  # todo chunks?
         set_random_last_modified(wtf.dirty)
         wtf.replace()
+
+    return target_file
