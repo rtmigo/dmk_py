@@ -132,7 +132,7 @@ def read_salt(file: Path):
 
 def find_salt_in_dir(parent: Path) -> Optional[bytes]:
     salt_file: Optional[Path] = None
-    for fn in sorted(parent.glob('*')):
+    for fn in sorted(parent.glob('*'), key=lambda p: p.name):
         print(f"trying salt {fn}")
         if looks_like_our_basename(
                 fn.name) and fn.stat().st_size <= MAX_SALT_FILE_SIZE:
