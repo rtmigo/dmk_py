@@ -91,7 +91,9 @@ def write_salt_and_fakes(parent: Path,
             salt_and_fakes.append(fn)
 
     # sorting alphabetically
-    salt_and_fakes.sort()
+    # (we need to sort bt name, not just sort paths, because otherwise
+    #  on Windows paths are sorted in case-insensitive manner)
+    salt_and_fakes.sort(key=lambda p: p.name)
 
     # writing salt to the first file
     salt_file = salt_and_fakes[0]
@@ -132,6 +134,8 @@ def read_salt(file: Path):
 
 def find_salt_in_dir(parent: Path) -> Optional[bytes]:
     salt_file: Optional[Path] = None
+    # we need to sort bt name, not just sort paths, because otherwise
+    # on Windows paths are sorted in case-insensitive manner
     for fn in sorted(parent.glob('*'), key=lambda p: p.name):
         print(f"trying salt {fn}")
         if looks_like_our_basename(
