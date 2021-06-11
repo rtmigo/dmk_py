@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from ksf.cryptodir.fileset._10_fakes import create_fake
-from ksf.cryptodir.fileset._20_encryption import encrypt_file_to_dir, \
+from ksf.cryptodir.fileset._25_encryption import encrypt_file_to_dir, \
     _DecryptedFile, is_file_from_group
 from ksf.cryptodir.fileset._30_navigator import Group, update_fileset_old
 from ksf.utils.randoms import get_noncrypt_random_bytes

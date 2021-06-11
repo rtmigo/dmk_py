@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 
 from ksf._common import MIN_DATA_FILE_SIZE
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from ksf.cryptodir.fileset._20_encryption import Encrypt, encrypt_file_to_dir, \
+from ksf.cryptodir.fileset._25_encryption import Encrypt, encrypt_file_to_dir, \
     ChecksumMismatch, _DecryptedFile, is_file_with_data, encrypt_io_to_dir, \
     DecryptedIO
 from ksf.utils.randoms import get_noncrypt_random_bytes
