@@ -6,7 +6,7 @@ from difflib import SequenceMatcher
 
 from ksf._common import bytes_to_fn_str, fnstr_to_bytes
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from ksf.cryptodir.fileset._10_imprint import pk_matches_codename, Imprint, \
+from ksf.cryptodir.fileset._10_imprint import Imprint, \
     pk_matches_imprint_bytes
 from tests.common import testing_salt
 
@@ -58,19 +58,19 @@ class Test(unittest.TestCase):
 
         self.assertEqual(imp.bytes_to_nonce(imp.as_bytes), imp.nonce)
 
-    def test_match_codename(self):
-        name = 'abc.txt'
-        pk = FilesetPrivateKey(name, testing_salt)
-        encoded = Imprint(pk).as_str
-
-        self.assertTrue(
-            pk_matches_codename(pk, encoded))
-        self.assertFalse(
-            pk_matches_codename(FilesetPrivateKey('other.txt', testing_salt),
-                                encoded))
-        self.assertFalse(
-            pk_matches_codename(FilesetPrivateKey('another.txt', testing_salt),
-                                encoded))
+    # def test_match_codename(self):
+    #     name = 'abc.txt'
+    #     pk = FilesetPrivateKey(name, testing_salt)
+    #     encoded = Imprint(pk).as_str
+    #
+    #     self.assertTrue(
+    #         pk_matches_codename(pk, encoded))
+    #     self.assertFalse(
+    #         pk_matches_codename(FilesetPrivateKey('other.txt', testing_salt),
+    #                             encoded))
+    #     self.assertFalse(
+    #         pk_matches_codename(FilesetPrivateKey('another.txt', testing_salt),
+    #                             encoded))
 
     def test_match_bytes(self):
         name = 'abc.txt'

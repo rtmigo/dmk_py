@@ -6,12 +6,12 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf.utils.randoms import get_noncrypt_random_bytes
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from ksf.cryptodir.fileset._10_imprint import pk_matches_codename
 from ksf.cryptodir.fileset._10_fakes import create_fake
-from ksf.cryptodir.fileset._20_encryption import encrypt_file_to_dir, _DecryptedFile
-from ksf.cryptodir.fileset._30_navigator import Fileset, update_fileset_old
+from ksf.cryptodir.fileset._20_encryption import encrypt_file_to_dir, \
+    _DecryptedFile, is_file_from_group
+from ksf.cryptodir.fileset._30_navigator import Group, update_fileset_old
+from ksf.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
 
@@ -34,7 +34,8 @@ class TestFileWithFakes(unittest.TestCase):
             N = 10
             pk = FilesetPrivateKey('abc', testing_salt)
             for _ in range(N):
-                create_fake(pk, 2000, td)
+                fake_file = create_fake(pk, 2000, td)
+                #self.assertTrue(is_file_from_group(pk, fake_file))
 
             # check we really created 10 files with unique names
             files = list(td.glob('*'))
@@ -42,7 +43,8 @@ class TestFileWithFakes(unittest.TestCase):
 
             # check each encoded name matches source name
             for f in files:
-                self.assertTrue(pk_matches_codename(pk, f.name))
+                self.assertTrue(is_file_from_group(pk, f))
+                self.assertEqual(f.stat().st_size, 2000)
 
             # # check sizes are mostly different
             # sizes = set(f.stat().st_size for f in files)
@@ -59,7 +61,7 @@ class TestFileWithFakes(unittest.TestCase):
             # newest file is newer than 8 years
             self.assertGreater(max(lm_days),
                                datetime.date.today() - datetime.timedelta(
-                               days=365.2425*8))
+                                   days=365.2425 * 8))
 
     def test_find(self):
         with TemporaryDirectory() as tds:
@@ -73,7 +75,7 @@ class TestFileWithFakes(unittest.TestCase):
                 create_fake(pk, 2000, td)
             real = encrypt_file_to_dir(source_file, pk, td)
 
-            correct = Fileset(td, pk)
+            correct = Group(td, pk)
             # we have 7 files total (including the source)
             self.assertEqual(sum(1 for _ in td.glob('*')), 7)
             # 6 files corresponding to the name
@@ -83,7 +85,8 @@ class TestFileWithFakes(unittest.TestCase):
             # one real file
             self.assertEqual(correct.real_file, real)
 
-            incorrect = Fileset(td, FilesetPrivateKey("incorrect name", testing_salt))
+            incorrect = Group(td,
+                              FilesetPrivateKey("incorrect name", testing_salt))
             self.assertEqual(len(incorrect.all_files), 0)
             self.assertEqual(incorrect.real_file, None)
 
@@ -101,7 +104,7 @@ class TestFileWithFakes(unittest.TestCase):
                 unique_sizes.update(f.stat().st_size for f in td.glob('*'))
 
         self.assertGreater(len(unique_sizes), 5)
-        #self.assertTrue(all(x >= MIN_DATA_FILE_SIZE for x in unique_sizes))
+        # self.assertTrue(all(x >= MIN_DATA_FILE_SIZE for x in unique_sizes))
 
     def test_write_with_surrogates(self):
         with TemporaryDirectory() as tds:
@@ -109,7 +112,7 @@ class TestFileWithFakes(unittest.TestCase):
 
             fpk_a = FilesetPrivateKey("some name", testing_salt)
             fpk_b = FilesetPrivateKey("other name", testing_salt)
-            fas = Fileset(td, fpk_a)
+            fas = Group(td, fpk_a)
             self.assertEqual(len(fas.all_files), 0)
 
             for _ in range(32):
@@ -126,13 +129,17 @@ class TestFileWithFakes(unittest.TestCase):
                 update_fileset_old(source_file_b, fpk_b, td)
 
                 # finding the latest file and checking it has the new contents
-                fas = Fileset(td, fpk_b)
+                fas = Group(td, fpk_b)
                 self.assertGreaterEqual(len(fas.all_files), 2)
                 self.assertEqual(_DecryptedFile(fas.real_file, fpk_b).data,
                                  the_data_b)
 
                 # finding the latest file and checking it has the new contents
-                fas = Fileset(td, fpk_a)
+                fas = Group(td, fpk_a)
                 self.assertGreaterEqual(len(fas.all_files), 2)
                 self.assertEqual(_DecryptedFile(fas.real_file, fpk_a).data,
                                  the_data_a)
+
+
+if __name__ == "__main__":
+    unittest.main()
