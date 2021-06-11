@@ -105,6 +105,14 @@ class Encrypt:
                  part_idx: int = 0,
                  parts_len: int = 1,
                  part_size: int = None):
+
+        if not 0 <= part_idx <= 0xFF:
+            raise ValueError(f"part_idx={part_idx}")
+        if not 1 <= parts_len <= 0xFF + 1:
+            raise ValueError(f"parts_len={parts_len}")
+        if part_size is not None and not (0 <= part_size <= 0xFFFFFF):
+            raise ValueError(f"part_size={part_size}")
+
         self.fpk = fpk
         self.data_version = data_version
 
@@ -207,11 +215,6 @@ class Encrypt:
         parts_len_bytes = uint8_to_bytes(self.parts_len - 1)
         part_idx_bytes = uint8_to_bytes(self.part_idx)
         part_size_bytes = uint24_to_bytes(self.part_size)
-
-        # ORIGINAL_SIZE
-        # if self.original_size is None and self.part_idx == 0 and self.parts_len == 1:
-        #    original_size = part_size
-        # original_size_bytes = uint32_to_bytes(part_size)
 
         header_bytes = b''.join((
             format_id,
@@ -435,7 +438,7 @@ class DecryptedIO:
 
         _ = self.header
 
-        body = self.__read_and_decrypt(self.header.data_size)
+        body = self.__read_and_decrypt(self.header.part_size)
         body_crc = bytes_to_uint32(self.__read_and_decrypt(4))
         if zlib.crc32(body) != body_crc:
             raise ChecksumMismatch("Body CRC mismatch.")

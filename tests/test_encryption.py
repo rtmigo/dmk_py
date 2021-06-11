@@ -3,16 +3,13 @@
 
 import random
 import unittest
-from base64 import b64encode
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf._common import MIN_DATA_FILE_SIZE
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from ksf.cryptodir.fileset._25_encryption import Encrypt, encrypt_file_to_dir, \
-    ChecksumMismatch, _DecryptedFile, is_file_with_data, encrypt_io_to_dir, \
-    DecryptedIO
+from ksf.cryptodir.fileset._25_encryption import Encrypt, \
+    is_file_with_data, DecryptedIO, GroupImprintMismatch
 from ksf.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
@@ -29,8 +26,7 @@ class TestEncryptDecrypt(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls.faster.end()
 
-    def test_name_matches_header(self):
-
+    def test_imprint_match(self):
         with TemporaryDirectory() as tds:
             td = Path(tds)
 
@@ -40,8 +36,8 @@ class TestEncryptDecrypt(unittest.TestCase):
             right = td / "irrelevant"
             NAME = 'abc'
             # name_to_hash(NAME)
-            Encrypt(FilesetPrivateKey(NAME, testing_salt)).file_to_file(source,
-                                                                        right)
+            Encrypt(FilesetPrivateKey(NAME, testing_salt)) \
+                .file_to_file(source, right)
             self.assertTrue(
                 is_file_with_data(FilesetPrivateKey(NAME, testing_salt),
                                   right))
@@ -49,122 +45,118 @@ class TestEncryptDecrypt(unittest.TestCase):
                 is_file_with_data(FilesetPrivateKey('labuda', testing_salt),
                                   right))
 
-    def test_encrypted_does_not_contain_plain(self):
-        with TemporaryDirectory() as tds:
-            td = Path(tds)
-            source_file = td / "source"
-            body = b'qwertyuiop!qwertyuiop'
-            source_file.write_bytes(body)
-            encrypted_file = encrypt_file_to_dir(source_file,
-                                                 FilesetPrivateKey('some_name',
-                                                                   testing_salt),
-                                                 td)
+    def test_encdec_constant(self):
+        self._encrypt_decrypt('name', b'qwertyuiop!qwertyuiop')
 
-            # checking that the original content can be found in original file,
-            # but not in the encrypted file
-            self.assertIn(body, source_file.read_bytes())
+    def test_encdec_empty_data(self):
+        self._encrypt_decrypt('empty', b'')
 
-            # the same way we can find original content in the original file
-            self.assertNotIn(body, encrypted_file.read_bytes())
+    def test_encdec_part(self):
+        dec = self._encrypt_decrypt('name', b'0123abc000',
+                                    pos=4,
+                                    parts_len=5,
+                                    part_size=3,
+                                    part_idx=2)
+        self.assertEqual(dec, b'abc')
 
-    def test_encrypted_files_have_different_sizes_plain(self):
-        with TemporaryDirectory() as tds:
-            td = Path(tds)
-            source_file = td / "source"
-            body = b'qwertyuiop!qwertyuiop'
-            source_file.write_bytes(body)
+    def test_encdec_part_sized_0(self):
+        dec = self._encrypt_decrypt('name', b'0123abc000',
+                                    pos=4,
+                                    parts_len=5,
+                                    part_size=0,
+                                    part_idx=2)
+        self.assertEqual(dec, b'')
 
-            fpk = FilesetPrivateKey('some_name', testing_salt)
+    # @unittest.skip('temp')
+    def test_encdec_part_random(self):
+        for _ in range(1000):
+            name_len = random.randint(0, 10)
+            name = ''.join(random.choice('abcdefghijklmnopqrstuvwxyz')
+                           for _ in range(name_len))
+            assert len(name) == name_len
 
-            files = [encrypt_file_to_dir(source_file, fpk, td)
-                     for _ in range(10)]
+            full_original_len = random.randint(0, 2048)
+            full_original = get_noncrypt_random_bytes(full_original_len)
 
-            self.assertEqual(len(set(str(f) for f in files)), 10)
+            if full_original_len > 0:
+                part_pos = random.randint(0, full_original_len - 1)
+            else:
+                part_pos = 0
+            part_max_size = full_original_len - part_pos
+            part_size = random.randint(0, part_max_size)
+            assert part_pos + part_size <= full_original_len
 
-            sizes = set([f.stat().st_size for f in files])
-            # at least three different file sizes
-            self.assertGreater(len(sizes), 3)
-            self.assertTrue(all(x >= MIN_DATA_FILE_SIZE for x in sizes))
+            parts_len = random.randint(1, 10)
+            part_idx = random.randint(0, parts_len - 1)
 
-    def test_on_random_data(self):
-        random.seed(55, version=2)
-        for _ in range(100):
-            name_len = random.randint(1, 99)
-            name = b64encode(get_noncrypt_random_bytes(name_len)).decode()
+            self._encrypt_decrypt(name,
+                                  full_original,
+                                  pos=part_pos,
+                                  parts_len=parts_len,
+                                  part_size=part_size,
+                                  part_idx=part_idx)
 
-            body_len = random.randint(0, 9999)
-            body = get_noncrypt_random_bytes(body_len)
-            self._encrypt_decrypt(name, body)
+    def _encrypt_decrypt(self,
+                         name: str,
+                         body: bytes,
 
-    def _encrypt_decrypt(self, name: str, body: bytes, check_wrong=False):
-        with TemporaryDirectory() as tds:
-            td = Path(tds)
-            source_file = td / "source"
-            source_file.write_bytes(body)
+                         pos=0,
 
-            fpk = FilesetPrivateKey(name, testing_salt)
+                         parts_len=1,
+                         part_idx=0,
+                         part_size=None,
 
-            encrypted_file = encrypt_file_to_dir(source_file, fpk, td)
+                         check_wrong=True):
 
-            # checking that the original content can be found in original file,
-            # but not in the encrypted file
-            self.assertIn(body, source_file.read_bytes())
+        # print(f"ENCDEC: parts_len={parts_len}")
+        # print(f"ENCDEC: part_idx={part_idx}")
+        # print(f"ENCDEC: part_size={part_size}")
 
-            # the same way we can find original content in the original file
-            if len(body) > 4:
-                self.assertNotIn(body, encrypted_file.read_bytes())
+        if part_size is not None:
+            expected_part_content = body[pos:pos + part_size]
+        else:
+            expected_part_content = body
 
-            self.assertTrue(encrypted_file.exists())
+        fpk = FilesetPrivateKey(name, testing_salt)
 
-            if check_wrong:
-                with self.assertRaises(ChecksumMismatch):
-                    _DecryptedFile(encrypted_file,
-                                   FilesetPrivateKey('wrong_item_name',
-                                                     testing_salt))
+        with BytesIO(body) as original_io:
+            original_io.seek(pos)
+            with BytesIO() as encrypted_io:
+                Encrypt(fpk,
+                        parts_len=parts_len,
+                        part_idx=part_idx,
+                        part_size=part_size) \
+                    .io_to_io(original_io, encrypted_io)
+                encrypted_io.seek(0)
+                encrypted = encrypted_io.read()
 
-            df = _DecryptedFile(encrypted_file, fpk)
-            self.assertEqual(df.data, body)
-            # №self.assertEqual(df.mtime, source_file.stat().st_mtime)
+        # checking that the original content can be found in original file,
+        # but not in the encrypted file
+        self.assertIn(expected_part_content, body)
+        if len(expected_part_content) > 6:
+            self.assertNotIn(expected_part_content, encrypted)
 
-            # writing the decrypted data to disk checking the saved file is
-            # the same as the original
+        # checking the we cannot decrypt the data with wrong key
+        if check_wrong:
+            with self.assertRaises(GroupImprintMismatch):
+                wrong_key = FilesetPrivateKey('WrOnG', testing_salt)
+                with BytesIO(encrypted) as input_io:
+                    DecryptedIO(wrong_key, input_io).read_data()
 
-            decrypted_file = td / "dec"
-            self.assertFalse(decrypted_file.exists())
-            df.write(decrypted_file)
-            self.assertTrue(decrypted_file.exists())
-            self.assertEqual(decrypted_file.read_bytes(), body)
-            # self.assertEqual(decrypted_file.stat().st_mtime,
-            #                  source_file.stat().st_mtime)
+        with BytesIO(encrypted) as input_io:
+            df = DecryptedIO(fpk, input_io)
+            self.assertEqual(df.header.data_size, len(body))
+            self.assertEqual(df.header.part_idx, part_idx)
+            self.assertEqual(df.header.parts_len, parts_len)
+            if part_size is not None:
+                self.assertEqual(df.header.part_size, part_size)
+            else:
+                self.assertEqual(df.header.part_size, len(body))
 
-    def test_decrypt_header_only(self):
-        with TemporaryDirectory() as tds:
-            td = Path(tds)
-            source_file = td / "source"
-            source_file.write_bytes(b'abc')
-            NAME = "thename"
-            pk = FilesetPrivateKey(NAME, testing_salt)
-            encrypted_file = encrypt_file_to_dir(source_file, pk, td)
-            df = _DecryptedFile(encrypted_file, pk, decrypt_body=False)
+            decrypted_part_content = df.read_data()
+            self.assertEqual(decrypted_part_content, expected_part_content)
 
-            # meta-data is loaded
-            self.assertEqual(df.size, source_file.stat().st_size)
-            # but there is no body
-            self.assertEqual(df.data, None)
-
-    def test_decrypt_body_without_header(self):
-        with TemporaryDirectory() as tds:
-            td = Path(tds)
-            pk = FilesetPrivateKey('name', testing_salt)
-            data = b'abcdef'
-            # writing
-            with BytesIO(data) as out_file:
-                encrypted_file = encrypt_io_to_dir(out_file, pk, td)
-            # reading
-            with encrypted_file.open('rb') as in_file:
-                # not accessing DecryptedIO.header, asking for data
-                self.assertEqual(DecryptedIO(pk, in_file).read_data(),
-                                 data)
+        return decrypted_part_content
 
 
 if __name__ == "__main__":
