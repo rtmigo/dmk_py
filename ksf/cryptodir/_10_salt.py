@@ -91,7 +91,7 @@ def write_salt_and_fakes(parent: Path,
             salt_and_fakes.append(fn)
 
     # sorting alphabetically
-    # (we need to sort bt name, not just sort paths, because otherwise
+    # (we need to sort by path.name, not just sort paths, because otherwise
     #  on Windows paths are sorted in case-insensitive manner)
     salt_and_fakes.sort(key=lambda p: p.name)
 
