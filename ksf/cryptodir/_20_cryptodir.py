@@ -19,6 +19,7 @@ class CryptoDir:
 
         salt = find_salt_in_dir(self.directory)
         if salt is None:
+            print("Creating new salt")
             salt = write_salt_and_fakes(self.directory).salt
         assert isinstance(salt, bytes)
         self.salt = salt
