@@ -3,7 +3,6 @@
 
 import io
 import os
-import struct
 import zlib
 from pathlib import Path
 from typing import Optional, BinaryIO, NamedTuple
@@ -18,6 +17,9 @@ from ksf.cryptodir.fileset._10_fakes import set_random_last_modified
 from ksf.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
     pk_matches_imprint_bytes
 from ksf.cryptodir.fileset._10_padding import IntroPadding
+from ksf.cryptodir.fileset._20_byte_funcs import bytes_to_uint32, \
+    bytes_to_int64, uint32_to_bytes, int64_to_bytes, uint8_to_bytes, \
+    uint24_to_bytes, bytes_to_uint8, bytes_to_uint24
 from ksf.cryptodir.fileset.random_sizes import random_size_like_file_greater
 from ksf.utils.dirty_file import WritingToTempFile
 
@@ -34,36 +36,6 @@ class GroupImprintMismatch(Exception):
 
 class ItemImprintMismatch(Exception):
     pass
-
-
-def double_to_bytes(x: float) -> bytes:
-    return struct.pack('>d', x)
-
-
-def bytes_to_double(b: bytes) -> float:
-    result = struct.unpack('>d', b)
-    # print(result)
-    return result[0]
-
-
-def bytes_to_uint32(data: bytes) -> int:
-    if len(data) != 4:
-        raise ValueError
-    return int.from_bytes(data, byteorder='big', signed=False)
-
-
-def bytes_to_int64(data: bytes) -> int:
-    if len(data) != 8:
-        raise ValueError
-    return int.from_bytes(data, byteorder='big', signed=True)
-
-
-def uint32_to_bytes(x: int) -> bytes:
-    return x.to_bytes(4, byteorder='big', signed=False)
-
-
-def int64_to_bytes(x: int) -> bytes:
-    return x.to_bytes(8, byteorder='big', signed=True)
 
 
 _intro_padding_64 = IntroPadding(64)
@@ -110,10 +82,50 @@ class Cryptographer:
         ])
 
 
+class Header(NamedTuple):
+    format_version: int  # todo rename
+    data_version: int  # todo rename
+    data_size: int  # todo rename
+    parts_len: int
+    part_idx: int
+    part_size: int
+
+
+def get_stream_size(stream: BinaryIO) -> int:
+    pos = stream.seek(0, io.SEEK_CUR)
+    size = stream.seek(0, io.SEEK_END)
+    stream.seek(pos, io.SEEK_SET)
+    return size
+
+
 class Encrypt:
-    def __init__(self, fpk, data_version: int = 0):
+    def __init__(self, fpk,
+                 data_version: int = 0,
+                 # original_size: int = None,
+                 part_idx: int = 0,
+                 parts_len: int = 1,
+                 part_size: int = None):
         self.fpk = fpk
         self.data_version = data_version
+
+        # self.original_size = original_size
+
+        if not 0 <= part_idx <= 0xFF:
+            raise ValueError(part_idx)
+
+        self.part_idx = part_idx
+
+        if not 0 <= parts_len <= 0xFFFFFF:
+            raise ValueError(part_idx)
+
+        self.parts_len = parts_len
+
+        if part_size is None and not (part_idx == 0 and parts_len == 1):
+            raise ValueError("part_size is not specified")
+        self.part_size = part_size
+
+    #        if original_size is None and part_idx == 0 and parts_len == 1:
+    #           original_size = part_size
 
     def io_to_io(self,
                  source: BinaryIO,
@@ -126,13 +138,29 @@ class Encrypt:
         <imprint B/>
         <encrypted>
             intro padding: bytes (1-64 bytes)
+
             <header>
-                'AG': format identifier, two bytes
-                format version: byte (always 1)
-                data_version: int64 (increases on each write)
-                body size: uint32
+                FORMAT_ID     (2 bytes) 'LS': format identifier, two bytes
+
+                FORMAT_VER    (uint8)   Always 1
+
+                ITEM_VER      (int64)   Increases on each write
+
+                FULL_SIZE     (uint32)  Total size of the original data
+
+                PARTS_LEN     (uint8)  The total number of parts (files)
+                                        into which the original data was split
+
+                PART_IDX      (uint8)   Zero-based part number contained in
+                                        the current file
+
+                PART_SIZE     (uint24)  Size of the part contained in the
+                                        current file. This is the number of
+                                        bytes to read from the source_io
             </header>
-            header crc-32: uint32
+
+            HEADER_CRC  (uint32) The CRC-32 checksum of the header
+
             body: bytes
             body crc-32: uint32
         </encrypted>
@@ -155,28 +183,49 @@ class Encrypt:
         imprint_b = Imprint(self.fpk)
         assert imprint_a.as_bytes != imprint_b.as_bytes
 
-        version_bytes = bytes([1])
+        # if total_size is None:
 
-        data_version_bytes = int64_to_bytes(self.data_version)
+        # FORMAT_VER
+        format_ver_bytes = bytes([1])
 
-        src_size = source.seek(0, io.SEEK_END)
-        source.seek(0, io.SEEK_SET)
+        # ITEM_VER
+        item_version_bytes = int64_to_bytes(self.data_version)
 
-        src_size_bytes = uint32_to_bytes(src_size)
+        # FORMAT_ID
+        format_id = 'LS'.encode('ascii')  # little secret
+        assert len(format_id) == 2
 
-        format_identifier = 'LS'.encode('ascii')  # little secret
-        assert len(format_identifier) == 2
+        # FULL_SIZE
+        full_size = get_stream_size(source)
+        full_size_bytes = uint32_to_bytes(full_size)
+
+        # PART_SIZE
+        if self.part_size is None:
+            assert self.parts_len == 1 and self.part_idx == 0
+            self.part_size = full_size
+
+        parts_len_bytes = uint8_to_bytes(self.parts_len - 1)
+        part_idx_bytes = uint8_to_bytes(self.part_idx)
+        part_size_bytes = uint24_to_bytes(self.part_size)
+
+        # ORIGINAL_SIZE
+        # if self.original_size is None and self.part_idx == 0 and self.parts_len == 1:
+        #    original_size = part_size
+        # original_size_bytes = uint32_to_bytes(part_size)
 
         header_bytes = b''.join((
-            format_identifier,
-            version_bytes,
-            data_version_bytes,
-            src_size_bytes,
+            format_id,
+            format_ver_bytes,
+            item_version_bytes,
+            full_size_bytes,
+            parts_len_bytes,
+            part_idx_bytes,
+            part_size_bytes
         ))
 
         header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
-        body_bytes = source.read()
+        body_bytes = read_or_fail(source, self.part_size)
         body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
 
         cryptographer = Cryptographer(fpk=self.fpk,
@@ -230,12 +279,6 @@ class Encrypt:
     def file_to_file(self, source_file: Path, target_file: Path):
         with source_file.open('rb') as source_io:
             self.io_to_file(source_io, target_file)
-
-
-class Header(NamedTuple):
-    format_version: int
-    data_version: int
-    data_size: int
 
 
 class DecryptedIO:
@@ -348,25 +391,43 @@ class DecryptedIO:
         data_version_bytes = self.__read_and_decrypt(8)
         data_version = bytes_to_int64(data_version_bytes)
 
-        # SIZE is the size of original file
-        body_size_bytes = self.__read_and_decrypt(4)
-        size = bytes_to_uint32(body_size_bytes)
+        # FULL_SIZE is the size of original file
+        full_size_bytes = self.__read_and_decrypt(4)
+        size = bytes_to_uint32(full_size_bytes)
+
+        # PARTS_LEN
+        parts_len_bytes = self.__read_and_decrypt(1)
+        parts_len = bytes_to_uint8(parts_len_bytes) + 1
+
+        # PART_IDX
+        part_idx_bytes = self.__read_and_decrypt(1)
+        part_idx = bytes_to_uint8(part_idx_bytes)
+
+        # PART_SIZE
+        part_size_bytes = self.__read_and_decrypt(3)
+        part_size = bytes_to_uint24(part_size_bytes)
 
         # reading and checking the header checksum
         header_crc = int.from_bytes(
             self.__read_and_decrypt(HEADER_CHECKSUM_LEN),
             byteorder='big',
             signed=False)
-        header_bytes = (format_id +
-                        format_version_bytes +
-                        data_version_bytes +
-                        body_size_bytes)
+        header_bytes = b''.join((format_id,
+                                 format_version_bytes,
+                                 data_version_bytes,
+                                 full_size_bytes,
+                                 parts_len_bytes,
+                                 part_idx_bytes,
+                                 part_size_bytes))
         if zlib.crc32(header_bytes) != header_crc:
             raise ChecksumMismatch("Header CRC mismatch.")
 
         return Header(data_version=data_version,
                       format_version=format_version,
-                      data_size=size)
+                      data_size=size,
+                      part_size=part_size,
+                      parts_len=parts_len,
+                      part_idx=part_idx)
 
     def read_data(self) -> bytes:
         if self._data_read:
