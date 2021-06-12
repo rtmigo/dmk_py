@@ -25,7 +25,7 @@ $ pip install git+https://github.com/rtmigo/ksf_py#egg=ksf
 The codename serves as both the identifier of the entry and the password that 
 decrypts it. It is a secret. And it must be unique. 
 
-For example, information about a bitcoin wallet can be stored under a codename
+For example, information about a bitcoin wallet can be stored under codename
 `"b1TC01n"` or `"bitcoin_password123"`. 
 
 
