@@ -16,35 +16,35 @@ $ pip install git+https://github.com/rtmigo/ksf_py#egg=ksf
 
 The directory can contain any number of entries. Including zero entries.
 
-
-
-
-
 ## How it looks from the outside
 
-The directory structure does not give any information about the content.
-It is not even possible to determine that the directory was created by 
-the `ksf`.
-
+The directory structure does not give any information about the content. It is
+not even possible to determine that the directory was created by the `ksf`.
 
 - The file names are random
 
 - The file modification dates are random
 
-- The file sizes are random. Large entries are split into small file parts. Small
-entries are supplemented with random padding
+- The file sizes are random. Large entries are split into small file parts.
+  Small entries are supplemented with random padding
 
-- The number of files is random: some of them are fakes that do not contain real data
+- The number of files is random: some of them are fakes that do not contain real
+  data
 
 Each file is indistinguishable from a random one: there are no recognizable
 identifiers or structures. Literally not a single predictable byte.
 
-## How does it look inside 
+At the moment of updating, for example, when adding a new record, the utility
+performs a number of random actions with files. Therefore, even if all file
+changes are logged, it is not evident from the log which files contain or
+previously contained real data.
+
+## How does it look inside
 
 All records are independent: each is encrypted with its own key.
 
 There is no master password to show the list of entries. Because there is no
 list of entries and no master password.
 
-The only thing that can be done is to get individual entries by their 
-secret keys.
+The only thing that can be done is to get individual entries by their secret
+keys.
