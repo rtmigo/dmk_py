@@ -10,7 +10,7 @@ entry, you can access the data of that particular entry.
 
 There is no way to decrypt the entire storage or even find out its contents.
 There is no master password and no table of contents. Secret names are not 
-stored anywhere, even in encrypted form.
+stored.
 
 Each entry is encrypted with a separate key. Without the key, 
 it is impossible to decrypt the entry, and it is impossible to know if it 
