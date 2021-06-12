@@ -1,5 +1,22 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
+
+"""
+
+NAMEGROUP is all files related to a particular name. A group consists of:
+- FILESET: files containing encrypted parts of the latest version of the data
+- fakes: some files with random content
+- obsolete: files with encrypted parts of older versions
+
+Only the fileset can be decrypted. Obsolete files are deleted randomly, and
+their sets may not be complete.
+
+Fakes for different names look the same on the outside. However, they must be
+associated with a specific name. This is the only way we can identify them as
+fakes, knowing the secret key (derived from the name).
+
+"""
+
 import io
 import os
 import random
@@ -10,7 +27,7 @@ from ksf._common import MIN_DATA_FILE_SIZE
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_fakes import create_fake
 from ksf.cryptodir.fileset._25_encrypt_part import is_file_with_data, \
-    _DecryptedFile, encrypt_io_to_dir, is_file_from_group
+    _DecryptedFile, encrypt_io_to_dir, is_file_from_namegroup
 from ksf.cryptodir.fileset.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file
 
@@ -31,7 +48,7 @@ def _get_newest_file(files: List[Path], pk: FilesetPrivateKey) -> Path:
     return latest_files[0]
 
 
-class Group:
+class NameGroup:
     def __init__(self, parent: Path, fpk: FilesetPrivateKey):
         self.parent = parent
         self.fpk = fpk
@@ -41,9 +58,7 @@ class Group:
         # `files` are all files related to the current item,
         # the real one and the surrogates
         self.all_files = [p for p in self.parent.glob('*')
-                          if p.is_file() and is_file_from_group(self.fpk, p)]
-        #
-                          #pk_matches_codename(self.fpk, p.name)]
+                          if p.is_file() and is_file_from_namegroup(self.fpk, p)]
 
         reals = [p for p in self.all_files
                  if is_file_with_data(self.fpk, p)]
@@ -103,7 +118,7 @@ def dir_to_file_sizes(d: Path) -> List[int]:
     return [f.stat().st_size for f in d.glob('*') if f.is_file]
 
 
-def increased_data_version(fileset: Group) -> int:
+def increased_data_version(fileset: NameGroup) -> int:
     MAX_INT64 = 0x7FFFFFFFFFFFFFFF
     if fileset.real_file:
         df = _DecryptedFile(fileset.real_file, fileset.fpk, decrypt_body=False)
@@ -141,7 +156,7 @@ def update_fileset(source_io: BinaryIO,
 
     tasks: List[Task] = list()
 
-    fileset = Group(target_dir, fpk)
+    fileset = NameGroup(target_dir, fpk)
 
     new_data_version = increased_data_version(fileset)
 

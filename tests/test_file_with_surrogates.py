@@ -9,8 +9,8 @@ from tempfile import TemporaryDirectory
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from ksf.cryptodir.fileset._10_fakes import create_fake
 from ksf.cryptodir.fileset._25_encrypt_part import encrypt_file_to_dir, \
-    _DecryptedFile, is_file_from_group
-from ksf.cryptodir.fileset._30_navigator import Group, update_fileset_old
+    _DecryptedFile, is_file_from_namegroup
+from ksf.cryptodir.fileset._30_navigator import NameGroup, update_fileset_old
 from ksf.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
@@ -43,7 +43,7 @@ class TestFileWithFakes(unittest.TestCase):
 
             # check each encoded name matches source name
             for f in files:
-                self.assertTrue(is_file_from_group(pk, f))
+                self.assertTrue(is_file_from_namegroup(pk, f))
                 self.assertEqual(f.stat().st_size, 2000)
 
             # # check sizes are mostly different
@@ -75,7 +75,7 @@ class TestFileWithFakes(unittest.TestCase):
                 create_fake(pk, 2000, td)
             real = encrypt_file_to_dir(source_file, pk, td)
 
-            correct = Group(td, pk)
+            correct = NameGroup(td, pk)
             # we have 7 files total (including the source)
             self.assertEqual(sum(1 for _ in td.glob('*')), 7)
             # 6 files corresponding to the name
@@ -85,8 +85,8 @@ class TestFileWithFakes(unittest.TestCase):
             # one real file
             self.assertEqual(correct.real_file, real)
 
-            incorrect = Group(td,
-                              FilesetPrivateKey("incorrect name", testing_salt))
+            incorrect = NameGroup(td,
+                                  FilesetPrivateKey("incorrect name", testing_salt))
             self.assertEqual(len(incorrect.all_files), 0)
             self.assertEqual(incorrect.real_file, None)
 
@@ -112,7 +112,7 @@ class TestFileWithFakes(unittest.TestCase):
 
             fpk_a = FilesetPrivateKey("some name", testing_salt)
             fpk_b = FilesetPrivateKey("other name", testing_salt)
-            fas = Group(td, fpk_a)
+            fas = NameGroup(td, fpk_a)
             self.assertEqual(len(fas.all_files), 0)
 
             for _ in range(32):
@@ -129,13 +129,13 @@ class TestFileWithFakes(unittest.TestCase):
                 update_fileset_old(source_file_b, fpk_b, td)
 
                 # finding the latest file and checking it has the new contents
-                fas = Group(td, fpk_b)
+                fas = NameGroup(td, fpk_b)
                 self.assertGreaterEqual(len(fas.all_files), 2)
                 self.assertEqual(_DecryptedFile(fas.real_file, fpk_b).data,
                                  the_data_b)
 
                 # finding the latest file and checking it has the new contents
-                fas = Group(td, fpk_a)
+                fas = NameGroup(td, fpk_a)
                 self.assertGreaterEqual(len(fas.all_files), 2)
                 self.assertEqual(_DecryptedFile(fas.real_file, fpk_a).data,
                                  the_data_a)
