@@ -11,8 +11,8 @@ entry, you can access the data of that particular entry.
 There is no way to decrypt the entire storage or even find out its contents.
 There is no master password and no table of contents.
 
-Each entry is encrypted with a separate key. Without the key, it is impossible
-to decrypt the entry, and it is impossible to know if it exists at all.
+Each entry is encrypted with a separate key. Without a key, it is impossible 
+to decrypt the record or find out if it exists at all.
 
 # Install
 
