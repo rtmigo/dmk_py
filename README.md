@@ -39,7 +39,7 @@ The 256-bit private keys are derived from codenames using **scrypt** with a
 CPU/Memory cost of 2^17 and the salt.
 
 To find entry data within the directory we use **blake2b** 192-bit hashes 
-combined with 192-bit nonce randoms.
+computed from the private key.
 
 The **ChaCha20** algorithm encrypts the record data using a private 256-bit 
 key obtained from the scrypt and newly generated 64-bit nonce.
