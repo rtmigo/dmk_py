@@ -38,7 +38,7 @@ using **scrypt** with a CPU/Memory cost of 2^17. **Blake2** 192-bit hashes
 combined with 192-bit nonces and used to find entries within the directory.
 The data is encrypted with the *ChaCha20*.
 
-### The files
+### The obfuscation
 
 `ksf` stores encrypted data in a directory.
 
