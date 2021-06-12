@@ -67,7 +67,7 @@ determine that the directory was created by the `ksf`.
 
 Content of each file is indistinguishable from a random data: there are no
 recognizable identifiers or structures. Literally not a single predictable byte,
-until you have an encryption key.
+until you have the decryption key.
 
 - The file names are random
 
