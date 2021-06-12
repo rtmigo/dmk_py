@@ -342,24 +342,27 @@ def update_namegroup(source_io: BinaryIO,
         wrt.sorting = -1  # earlier
         tasks.append(wrt)
 
-        random.shuffle(tasks)
-        tasks.sort(key=lambda t: t.sorting)
+    # closes the NameGroup and all the open-for-reading files.
+    # Now we can delete any file without PermissionError
 
-        new_content_written = False
+    random.shuffle(tasks)
+    tasks.sort(key=lambda t: t.sorting)
 
-        for task in tasks:
-            if isinstance(task, WriteRealTask):
-                encrypt_to_files(fpk, source_io, target_dir, new_data_version)
-                new_content_written = True
-            elif isinstance(task, WriteFakeTask):
-                create_fake(fpk,
-                            target_dir=target_dir,
-                            target_size=task.size)
-            elif isinstance(task, DeleteTask):
-                assert new_content_written or not task.was_the_content
-                os.remove(str(task.file))
-            else:
-                raise TypeError
+    new_content_written = False
+
+    for task in tasks:
+        if isinstance(task, WriteRealTask):
+            encrypt_to_files(fpk, source_io, target_dir, new_data_version)
+            new_content_written = True
+        elif isinstance(task, WriteFakeTask):
+            create_fake(fpk,
+                        target_dir=target_dir,
+                        target_size=task.size)
+        elif isinstance(task, DeleteTask):
+            assert new_content_written or not task.was_the_content
+            os.remove(str(task.file))
+        else:
+            raise TypeError
 
 # def update_fileset_old(source_file: Path, fpk: FilesetPrivateKey,
 #                        target_dir: Path):
