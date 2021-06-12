@@ -8,7 +8,7 @@ from pathlib import Path
 
 from Crypto.Random import get_random_bytes
 
-from ksf._common import MIN_DATA_FILE_SIZE, looks_like_our_basename, \
+from ksf._common import MIN_DATA_FILE_SIZE, looks_like_random_basename, \
     unique_filename
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
@@ -56,7 +56,7 @@ def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
         raise ValueError
 
     target_file = unique_filename(target_dir) #target_dir / Imprint(fpk).as_str  # todo random fn
-    assert looks_like_our_basename(target_file.name)
+    assert looks_like_random_basename(target_file.name)
     assert not target_file.exists()
     #if target_file.exists():
     #    raise HashCollision

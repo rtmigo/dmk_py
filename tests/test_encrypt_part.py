@@ -8,7 +8,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from ksf.cryptodir.fileset._25_encryption import Encrypt, \
+from ksf.cryptodir.fileset._25_encrypt_part import Encrypt, \
     is_file_with_data, DecryptedIO, GroupImprintMismatch
 from ksf.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt

@@ -27,7 +27,7 @@ from typing import Optional, List, NamedTuple
 from Crypto.Random import get_random_bytes
 
 from ksf._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, read_or_fail, \
-    looks_like_our_basename, unique_filename
+    looks_like_random_basename, unique_filename
 from ksf.cryptodir.fileset._10_fakes import set_random_last_modified
 
 
@@ -113,7 +113,7 @@ def write_salt_and_fakes(parent: Path,
 
 
 def read_salt(file: Path):
-    if not looks_like_our_basename(file.name):
+    if not looks_like_random_basename(file.name):
         raise SaltFileBadName
 
     fs = file.stat()
@@ -138,7 +138,7 @@ def find_salt_in_dir(parent: Path) -> Optional[bytes]:
     # on Windows paths are sorted in case-insensitive manner
     for fn in sorted(parent.glob('*'), key=lambda p: p.name):
         print(f"trying salt {fn}")
-        if looks_like_our_basename(
+        if looks_like_random_basename(
                 fn.name) and fn.stat().st_size <= MAX_SALT_FILE_SIZE:
             salt_file = fn
             break

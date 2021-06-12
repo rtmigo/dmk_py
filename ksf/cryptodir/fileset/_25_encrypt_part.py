@@ -11,7 +11,7 @@ from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
 from ksf._common import read_or_fail, InsufficientData, \
-    looks_like_our_basename, unique_filename
+    looks_like_random_basename, unique_filename
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_fakes import set_random_last_modified
 from ksf.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
@@ -76,8 +76,7 @@ class Cryptographer:
     def __str__(self):
         return '\n'.join([
             f'fpk: {self.fpk.as_bytes}',
-            # f'name salt: {bytes_to_str(self.name_salt)}',
-            # f'key: {bytes_to_str(self.key)}',
+
             f'nonce: {bytes_to_str(self.nonce)}',
         ])
 
@@ -131,9 +130,6 @@ class Encrypt:
         if part_size is None and not (part_idx == 0 and parts_len == 1):
             raise ValueError("part_size is not specified")
         self.part_size = part_size
-
-    #        if original_size is None and part_idx == 0 and parts_len == 1:
-    #           original_size = part_size
 
     def io_to_io(self,
                  source: BinaryIO,
@@ -302,11 +298,6 @@ class DecryptedIO:
         self._header: Optional[Header] = None
         self._data_read = False
 
-        # self._belongs_to_fileset: Optional[bool] = None
-
-        # self._imprint_a_bytes: Optional[bytes] = None
-        # self._imprint_b_bytes: Optional[bytes] = None
-
         self._imprint_a_checked = False
         self._imprint_b_checked = False
 
@@ -337,24 +328,6 @@ class DecryptedIO:
         if not pk_matches_imprint_bytes(self.fpk, imp):
             raise GroupImprintMismatch
         self._imprint_b_checked = True
-
-    # @property
-    # def belongs_to_fileset(self) -> bool:
-    #     return pk_matches_imprint_bytes(self.fpk, self._rc_imprint_a_bytes)
-    #
-    # @property
-    # def contains_data(self) -> bool:
-    #     return pk_matches_imprint_bytes(self.fpk, self.imprint_b_bytes)
-
-    # def __read_imprint(self):
-    #     f = self.source
-    #     # reading and the imprint and checking that the name
-    #     # matches this imprint
-    #     imprint_bytes = read_or_fail(f, Imprint.FULL_LEN)
-    #     if not pk_matches_imprint_bytes(self.fpk, imprint_bytes):
-    #         raise ImprintMismatch("The private key does not match the imprint.")
-    #
-    #     self.__nonce = read_or_fail(f, ENCRYPTION_NONCE_LEN)
 
     @property
     def header(self) -> Header:
@@ -484,25 +457,13 @@ def encrypt_file_to_dir(source_file: Path, fpk: FilesetPrivateKey,
                                  target_dir,
                                  data_version)
 
-    # imprint = Imprint(fpk)
-    #
-    # fn = target_dir / imprint.as_str
-    # assert looks_like_our_basename(fn.name)
-    # if fn.exists():
-    #     raise HashCollision
-    # Encrypt(fpk, data_version).file_to_file(source_file, fn)
-    # return fn
-
 
 def encrypt_io_to_dir(source_io: BinaryIO,
                       fpk: FilesetPrivateKey,
                       target_dir: Path,
                       data_version: int = 0) -> Path:
-    # imprint = Imprint(fpk)
-    # unique_filename
-
     fn = unique_filename(target_dir)  # / imprint.as_str
-    assert looks_like_our_basename(fn.name)
+    assert looks_like_random_basename(fn.name)
     if fn.exists():
         raise HashCollision
     Encrypt(fpk, data_version).io_to_file(source_io, fn)
@@ -515,7 +476,6 @@ def is_file_from_group(fpk: FilesetPrivateKey, file: Path) -> bool:
             DecryptedIO(fpk, f).read_imprint_a()
             return True
         except (InsufficientData, GroupImprintMismatch) as e:
-            # print("EXC", type(e))
             return False
 
 
