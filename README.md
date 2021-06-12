@@ -21,6 +21,10 @@ The directory can contain any number of entries. Including zero entries.
 The directory structure does not give any information about the content. It is
 not even possible to determine that the directory was created by the `ksf`.
 
+The file content is indistinguishable from a random one: there are no
+recognizable identifiers or structures. Literally not a single predictable byte,
+until you have the encryption key.
+
 - The file names are random
 
 - The file modification dates are random
@@ -30,14 +34,6 @@ not even possible to determine that the directory was created by the `ksf`.
 
 - The number of files is random: some of them are fakes that do not contain real
   data
-
-Each file is indistinguishable from a random one: there are no recognizable
-identifiers or structures. Literally not a single predictable byte.
-
-At the moment of updating, for example, when adding a new record, the utility
-performs a number of random actions with files. So even the file change log 
-is confusing.
-
 
 ## How does it look inside
 
