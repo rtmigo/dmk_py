@@ -20,7 +20,7 @@ to decrypt the entry, and it is impossible to know if it exists at all.
 $ pip install git+https://github.com/rtmigo/ksf_py#egg=ksf
 ```
 
-## Codenames
+# Codenames
 
 The codename serves as both the identifier of the entry and the password that 
 decrypts it. It is a secret. And it must be unique. 
@@ -30,7 +30,7 @@ For example, information about a bitcoin wallet can be stored under a codename
 can use codenames like `"bitcoin_password123"`. 
 
 
-## The files
+# The files
 
 `ksf` stores encrypted data in a directory.
 
