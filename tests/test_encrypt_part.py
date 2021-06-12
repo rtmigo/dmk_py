@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from ksf.cryptodir.fileset._25_encrypt_part import Encrypt, \
-    is_file_with_data, DecryptedIO, GroupImprintMismatch
+    is_content, DecryptedIO, GroupImprintMismatch
 from ksf.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
@@ -39,11 +39,11 @@ class TestEncryptDecrypt(unittest.TestCase):
             Encrypt(FilesetPrivateKey(NAME, testing_salt)) \
                 .file_to_file(source, right)
             self.assertTrue(
-                is_file_with_data(FilesetPrivateKey(NAME, testing_salt),
-                                  right))
+                is_content(FilesetPrivateKey(NAME, testing_salt),
+                           right))
             self.assertFalse(
-                is_file_with_data(FilesetPrivateKey('labuda', testing_salt),
-                                  right))
+                is_content(FilesetPrivateKey('labuda', testing_salt),
+                           right))
 
     def test_encdec_constant(self):
         self._encrypt_decrypt('name', b'qwertyuiop!qwertyuiop')
