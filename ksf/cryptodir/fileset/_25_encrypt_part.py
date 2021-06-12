@@ -10,12 +10,10 @@ from typing import Optional, BinaryIO, NamedTuple
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
-from ksf._common import read_or_fail, InsufficientData, \
-    looks_like_random_basename, unique_filename
+from ksf._common import read_or_fail, InsufficientData
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_fakes import set_random_last_modified
-from ksf.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
-    pk_matches_imprint_bytes
+from ksf.cryptodir.fileset._10_imprint import Imprint, pk_matches_imprint_bytes
 from ksf.cryptodir.fileset._10_padding import IntroPadding
 from ksf.cryptodir.fileset._20_byte_funcs import bytes_to_uint32, \
     bytes_to_int64, uint32_to_bytes, int64_to_bytes, uint8_to_bytes, \
@@ -462,27 +460,29 @@ class _DecryptedFile:
         target.write_bytes(self.data)
 
 
-def encrypt_file_to_dir(source_file: Path, fpk: FilesetPrivateKey,
-                        target_dir: Path,
-                        data_version: int = 0) -> Path:
-    # todo remove this method
-    with source_file.open('rb') as f:
-        return encrypt_io_to_dir(f,
-                                 fpk,
-                                 target_dir,
-                                 data_version)
-
-
-def encrypt_io_to_dir(source_io: BinaryIO,
-                      fpk: FilesetPrivateKey,
-                      target_dir: Path,
-                      data_version: int = 0) -> Path:
-    fn = unique_filename(target_dir)  # / imprint.as_str
-    assert looks_like_random_basename(fn.name)
-    if fn.exists():
-        raise HashCollision
-    Encrypt(fpk, data_version).io_to_file(source_io, fn)
-    return fn
+# def encrypt_file_to_dir(source_file: Path, fpk: FilesetPrivateKey,
+#                         target_dir: Path,
+#                         data_version: int = 0) -> Path:
+#     # todo remove this method
+#     with source_file.open('rb') as f:
+#         return encrypt_io_to_dir(f,
+#                                  fpk,
+#                                  target_dir,
+#                                  data_version)
+#
+#
+# def encrypt_io_to_dir(source_io: BinaryIO,
+#                       fpk: FilesetPrivateKey,
+#                       target_dir: Path,
+#                       data_version: int = 0) -> Path:
+#     # todo remove
+#     raise NotImplemented
+#     fn = unique_filename(target_dir)  # / imprint.as_str
+#     assert looks_like_random_basename(fn.name)
+#     if fn.exists():
+#         raise HashCollision
+#     Encrypt(fpk, data_version).io_to_file(source_io, fn)
+#     return fn
 
 
 def is_file_from_namegroup(fpk: FilesetPrivateKey, file: Path) -> bool:
@@ -490,6 +490,16 @@ def is_file_from_namegroup(fpk: FilesetPrivateKey, file: Path) -> bool:
         return DecryptedIO(fpk, f).belongs_to_namegroup
 
 
-def is_file_with_data(fpk: FilesetPrivateKey, file: Path) -> bool:
+def is_content(fpk: FilesetPrivateKey, file: Path) -> bool:
     with file.open('rb') as f:
         return DecryptedIO(fpk, f).contains_data
+
+
+def is_fake(fpk: FilesetPrivateKey, file: Path) -> bool:
+    with file.open('rb') as f:
+        dio = DecryptedIO(fpk, f)
+        return dio.belongs_to_namegroup and not dio.contains_data
+
+        # is_file_from_namegroup(fpk, f)
+    # with file.open('rb') as f:
+#        return DecryptedIO(fpk, f).contains_data

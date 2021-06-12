@@ -76,7 +76,8 @@ class TestEncryptDecryptFiles(unittest.TestCase):
             temp_dir = Path(temp_dir_str)
             fpk = FilesetPrivateKey(name, testing_salt)
             with BytesIO(body) as original_io:
-                files = encrypt_to_files(fpk, original_io, temp_dir)
+                files = encrypt_to_files(fpk, original_io, temp_dir,
+                                         content_version=1)
 
             try:
                 decrypted_parts = [DecryptedIO(fpk, f.open('rb'))

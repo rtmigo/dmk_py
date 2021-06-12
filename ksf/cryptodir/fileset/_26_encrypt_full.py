@@ -27,7 +27,8 @@ def split_random_sizes(full_size: int) -> List[int]:
 
 def encrypt_to_files(fpk: FilesetPrivateKey,
                      source_io: BinaryIO,
-                     target_dir: Path) -> List[Path]:
+                     target_dir: Path,
+                     content_version: int) -> List[Path]:
     full_size = get_stream_size(source_io)
     part_sizes = split_random_sizes(full_size)
     assert sum(part_sizes) == full_size
@@ -40,7 +41,9 @@ def encrypt_to_files(fpk: FilesetPrivateKey,
         Encrypt(fpk,
                 parts_len=len(part_sizes),
                 part_idx=part_idx,
-                part_size=part_size).io_to_file(source_io, target_file)
+                part_size=part_size,
+                data_version=content_version
+                ).io_to_file(source_io, target_file)
 
     assert len(files) == len(part_sizes)
     return files

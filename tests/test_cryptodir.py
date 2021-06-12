@@ -1,4 +1,5 @@
 import unittest
+from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -21,10 +22,10 @@ class TestCryptoDir(unittest.TestCase):
 
     def test(self):
 
-        for _ in range(25):
+        for _ in range(7):
 
             names_and_datas = [
-                (name, gen_random_content())
+                (name, gen_random_content(max_size=1024*128))
                 for name in gen_random_names(10)
             ]
 
@@ -33,12 +34,14 @@ class TestCryptoDir(unittest.TestCase):
 
                 # writing
                 for name, data in names_and_datas:
-                    src = temp_dir / "source.txt"
-                    src.write_bytes(data)
+                    #src = temp_dir / "source.txt"
+                    #src.write_bytes(data)
 
                     crypto_dir = CryptoDir(temp_dir)
                     self.assertEqual(crypto_dir.get(name), None)
-                    crypto_dir.set_from_file(name, src)
+
+                    with BytesIO(data) as input_io:
+                        crypto_dir.set_from_io(name, input_io)
 
                 # reading with same instance
                 for name, data in names_and_datas:

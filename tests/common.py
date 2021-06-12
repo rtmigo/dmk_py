@@ -1,6 +1,6 @@
 import random
 from base64 import b64encode
-from typing import List
+from typing import List, Set
 
 from ksf.utils.randoms import get_noncrypt_random_bytes
 
@@ -8,8 +8,8 @@ testing_salt = b"\xef\x87\xffr_\xed\xe2\xc5\x92\x11\x8e'F\xe6-C\xf1" \
                b"\xa9\xd4\x9fu\xc8\x05Y\x8b\xc3\x94\xd1\xbd\x10#B"
 
 
-def gen_random_content() -> bytes:
-    return get_noncrypt_random_bytes(random.randint(0, 16 * 1024))
+def gen_random_content(min_size=0, max_size=1024) -> bytes:
+    return get_noncrypt_random_bytes(random.randint(min_size, max_size))
 
 
 def gen_random_name() -> str:
@@ -18,8 +18,10 @@ def gen_random_name() -> str:
 
 
 def gen_random_names(n: int) -> List[str]:
-    names = set()
+    names: Set[str] = set()
     while len(names) < n:
         names.add(gen_random_name())
     assert len(names) == n
     return list(names)
+
+#bool mtimes_are_random(files: List[Path]):
