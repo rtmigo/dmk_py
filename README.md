@@ -35,9 +35,9 @@ Each file is indistinguishable from a random one: there are no recognizable
 identifiers or structures. Literally not a single predictable byte.
 
 At the moment of updating, for example, when adding a new record, the utility
-performs a number of random actions with files. Therefore, even if all file
-changes are logged, it is not evident from the log which files contain or
-previously contained real data.
+performs a number of random actions with files. So even the file change log 
+is confusing.
+
 
 ## How does it look inside
 
