@@ -30,7 +30,7 @@ For example, information about a bitcoin wallet can be stored under codename
 
 # Under the hood
 
-### Encryption
+## Encryption
 
 When initializing the directory, we create a random 256-bit salt and store it in
 one of the files.
@@ -44,7 +44,7 @@ computed from the private key. The hashes are matched against the file content.
 The **ChaCha20** algorithm encrypts the record data using a private 256-bit 
 key obtained from the scrypt and newly generated 64-bit nonce.
 
-### Obfuscation
+## Obfuscation
 
 `ksf` stores encrypted data in a directory.
 
