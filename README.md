@@ -28,8 +28,17 @@ decrypts it. It is a secret. And it must be unique.
 For example, information about a bitcoin wallet can be stored under codename
 `"b1TC01n"` or `"bitcoin_password123"`. 
 
+# Under the hood
 
-# The files
+### Encryption
+
+When creating a directory, a random 256-bit salt is generated, which is also 
+stored in one of the files. The private keys are derived from codenames 
+using **scrypt** with a CPU/Memory cost of 2^17. **Blake2** 192-bit hashes 
+combined with 192-bit nonces and used to find entries within the directory.
+The data is encrypted with the *ChaCha20*.
+
+### The files
 
 `ksf` stores encrypted data in a directory.
 
