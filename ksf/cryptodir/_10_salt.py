@@ -137,7 +137,7 @@ def find_salt_in_dir(parent: Path) -> Optional[bytes]:
     # we need to sort bt name, not just sort paths, because otherwise
     # on Windows paths are sorted in case-insensitive manner
     for fn in sorted(parent.glob('*'), key=lambda p: p.name):
-        print(f"trying salt {fn}")
+        #print(f"trying salt {fn}")
         if looks_like_random_basename(
                 fn.name) and fn.stat().st_size <= MAX_SALT_FILE_SIZE:
             salt_file = fn
