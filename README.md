@@ -44,7 +44,7 @@ identifiers or structures. Literally not a single predictable byte.
 All records are independent: each is encrypted with its own key.
 
 There is no master password to show the list of entries. Because there is no
-list of entries.
+list of entries and no master password.
 
 The only thing that can be done is to get individual entries by their 
 secret keys.
