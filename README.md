@@ -12,8 +12,8 @@ There is no way to decrypt the entire storage or even find out its contents.
 There is no master password and no list of entries.
 
 Each entry is encrypted with a separate key. Without the key, 
-it is impossible to decrypt the entry, it is impossible to find out in which 
-files it is stored, and it is impossible to know if it exists at all.
+it is impossible to decrypt the entry, and it is impossible to know if it 
+exists at all.
 
 # Install
 
