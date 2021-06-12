@@ -5,8 +5,8 @@
 `ksf` encrypts individual data entries. Entries are files or strings. Entries
 can be added, updated and removed.
 
-Entries are identified with **secret names**. Knowing the secret name of an
-entry, you can access the data of that particular entry.
+Entries are identified with **codenames**. Knowing the codename of an 
+entry, you can access the data of that particular entry. 
 
 There is no way to decrypt the entire storage or even find out its contents.
 There is no master password and no table of contents.
@@ -19,6 +19,16 @@ to decrypt the entry, and it is impossible to know if it exists at all.
 ``` bash
 $ pip install git+https://github.com/rtmigo/ksf_py#egg=ksf
 ```
+
+## Codenames
+
+The codename serves as both the identifier of the entry and the password that 
+decrypts it. It is a secret. And it must be unique. 
+
+For example, information about a bitcoin wallet can be stored under a codename
+`"b1TC01n"`. If you are more familiar with the name-password pair, then you 
+can set codenames like `"bitcoin_password123"`. 
+
 
 ## The files
 
