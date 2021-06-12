@@ -9,7 +9,8 @@ Entries are identified with **secret names**. Knowing the secret name of an
 entry, you can access the data of that particular entry.
 
 There is no way to decrypt the entire storage or even find out its contents.
-There is no master password and no list of entries.
+There is no master password and no table of contents. Secret names are hashed, 
+but not stored.
 
 Each entry is encrypted with a separate key. Without the key, 
 it is impossible to decrypt the entry, and it is impossible to know if it 
