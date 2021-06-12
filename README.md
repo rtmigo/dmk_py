@@ -42,7 +42,7 @@ To find entry data within the directory we use **blake2b** 192-bit hashes
 combined with 192-bit nonce randoms.
 
 The **ChaCha20** algorithm encrypts the record data using a private 256-bit 
-key obtained from the scrypt and 64-bit nonce.
+key obtained from the scrypt and newly generated 64-bit nonce.
 
 ### Obfuscation
 
