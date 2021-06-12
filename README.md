@@ -26,8 +26,8 @@ The codename serves as both the identifier of the entry and the password that
 decrypts it. It is a secret. And it must be unique. 
 
 For example, information about a bitcoin wallet can be stored under a codename
-`"b1TC01n"`. If you are more familiar with the name-password pair, then you 
-can set codenames like `"bitcoin_password123"`. 
+`"b1TC01n"`. If you are more convenient with the name-password pair, you 
+can use codenames like `"bitcoin_password123"`. 
 
 
 ## The files
