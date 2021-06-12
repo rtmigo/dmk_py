@@ -37,10 +37,11 @@ until you have the encryption key.
 
 ## How does it look inside
 
+The only thing that can be done is to get and set individual entries by their
+secret keys.
+
 All records are independent: each is encrypted with its own key.
 
 There is no master password to show the list of entries. Because there is no
 list of entries and no master password.
 
-The only thing that can be done is to get and set individual entries by their
-secret keys.
