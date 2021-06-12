@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from ksf.cryptodir.fileset import DecryptedIO
 from ksf.cryptodir.fileset._26_encrypt_full import encrypt_to_files, \
-    decrypt_from_files
+    decrypt_from_files, split_random_sizes
 from ksf.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
@@ -34,6 +34,21 @@ class TestEncryptDecryptFiles(unittest.TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         cls.faster.end()
+
+    def test_split_random_sizes(self):
+        N = 999999
+        a = split_random_sizes(N)
+        b = split_random_sizes(N)
+        self.assertEqual(a, a.copy())
+        self.assertNotEqual(a, b)
+
+    def test_split_random_sizes_zero(self):
+        self.assertEqual(split_random_sizes(0), [0])
+
+
+
+    def test_encdec_empty(self):
+        self._encrypt_decrypt('name', b'')
 
     # # @unittest.skip('temp')
     def test_encdec_random(self):
@@ -88,7 +103,7 @@ class TestEncryptDecryptFiles(unittest.TestCase):
                     decrypted_full_io.seek(0)
                     decrypted_full_bytes = decrypted_full_io.read()
                 self.assertEqual(decrypted_full_bytes, body)
-                #print(f"yeah? {len(decrypted_full_bytes)}")
+                # print(f"yeah? {len(decrypted_full_bytes)}")
             finally:
                 for s in decrypted_parts:
                     s.source.close()
@@ -138,8 +153,8 @@ class TestEncryptDecryptFiles(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestEncryptDecryptFiles().test_encdec_random()
-    #unittest.main()
+    # TestEncryptDecryptFiles().test_encdec_random()
+    unittest.main()
     # TestEncryptDecrypt()._encrypt_decrypt('abcdef', b'qwertyuiop',
     #                                     check_wrong=False)
     # print("OK")

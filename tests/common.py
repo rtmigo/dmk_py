@@ -1,5 +1,7 @@
+import datetime
 import random
 from base64 import b64encode
+from pathlib import Path
 from typing import List, Set
 
 from ksf.utils.randoms import get_noncrypt_random_bytes
@@ -24,4 +26,16 @@ def gen_random_names(n: int) -> List[str]:
     assert len(names) == n
     return list(names)
 
-#bool mtimes_are_random(files: List[Path]):
+
+def dates_are_random(files: List[Path]) -> bool:
+    if len(files) < 3:
+        raise ValueError(f"Only {len(files)} files! Need 3.")
+    dates = [datetime.date.fromtimestamp(f.stat().st_mtime) for f in files]
+    return len(set(dates)) >= 2
+
+
+def sizes_are_random(files: List[Path]) -> bool:
+    if len(files) < 3:
+        raise ValueError(f"Only {len(files)} files! Need 3.")
+    sizes = [f.stat().st_size for f in files]
+    return len(set(sizes)) >= 2

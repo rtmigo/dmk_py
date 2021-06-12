@@ -20,10 +20,21 @@ class TestCryptoDir(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls.faster.end()
 
-    def test(self):
+    def test_encdec_empty(self):
+        with TemporaryDirectory() as tds:
+            temp_dir = Path(tds)
+            crypto_dir = CryptoDir(temp_dir)
+            NAME='empty'
+            with BytesIO(b'') as input_io:
+                crypto_dir.set_from_io(NAME, input_io)
+
+            crypto_dir_b = CryptoDir(temp_dir)
+            self.assertEqual(crypto_dir_b.get(NAME), b'')
+
+
+    def test_random_write_and_read(self):
 
         for _ in range(7):
-
             names_and_datas = [
                 (name, gen_random_content(max_size=1024*128))
                 for name in gen_random_names(10)
@@ -34,9 +45,6 @@ class TestCryptoDir(unittest.TestCase):
 
                 # writing
                 for name, data in names_and_datas:
-                    #src = temp_dir / "source.txt"
-                    #src.write_bytes(data)
-
                     crypto_dir = CryptoDir(temp_dir)
                     self.assertEqual(crypto_dir.get(name), None)
 
