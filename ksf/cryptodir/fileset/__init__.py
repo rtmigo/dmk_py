@@ -2,4 +2,4 @@
 # SPDX-License-Identifier: MIT
 
 from ._25_encrypt_part import _DecryptedFile, DecryptedIO
-from ._30_navigator import Group, update_fileset_old
+from ._30_navigator import NameGroup, update_fileset_old

@@ -298,6 +298,9 @@ class DecryptedIO:
         self._header: Optional[Header] = None
         self._data_read = False
 
+        self._belongs_to_namegroup: Optional[bool] = None
+        self._contains_data: Optional[bool] = None
+
         self._imprint_a_checked = False
         self._imprint_b_checked = False
 
@@ -309,36 +312,48 @@ class DecryptedIO:
             raise InsufficientData
         return self.cfg.cipher.decrypt(encrypted)
 
-    def read_imprint_a(self):
-        if self._imprint_a_checked:
-            return
-        imp = read_or_fail(self.source, Imprint.FULL_LEN)
-        if not pk_matches_imprint_bytes(self.fpk, imp):
-            raise GroupImprintMismatch
-        self._imprint_a_checked = True
+    @property
+    def belongs_to_namegroup(self) -> bool:
+        # reads and interprets IMPRINT_A
+        if self._belongs_to_namegroup is None:
+            try:
+                imp = read_or_fail(self.source, Imprint.FULL_LEN)
+                self._belongs_to_namegroup = \
+                    pk_matches_imprint_bytes(self.fpk, imp)
+            except InsufficientData:
+                self._belongs_to_namegroup = False
+        assert self._belongs_to_namegroup is not None
+        return self._belongs_to_namegroup
 
-    def read_imprint_b(self):
-        # doing this at most once
-        if self._imprint_b_checked:
-            return
-        # reading everything in the file before
-        self.read_imprint_a()
-        # reading and checking the imprint
-        imp = read_or_fail(self.source, Imprint.FULL_LEN)
-        if not pk_matches_imprint_bytes(self.fpk, imp):
-            raise GroupImprintMismatch
-        self._imprint_b_checked = True
+    @property
+    def contains_data(self) -> bool:
+        # reads and interprets IMPRINT_B
+
+        if not self.belongs_to_namegroup:
+            return False
+
+        if self._contains_data is None:
+            try:
+                imp = read_or_fail(self.source, Imprint.FULL_LEN)
+                self._contains_data = pk_matches_imprint_bytes(self.fpk, imp)
+            except InsufficientData:
+                self._contains_data = False
+
+        assert self._contains_data is not None
+        return self._contains_data
 
     @property
     def header(self) -> Header:
+        if not self.belongs_to_namegroup:
+            raise GroupImprintMismatch
+        if not self.contains_data:
+            raise ItemImprintMismatch
         if self._header is None:
             self._header = self.__read_header()
         assert self._header is not None
         return self._header
 
     def __read_header(self) -> Header:
-
-        self.read_imprint_b()
 
         nonce = read_or_fail(self.source, ENCRYPTION_NONCE_LEN)
 
@@ -470,19 +485,11 @@ def encrypt_io_to_dir(source_io: BinaryIO,
     return fn
 
 
-def is_file_from_group(fpk: FilesetPrivateKey, file: Path) -> bool:
+def is_file_from_namegroup(fpk: FilesetPrivateKey, file: Path) -> bool:
     with file.open('rb') as f:
-        try:
-            DecryptedIO(fpk, f).read_imprint_a()
-            return True
-        except (InsufficientData, GroupImprintMismatch) as e:
-            return False
+        return DecryptedIO(fpk, f).belongs_to_namegroup
 
 
 def is_file_with_data(fpk: FilesetPrivateKey, file: Path) -> bool:
     with file.open('rb') as f:
-        try:
-            DecryptedIO(fpk, f).read_imprint_b()
-            return True
-        except (InsufficientData, ItemImprintMismatch, GroupImprintMismatch):
-            return False
+        return DecryptedIO(fpk, f).contains_data
