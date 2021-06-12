@@ -269,7 +269,7 @@ class Encrypt:
             # must be the same as writing a fake file
             with wtf.dirty.open('wb') as outfile:
                 self.io_to_io(source_io, outfile)
-                set_random_last_modified(wtf.dirty)  # todo test it
+            set_random_last_modified(wtf.dirty)
             # dirty file is written AND closed (important for Windows)
             wtf.replace()
 

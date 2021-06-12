@@ -12,14 +12,32 @@ from ksf.cryptodir.fileset._25_encrypt_part import get_stream_size, Encrypt, \
 def split_random_sizes(full_size: int) -> List[int]:
     MAX_PART_SIZE = 0xFFFF
 
+    if full_size < 0:
+        raise ValueError
+
+    if full_size == 0:
+        return [0]
+
+    truncated_last_part = False  # just for asserts
+
     sum_sizes = 0
     part_sizes = list()
     while sum_sizes < full_size:
-        next_part_max_size = min(MAX_PART_SIZE, full_size - sum_sizes)
-        assert next_part_max_size > 0
-        next_part_size = random.randint(1, next_part_max_size)
+        assert not truncated_last_part
+
+        # up to 64 kb, even if we do not have so much data
+        next_part_size = random.randint(1, MAX_PART_SIZE)
+        # adjusting the last part size
+        limit = min(MAX_PART_SIZE, full_size - sum_sizes)
+        assert limit > 0
+        if next_part_size > limit:
+            next_part_size = limit
+            truncated_last_part = True
+
+        # updating sizes list and sum
         sum_sizes += next_part_size
         part_sizes.append(next_part_size)
+
     assert sum(part_sizes) == full_size, f"{sum(part_sizes)} {full_size}"
     assert all(1 <= p <= MAX_PART_SIZE for p in part_sizes)
     return part_sizes
@@ -55,6 +73,9 @@ class BadFilesetError(Exception):
 
 def decrypt_from_files(files: List[DecryptedIO],
                        target_io: BinaryIO):
+    if not files:
+        raise ValueError("Zero files passed")
+
     pos = target_io.seek(0, io.SEEK_CUR)
     if pos != 0:
         raise ValueError(f"Unexpected initial stream position: {pos}")
