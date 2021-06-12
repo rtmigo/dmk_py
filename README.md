@@ -32,7 +32,7 @@ For example, information about a bitcoin wallet can be stored under codename
 
 ### Encryption
 
-When creating the directory, we create a random 256-bit salt and store it in
+When initializing the directory, we create a random 256-bit salt and store it in
 one of the files.
 
 The 256-bit private keys are derived from codenames using **scrypt** with a 
