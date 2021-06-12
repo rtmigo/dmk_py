@@ -32,8 +32,8 @@ until you have the encryption key.
 - The file sizes are random. Large entries are split into small file parts.
   Small entries are supplemented with random padding
 
-- The number of files is random: some of them are fakes that do not contain real
-  data
+- The number of files is random: some files are fakes that do not contain
+  real data
 
 ## How does it look inside
 
