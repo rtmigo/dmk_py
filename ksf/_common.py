@@ -1,12 +1,14 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 import random
-from base64 import urlsafe_b64encode, urlsafe_b64decode
+from base64 import urlsafe_b64encode, urlsafe_b64decode, b32encode
 from pathlib import Path
 from typing import BinaryIO, Tuple
 
 from Crypto.Hash import BLAKE2b
 from Crypto.Random import get_random_bytes
+
+from ksf.utils.randoms import get_noncrypt_random_bytes
 
 PK_SALT_SIZE = 32
 PK_SIZE = 32
@@ -26,31 +28,39 @@ def read_or_fail(f: BinaryIO, n: int) -> bytes:
     return result
 
 
-def looks_like_our_basename(txt: str) -> bool:
-    return '.' not in txt
-    # try:
-    #     bytes = fnstr_to_bytes(txt)
-    #     return len(bytes) == BASENAME_SIZE
-    # except ValueError:
-    #     return False
+def random_basename() -> str:
+    for _ in range(99999):
+        length = random.randint(2, 12)
+        data = get_noncrypt_random_bytes(length)
+        result = b32encode(data).decode('ascii')
+        result = result.lower().replace('=', '')
+        if contains_digit(result) and contains_alpha(result):
+            assert looks_like_random_basename(result)
+            return result
+    raise RuntimeError("Dead loop prevented")
+
+
+def looks_like_random_basename(txt: str) -> bool:
+    return all(c.isalnum() and c.lower()==c for c in txt) \
+           and contains_digit(txt) \
+           and contains_alpha(txt)
 
 
 class InsufficientData(Exception):
     pass
 
 
+def contains_digit(txt: str) -> bool:
+    return any(c.isdigit() for c in txt)
+
+
+def contains_alpha(txt: str) -> bool:
+    return any(c.isalpha() for c in txt)
+
+
 def unique_filename(parent: Path) -> Path:
     for _ in range(999999):
-        # length is not secure, but bytes are.
-        # How to make the length secure?
-        basename = ''
-        for _ in range(random.randint(2, 12)):
-            # on windows files are not really case-sensitive.
-            # So we prefer lowercase
-            basename += random.choice('abcdefghijklmnopqrstuvwxyz0123456789')
-
-        # basename = bytes_to_fn_str(get_random_bytes(length))
-        file = parent / basename
+        file = parent / random_basename()
         if not file.exists():
             return file
     raise RuntimeError("Cannot find unique filename")

@@ -4,7 +4,7 @@
 import os
 from pathlib import Path
 
-from ksf._common import looks_like_our_basename
+from ksf._common import looks_like_random_basename
 
 
 class WritingToTempFile:
@@ -18,7 +18,7 @@ class WritingToTempFile:
     def __init__(self, file: Path):
         self.final = file
         self.dirty = file.parent / (file.name + ".tmp")
-        assert not looks_like_our_basename(self.dirty.name)
+        assert not looks_like_random_basename(self.dirty.name)
 
     def __enter__(self):
         return self

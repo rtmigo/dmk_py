@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 import datetime
 
 from ksf._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, InsufficientData, \
-    bytes_to_fn_str, BASENAME_SIZE, looks_like_our_basename, unique_filename
+    bytes_to_fn_str, BASENAME_SIZE, looks_like_random_basename, unique_filename
 from ksf.cryptodir._10_salt import write_salt_and_fakes, read_salt, \
     SaltFileBadName, \
     SaltFileTooLarge, find_salt_in_dir, SaltFileIsNotFile
@@ -42,7 +42,7 @@ class TestSaltFile(unittest.TestCase):
 
     def test_fails_if_not_file(self):
         with TemporaryDirectory() as tds:
-            sub = Path(tds) / "nameok"
+            sub = Path(tds) / "nameok1"
             with self.assertRaises(FileNotFoundError):
                 read_salt(sub)
             sub.mkdir()

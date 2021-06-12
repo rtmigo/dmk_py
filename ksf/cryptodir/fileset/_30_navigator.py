@@ -9,7 +9,7 @@ from typing import List, Optional, BinaryIO
 from ksf._common import MIN_DATA_FILE_SIZE
 from ksf.cryptodir._10_kdf import FilesetPrivateKey
 from ksf.cryptodir.fileset._10_fakes import create_fake
-from ksf.cryptodir.fileset._25_encryption import is_file_with_data, \
+from ksf.cryptodir.fileset._25_encrypt_part import is_file_with_data, \
     _DecryptedFile, encrypt_io_to_dir, is_file_from_group
 from ksf.cryptodir.fileset.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file
