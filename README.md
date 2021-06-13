@@ -42,9 +42,9 @@ For example, information about a bitcoin wallet can be stored under codename
    with a 192-bit nonce. These hash+nonce pairs are openly saved to files that
    contain encrypted entries.
 
-   Having the private key and the nonce, we can recompute the same hash (3) and
-   check if the file contains it. If yes, then the file belongs to the given
-   codename.
+   Having the private key (2) and the nonce (3), we can recompute the same
+   hash (3) and check if the file contains it. If yes, then the file belongs to
+   the given codename.
 
 4) **ChaCha20** encrypts the entry data using the private key (2) and a newly
    generated 64-bit nonce.
