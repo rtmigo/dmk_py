@@ -51,13 +51,6 @@ def random_size_like_file(ref_size: int) -> int:
 def random_size_like_file_greater(ref_size: int) -> int:
     for _ in range(999999):
         result = random_size_like_file(ref_size)
-        #if last_byte:
-
-        # m =
-        #if last_byte is not None:
-        #    result += (result % last_byte)
-        #    assert result&0xFF ==
-
         if result > ref_size:
             return result
     raise RuntimeError("Dead loop prevented")

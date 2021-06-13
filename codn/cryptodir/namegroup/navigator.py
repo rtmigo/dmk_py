@@ -25,10 +25,10 @@ from typing import List, BinaryIO, Optional
 
 from codn._common import MIN_DATA_FILE_SIZE
 from codn.cryptodir._10_kdf import FilesetPrivateKey
-from codn.cryptodir.fileset._10_fakes import create_fake
-from codn.cryptodir.fileset._25_encrypt_part import DecryptedIO
-from codn.cryptodir.fileset._26_encrypt_full import encrypt_to_files
-from codn.cryptodir.fileset.random_sizes import random_size_like_others_in_dir, \
+from codn.cryptodir.namegroup.fakes import create_fake
+from codn.cryptodir.namegroup.encdec._25_encdec_part import DecryptedIO
+from codn.cryptodir.namegroup.encdec._26_encdec_full import encrypt_to_files
+from codn.cryptodir.namegroup.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file
 
 

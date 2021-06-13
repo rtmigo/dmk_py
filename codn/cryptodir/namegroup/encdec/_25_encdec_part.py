@@ -12,14 +12,14 @@ from Crypto.Random import get_random_bytes
 
 from codn._common import read_or_fail, InsufficientData
 from codn.cryptodir._10_kdf import FilesetPrivateKey
-from codn.cryptodir.fileset._10_fakes import set_random_last_modified
-from codn.cryptodir.fileset._10_imprint import Imprint, pk_matches_imprint_bytes
-from codn.cryptodir.fileset._10_padding import IntroPadding
-from codn.cryptodir.fileset._20_byte_funcs import bytes_to_uint32, \
+from codn.cryptodir.namegroup.imprint import Imprint, pk_matches_imprint_bytes
+from codn.cryptodir.namegroup.random_sizes import random_size_like_file_greater
+from codn.utils.dirty_file import WritingToTempFile
+from codn.utils.randoms import set_random_last_modified
+from ._10_padding import IntroPadding
+from ._20_byte_funcs import bytes_to_uint32, \
     bytes_to_int64, uint32_to_bytes, int64_to_bytes, uint8_to_bytes, \
     uint24_to_bytes, bytes_to_uint8, bytes_to_uint24
-from codn.cryptodir.fileset.random_sizes import random_size_like_file_greater
-from codn.utils.dirty_file import WritingToTempFile
 
 _DEBUG_PRINT = False
 

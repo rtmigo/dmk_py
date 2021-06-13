@@ -8,8 +8,8 @@ from tempfile import TemporaryDirectory
 from typing import List, Set
 
 from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from codn.cryptodir.fileset._25_encrypt_part import is_fake, is_content
-from codn.cryptodir.fileset._30_navigator import NewNameGroup, update_namegroup
+from codn.cryptodir.namegroup.encdec._25_encdec_part import is_fake, is_content
+from codn.cryptodir.namegroup.navigator import NewNameGroup, update_namegroup
 from tests.common import testing_salt, sizes_are_random, dates_are_random
 
 

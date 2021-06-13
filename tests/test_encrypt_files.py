@@ -8,8 +8,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from codn.cryptodir.fileset import DecryptedIO
-from codn.cryptodir.fileset._26_encrypt_full import encrypt_to_files, \
+from codn.cryptodir.namegroup import DecryptedIO
+from codn.cryptodir.namegroup.encdec._26_encdec_full import encrypt_to_files, \
     decrypt_from_files, split_random_sizes
 from codn.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt

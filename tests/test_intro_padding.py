@@ -5,7 +5,7 @@ import random
 import unittest
 from io import BytesIO
 
-from codn.cryptodir.fileset._10_padding import IntroPadding
+from codn.cryptodir.namegroup.encdec._10_padding import IntroPadding
 
 
 class TestIntro(unittest.TestCase):
