@@ -1,6 +1,5 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-
 import time
 
 import click
@@ -72,8 +71,15 @@ def clear():
         print("Canceled")
 
 
+from ._constants import __version__, __copyright__
+
+
 @click.group()
+@click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
 def cli():
+    """
+    See https://github.com/rtmigo/ksf_py#readme
+    """
     pass
 
 

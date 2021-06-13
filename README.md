@@ -2,21 +2,26 @@
 [![Generic badge](https://img.shields.io/badge/Python-3.7+-blue.svg)](#)
 [![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS%20|%20Windows-blue.svg)](#)
 
-**This is experimental code. It is not ready to use.
-This description is also a draft.**
+**This is experimental code. It is not ready to use. This description is also a
+draft.**
+
+# [codn](https://github.com/rtmigo/ksf_py)
 
 ---
 
-`ksf` encrypts individual data entries. Entries
-can be added, updated and removed. Entries are files or strings.
+`codn` encrypts data entries. Entries can be added, updated and removed. Entries
+are files or strings.
 
-You need to know the **codename** of the entry to access the data of that
-particular entry. Without the codename, it is impossible even to find out if the
-entry exists.
+You need to know the **codename** of the entry to access the data of the entry.
+Without the codename, it is impossible even to find out if the entry exists.
 
-There is no way to decrypt the entire storage. There is no master password and
-no table of contents. The file names, sizes and dates are obfuscated to reveal a
-minimum of information.
+- There is **no way to decrypt the entire storage**, since there is **no master
+  password**
+- There is **no table of contents**. The **codenames are not stored** even in
+  encrypted form
+- The **files reveal nothing** about the storage contents. The file names,
+  sizes, dates and even the number of files are randomly obfuscated
+- Each file content is indistinguishable from random
 
 # Install
 
@@ -36,16 +41,16 @@ For example, information about a bitcoin wallet can be stored under codename
 
 ## Encryption
 
-1) **URandom** creates **256-bit salt** when we initialize the directory. The salt
-   is saved openly in one of the files. This salt never changes. It is required
-   for any other actions on the directory.
+1) **URandom** creates 256-bit **salt** when we initialize the directory. The
+   salt is saved openly in one of the files. This salt never changes. It is
+   required for any other actions on the directory.
 
 2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
    salted (1) codename.
 
 3) **Blake2b** computes 192-bit **hashes** from the private key (2) combined
-   with a 192-bit **nonce**. These hash+nonce pairs are openly saved to files that
-   contain encrypted entries.
+   with a 192-bit **nonce**. These hash+nonce pairs are openly saved to files
+   that contain encrypted entries.
 
    Having the private key (2) and the nonce (3), we can recompute the same
    hash (3) and check if the file contains it. If yes, then the file belongs to
@@ -61,11 +66,10 @@ For example, information about a bitcoin wallet can be stored under codename
 
 `ksf` stores encrypted data in a directory.
 
-The directory can contain any number of entries. Including zero entries.
+The directory can contain any number of entries. Or contain none at all.
 
-The directory content is obfuscated. It does not reveal information about the 
-entries. It is not even possible to determine that the directory was created 
-by the `ksf`.
+The directory content is obfuscated. It is not even possible to determine that
+the directory was created by the `ksf`.
 
 ```
 Size  | Timestamp    | Filename
