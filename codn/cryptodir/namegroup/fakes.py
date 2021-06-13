@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import datetime
-import os
-import random
 from pathlib import Path
 
 from Crypto.Random import get_random_bytes
@@ -11,28 +9,12 @@ from Crypto.Random import get_random_bytes
 from codn._common import MIN_DATA_FILE_SIZE, looks_like_random_basename, \
     unique_filename
 from codn.cryptodir._10_kdf import FilesetPrivateKey
-from codn.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
-    pk_matches_imprint_bytes
+from codn.cryptodir.namegroup.imprint import Imprint
 from codn.utils.dirty_file import WritingToTempFile
+from codn.utils.randoms import MICROSECONDS_PER_DAY, set_random_last_modified
 
-MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000 * 1000
 assert datetime.timedelta(microseconds=MICROSECONDS_PER_DAY) \
            .total_seconds() == 60 * 60 * 24
-
-
-def _random_datetime(max_days_ago: float = 366) -> datetime.datetime:
-    mcs = random.randint(0, round(MICROSECONDS_PER_DAY * max_days_ago))
-    delta = datetime.timedelta(microseconds=mcs)
-    return datetime.datetime.now() - delta
-
-
-def _set_file_last_modified(file: Path, dt: datetime.datetime):
-    dt_epoch = dt.timestamp()
-    os.utime(str(file), (dt_epoch, dt_epoch))
-
-
-def set_random_last_modified(file: Path):
-    _set_file_last_modified(file, _random_datetime(max_days_ago=365.2425 * 10))
 
 
 def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):

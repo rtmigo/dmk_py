@@ -7,9 +7,7 @@ from typing import Optional, BinaryIO
 
 from ._10_kdf import FilesetPrivateKey
 from ._10_salt import find_salt_in_dir, write_salt_and_fakes
-from .fileset import update_namegroup, NewNameGroup, DecryptedIO
-from .fileset._26_encrypt_full import decrypt_from_files
-from .fileset._30_navigator import update_namegroup
+from .namegroup import NewNameGroup, decrypt_from_files, update_namegroup
 
 
 class CryptoDir:
@@ -32,7 +30,6 @@ class CryptoDir:
     def get(self, name: str) -> Optional[bytes]:
         pk = FilesetPrivateKey(name, self.salt)
         with NewNameGroup(self.directory, pk) as nng:
-
             if not nng.fresh_content_files:
                 return None
 

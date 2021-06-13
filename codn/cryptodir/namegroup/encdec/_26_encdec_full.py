@@ -5,7 +5,7 @@ from typing import BinaryIO, List
 
 from codn._common import unique_filename
 from codn.cryptodir._10_kdf import FilesetPrivateKey
-from codn.cryptodir.fileset._25_encrypt_part import get_stream_size, Encrypt, \
+from codn.cryptodir.namegroup.encdec._25_encdec_part import get_stream_size, Encrypt, \
     DecryptedIO
 
 

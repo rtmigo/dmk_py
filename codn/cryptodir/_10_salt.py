@@ -28,7 +28,7 @@ from Crypto.Random import get_random_bytes
 
 from codn._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, read_or_fail, \
     looks_like_random_basename, unique_filename
-from codn.cryptodir.fileset._10_fakes import set_random_last_modified
+from codn.utils.randoms import set_random_last_modified
 
 
 class SaltFileError(Exception):

@@ -9,10 +9,10 @@ from tempfile import TemporaryDirectory
 from typing import List, Set
 
 from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from codn.cryptodir.fileset._10_fakes import create_fake
-from codn.cryptodir.fileset._25_encrypt_part import is_fake, is_content
-from codn.cryptodir.fileset._26_encrypt_full import encrypt_to_files
-from codn.cryptodir.fileset._30_navigator import NewNameGroup, update_namegroup
+from codn.cryptodir.namegroup.fakes import create_fake
+from codn.cryptodir.namegroup.encdec._25_encdec_part import is_fake, is_content
+from codn.cryptodir.namegroup.encdec._26_encdec_full import encrypt_to_files
+from codn.cryptodir.namegroup.navigator import NewNameGroup, update_namegroup
 from codn.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 

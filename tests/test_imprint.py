@@ -6,7 +6,7 @@ from difflib import SequenceMatcher
 
 from codn._common import bytes_to_fn_str, fnstr_to_bytes
 from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from codn.cryptodir.fileset._10_imprint import Imprint, \
+from codn.cryptodir.namegroup.imprint import Imprint, \
     pk_matches_imprint_bytes
 from tests.common import testing_salt
 
