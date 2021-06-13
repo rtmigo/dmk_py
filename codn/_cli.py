@@ -33,10 +33,10 @@ def config():
 @click.command(name='set')
 @click.option('-n',
               '--name',
-              prompt='Secret name of the item',
+              prompt='Name',
               hide_input=True,
-              confirmation_prompt=True)
-@click.option('-v', '--value', prompt='The value')
+              confirmation_prompt="Repeat")
+@click.option('-v', '--value', prompt='Entry value')
 def set_cmd(name: str, value: str):
     """Adds or replaces item as a string."""
     Main().set(name, value)
@@ -44,7 +44,7 @@ def set_cmd(name: str, value: str):
 
 @click.command()
 @click.option('-n', '--name',
-              prompt='Secret name of the item',
+              prompt='Codename',
               hide_input=True)
 def get(name: str):
     """Gets item data as string prints value to stdout."""
@@ -54,7 +54,7 @@ def get(name: str):
 
 @click.command()
 @click.option('-n', '--name',
-              prompt='Secret name of the item',
+              prompt='Codename',
               hide_input=True)
 def eval(name: str):
     """Gets item data as string and executes it as shell command."""
