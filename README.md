@@ -61,10 +61,9 @@ For example, information about a bitcoin wallet can be stored under codename
 
 `ksf` stores encrypted data in a directory.
 
-The directory can contain any number of entries. Including zero entries.
+The directory can contain any number of entries. Or contain none at all.
 
-The directory content is obfuscated. It does not reveal information about the 
-entries. It is not even possible to determine that the directory was created 
+The directory content is obfuscated. It is not even possible to determine that the directory was created 
 by the `ksf`.
 
 ```
