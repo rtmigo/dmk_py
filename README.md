@@ -36,7 +36,7 @@ For example, information about a bitcoin wallet can be stored under codename
 
 ## Encryption
 
-1) **URandom** creates **256-bit salt** when we initialize the directory. The salt
+1) **URandom** creates 256-bit **salt** when we initialize the directory. The salt
    is saved openly in one of the files. This salt never changes. It is required
    for any other actions on the directory.
 
