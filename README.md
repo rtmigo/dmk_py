@@ -2,8 +2,8 @@
 [![Generic badge](https://img.shields.io/badge/Python-3.7+-blue.svg)](#)
 [![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS%20|%20Windows-blue.svg)](#)
 
-`ksf` encrypts individual data entries. Entries are files or strings. Entries
-can be added, updated and removed.
+`ksf` encrypts individual data entries. Entries
+can be added, updated and removed. Entries are files or strings.
 
 You need to know the **codename** of the entry to access the data of that
 particular entry. Without the codename, it is impossible even to find out if the
