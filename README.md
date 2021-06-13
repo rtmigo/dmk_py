@@ -39,7 +39,7 @@ For example, information about a bitcoin wallet can be stored under codename
 2) **Scrypt** (CPU/Memory cost = 2^17) creates 256-bit **private key** from
    salted (1) codename.
 
-3) **Blake2b** creates **192-bit hashes** from the private key (2) combined with
+3) **Blake2b** creates 192-bit **hashes** from the private key (2) combined with
    a 192-bit nonce. These hash+nonce pairs are openly saved to files that
    contain encrypted entries.
 
