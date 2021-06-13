@@ -33,7 +33,7 @@ decrypts it. It is a secret. And it must be unique.
 For example, information about a bitcoin wallet can be stored under codename
 `"b1TC01n"` or `"bitcoin_secret123"`.
 
-# Write and read string
+# Write and read text
 
 In one line:
 
