@@ -3,9 +3,9 @@ import random
 from pathlib import Path
 from typing import BinaryIO, List
 
-from ksf._common import unique_filename
-from ksf.cryptodir._10_kdf import FilesetPrivateKey
-from ksf.cryptodir.fileset._25_encrypt_part import get_stream_size, Encrypt, \
+from codn._common import unique_filename
+from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.cryptodir.fileset._25_encrypt_part import get_stream_size, Encrypt, \
     DecryptedIO
 
 

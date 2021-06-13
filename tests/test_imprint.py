@@ -4,9 +4,9 @@
 import unittest
 from difflib import SequenceMatcher
 
-from ksf._common import bytes_to_fn_str, fnstr_to_bytes
-from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from ksf.cryptodir.fileset._10_imprint import Imprint, \
+from codn._common import bytes_to_fn_str, fnstr_to_bytes
+from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
+from codn.cryptodir.fileset._10_imprint import Imprint, \
     pk_matches_imprint_bytes
 from tests.common import testing_salt
 

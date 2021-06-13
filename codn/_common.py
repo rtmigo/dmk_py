@@ -8,7 +8,7 @@ from typing import BinaryIO, Tuple
 from Crypto.Hash import BLAKE2b
 from Crypto.Random import get_random_bytes
 
-from ksf.utils.randoms import get_noncrypt_random_bytes
+from codn.utils.randoms import get_noncrypt_random_bytes
 
 PK_SALT_SIZE = 32
 PK_SIZE = 32

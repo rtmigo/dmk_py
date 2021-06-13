@@ -1,6 +1,6 @@
 import unittest
 
-from ksf.cryptodir.fileset._20_byte_funcs import uint16_to_bytes, \
+from codn.cryptodir.fileset._20_byte_funcs import uint16_to_bytes, \
     bytes_to_uint16
 
 

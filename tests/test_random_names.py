@@ -1,6 +1,6 @@
 import unittest
 
-from ksf._common import random_basename, looks_like_random_basename
+from codn._common import random_basename, looks_like_random_basename
 
 
 class TestRandomName(unittest.TestCase):

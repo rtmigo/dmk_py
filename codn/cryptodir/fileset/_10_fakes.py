@@ -8,12 +8,12 @@ from pathlib import Path
 
 from Crypto.Random import get_random_bytes
 
-from ksf._common import MIN_DATA_FILE_SIZE, looks_like_random_basename, \
+from codn._common import MIN_DATA_FILE_SIZE, looks_like_random_basename, \
     unique_filename
-from ksf.cryptodir._10_kdf import FilesetPrivateKey
-from ksf.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
+from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.cryptodir.fileset._10_imprint import Imprint, HashCollision, \
     pk_matches_imprint_bytes
-from ksf.utils.dirty_file import WritingToTempFile
+from codn.utils.dirty_file import WritingToTempFile
 
 MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000 * 1000
 assert datetime.timedelta(microseconds=MICROSECONDS_PER_DAY) \

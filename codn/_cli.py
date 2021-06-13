@@ -4,10 +4,10 @@ import time
 
 import click
 
-from ksf._common import PK_SALT_SIZE
-from ksf._main import Main
-from ksf.cryptodir._10_kdf import FilesetPrivateKey
-from ksf.utils.randoms import get_noncrypt_random_bytes
+from codn._common import PK_SALT_SIZE
+from codn._main import Main
+from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.utils.randoms import get_noncrypt_random_bytes
 
 
 @click.command(hidden=True)

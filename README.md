@@ -5,7 +5,7 @@
 **This is experimental code. It is not ready to use. This description is also a
 draft.**
 
-# [codn](https://github.com/rtmigo/ksf_py)
+# [codn](https://github.com/rtmigo/codn_py)
 
 ---
 
@@ -15,18 +15,14 @@ are files or strings.
 You need to know the **codename** of the entry to access the data of the entry.
 Without the codename, it is impossible even to find out if the entry exists.
 
-- There is **no way to decrypt the entire storage**, since there is **no master
-  password**
-- There is **no table of contents**. The **codenames are not stored** even in
-  encrypted form
-- The **files reveal nothing** about the storage contents. The file names,
-  sizes, dates and even the number of files are randomly obfuscated
-- Each file content is indistinguishable from random
+There is **no way to decrypt the entire storage**, since there is **no master
+password** and **no table of contents**. The **files** are obfuscated to
+**reveal nothing** even indirectly.
 
 # Install
 
 ``` bash
-$ pip install git+https://github.com/rtmigo/ksf_py#egg=ksf
+$ pip install git+https://github.com/rtmigo/codn_py#egg=codn
 ```
 
 # Codenames
@@ -64,12 +60,12 @@ For example, information about a bitcoin wallet can be stored under codename
 
 ## Obfuscation
 
-`ksf` stores encrypted data in a directory.
+`codn` stores encrypted data in a directory.
 
 The directory can contain any number of entries. Or contain none at all.
 
 The directory content is obfuscated. It is not even possible to determine that
-the directory was created by the `ksf`.
+the directory was created by the `codn`.
 
 ```
 Size  | Timestamp    | Filename

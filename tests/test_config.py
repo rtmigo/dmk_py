@@ -4,7 +4,7 @@
 import unittest
 from pathlib import Path
 
-from ksf._config import Config
+from codn._config import Config
 
 
 class TestConfig(unittest.TestCase):

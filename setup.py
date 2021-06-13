@@ -12,7 +12,7 @@ def load_module_dict(filename: str) -> dict:
     return module.__dict__
 
 
-name = "ksf"
+name = "codn"
 constants = load_module_dict(f'{name}/_constants.py')
 
 readme = (Path(__file__).parent / 'README.md').read_text(encoding="utf-8")
@@ -26,7 +26,7 @@ setup(
     author_email="ortemeo@gmail.com",
     # url='https://github.com/rtmigo/vien_py',
 
-    packages=['ksf'],
+    packages=['codn'],
     python_requires='>=3.7',
     install_requires=['pycryptodome', 'click'], # ,
 
@@ -39,7 +39,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'ksf = ksf:cli',
+            'codn = codn:cli',
         ]},
 
     keywords="".split(),

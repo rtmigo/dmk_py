@@ -3,8 +3,8 @@ import shutil
 import subprocess
 from io import BytesIO
 
-from ksf._config import Config
-from ksf.cryptodir import CryptoDir
+from codn._config import Config
+from codn.cryptodir import CryptoDir
 
 
 def _confirm(txt: str):

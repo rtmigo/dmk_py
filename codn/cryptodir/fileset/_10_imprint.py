@@ -6,8 +6,8 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from ksf._common import bytes_to_fn_str, blake192, BASENAME_SIZE
-from ksf.cryptodir._10_kdf import FilesetPrivateKey
+from codn._common import bytes_to_fn_str, blake192, BASENAME_SIZE
+from codn.cryptodir._10_kdf import FilesetPrivateKey
 
 
 class Imprint:

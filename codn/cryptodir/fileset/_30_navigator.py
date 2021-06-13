@@ -23,12 +23,12 @@ import random
 from pathlib import Path
 from typing import List, BinaryIO, Optional
 
-from ksf._common import MIN_DATA_FILE_SIZE
-from ksf.cryptodir._10_kdf import FilesetPrivateKey
-from ksf.cryptodir.fileset._10_fakes import create_fake
-from ksf.cryptodir.fileset._25_encrypt_part import DecryptedIO
-from ksf.cryptodir.fileset._26_encrypt_full import encrypt_to_files
-from ksf.cryptodir.fileset.random_sizes import random_size_like_others_in_dir, \
+from codn._common import MIN_DATA_FILE_SIZE
+from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.cryptodir.fileset._10_fakes import create_fake
+from codn.cryptodir.fileset._25_encrypt_part import DecryptedIO
+from codn.cryptodir.fileset._26_encrypt_full import encrypt_to_files
+from codn.cryptodir.fileset.random_sizes import random_size_like_others_in_dir, \
     random_size_like_file
 
 

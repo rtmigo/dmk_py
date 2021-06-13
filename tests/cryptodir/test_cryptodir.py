@@ -6,8 +6,8 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf.cryptodir._10_kdf import FasterKDF
-from ksf.cryptodir._20_cryptodir import CryptoDir
+from codn.cryptodir._10_kdf import FasterKDF
+from codn.cryptodir._20_cryptodir import CryptoDir
 from tests.common import gen_random_content, gen_random_names
 
 

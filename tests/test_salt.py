@@ -7,13 +7,13 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, InsufficientData, \
+from codn._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, InsufficientData, \
     unique_filename
-from ksf.cryptodir._10_salt import write_salt_and_fakes, read_salt, \
+from codn.cryptodir._10_salt import write_salt_and_fakes, read_salt, \
     SaltFileBadName, \
     SaltFileTooLarge, find_salt_in_dir, SaltFileIsNotFile, \
     _random_byte_with_lowest_bit_on
-from ksf.utils.randoms import get_noncrypt_random_bytes
+from codn.utils.randoms import get_noncrypt_random_bytes
 
 
 class TestSaltFile(unittest.TestCase):
