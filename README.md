@@ -5,14 +5,13 @@
 `ksf` encrypts individual data entries. Entries are files or strings. Entries
 can be added, updated and removed.
 
-Entries are identified with **codenames**. Knowing the codename of an entry, you
-can access the data of that particular entry.
+You need to know the **codename** of the entry to access the data of that
+particular entry. Without the codename, it is impossible even to find out if the
+entry exists.
 
-There is no way to decrypt the entire storage or even find out its contents.
-There is no master password and no table of contents.
-
-Each entry is encrypted with a separate key. Without a key, it is impossible to
-decrypt the record or find out if it exists at all.
+There is no way to decrypt the entire storage. There is no master password and
+no table of contents. The file names, sizes and dates are obfuscated to reveal a
+minimum of information.
 
 # Install
 
@@ -39,8 +38,8 @@ For example, information about a bitcoin wallet can be stored under codename
 2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
    salted (1) codename.
 
-3) **Blake2b** computes 192-bit **hashes** from the private key (2) combined with
-   a 192-bit nonce. These hash+nonce pairs are openly saved to files that
+3) **Blake2b** computes 192-bit **hashes** from the private key (2) combined
+   with a 192-bit nonce. These hash+nonce pairs are openly saved to files that
    contain encrypted entries.
 
    Having the private key and the nonce, we can recompute the same hash (3) and
