@@ -1,18 +1,24 @@
+import datetime
 import random
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import datetime
 
 from ksf._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, InsufficientData, \
-    bytes_to_fn_str, BASENAME_SIZE, looks_like_random_basename, unique_filename
+    unique_filename
 from ksf.cryptodir._10_salt import write_salt_and_fakes, read_salt, \
     SaltFileBadName, \
-    SaltFileTooLarge, find_salt_in_dir, SaltFileIsNotFile
+    SaltFileTooLarge, find_salt_in_dir, SaltFileIsNotFile, \
+    _random_byte_with_lowest_bit_on
 from ksf.utils.randoms import get_noncrypt_random_bytes
 
 
 class TestSaltFile(unittest.TestCase):
+
+    def test_random_byte_with_bit(self):
+        values = set(_random_byte_with_lowest_bit_on() for _ in range(100))
+        self.assertGreater(len(values), 10)
+        self.assertTrue(all(b & 1 for b in values))
 
     def test_reads_correct(self):
         with TemporaryDirectory() as tds:
@@ -32,7 +38,6 @@ class TestSaltFile(unittest.TestCase):
                 dates.add(
                     datetime.date.fromtimestamp(f.stat().st_mtime))
         self.assertGreater(len(dates), 4)
-
 
     def test_fails_wrong_fn(self):
         with self.assertRaises(SaltFileBadName):
