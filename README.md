@@ -16,9 +16,7 @@ You need to know the **codename** of the entry to access the data of the entry.
 Without the codename, it is impossible even to find out if the entry exists.
 
 There is **no way to decrypt the entire storage**, since there is **no master
-password**. There is **no table of contents**. The **codenames are not stored** even in
-  encrypted form. The **files reveal nothing** about the storage contents. The file names,
-  sizes, dates and even the number of files are randomly obfuscated.  Each file content is indistinguishable from random.
+password**. There is **no table of contents**. The **files** are obfuscated to **reveal nothing** about the storage contents.
 
 # Install
 
