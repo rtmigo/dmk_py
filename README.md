@@ -17,7 +17,7 @@ Without the codename, it is impossible even to find out if the entry exists.
 
 There is **no way to decrypt the entire storage**, since there is **no master
 password** and **no table of contents**. The **files** are obfuscated to
-**reveal nothing**.
+**reveal nothing** even indirectly.
 
 # Install
 
