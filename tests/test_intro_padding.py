@@ -5,10 +5,58 @@ import random
 import unittest
 from io import BytesIO
 
-from codn.cryptodir.namegroup.encdec._10_padding import IntroPadding
+from codn.cryptodir.namegroup.encdec._10_padding import IntroPadding, \
+    _set_highest_bit, _is_highest_bit_set, _random_first_byte, \
+    _first_byte_to_len
 
 
 class TestIntro(unittest.TestCase):
+
+    def test_highest_bit(self):
+        x = _set_highest_bit(55)
+        self.assertEqual(x, 183)
+        self.assertTrue(_is_highest_bit_set(x))
+
+        x = _set_highest_bit(56)
+        self.assertEqual(x, 184)
+        self.assertTrue(_is_highest_bit_set(x))
+
+    def test_first_byte_must_be_step_2(self):
+
+        for _ in range(1000):
+            with self.assertRaises(ValueError):
+                _first_byte_to_len(_random_first_byte(), 15)
+            with self.assertRaises(ValueError):
+                _first_byte_to_len(_random_first_byte(), 17)
+
+            # too small and too large
+            with self.assertRaises(ValueError):
+                _first_byte_to_len(_random_first_byte(), 256)
+            with self.assertRaises(ValueError):
+                _first_byte_to_len(_random_first_byte(), 1)
+            with self.assertRaises(ValueError):
+                _first_byte_to_len(_random_first_byte(), 0)
+
+            _first_byte_to_len(_random_first_byte(), 16)
+            _first_byte_to_len(_random_first_byte(), 128)
+
+    def test_first_byte(self):
+        for max_len in [16, 64, 128]:
+            all_lengths = set()
+            for i in range(999999):
+                first_byte = _random_first_byte()
+                length = _first_byte_to_len(first_byte, max_len)
+                self.assertEqual(_first_byte_to_len(first_byte, max_len),
+                                 length)
+                all_lengths.add(length)
+
+                if 0 in all_lengths and max_len-1 in all_lengths and len(
+                        all_lengths) > 3:
+                    break
+
+            self.assertGreater(len(all_lengths), 3)
+            self.assertEqual(min(all_lengths), 0)
+            self.assertEqual(max(all_lengths), max_len-1)
 
     def test_min_len_1(self):
         for maxlen in [2, 8]:
@@ -57,3 +105,7 @@ class TestIntro(unittest.TestCase):
             IntroPadding(1)
         with self.assertRaises(ValueError):
             IntroPadding(512)
+
+
+if __name__ == "__main__":
+    unittest.main()

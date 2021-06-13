@@ -12,6 +12,34 @@ def _is_power_of_two(n: int) -> bool:
     return n > 0 and (n & (n - 1)) == 0
 
 
+def _set_highest_bit(x: int) -> int:
+    if not 0 <= x <= 0xFF:
+        raise ValueError
+    return x | 0x80
+
+
+def _is_highest_bit_set(x: int) -> bool:
+    if not 0 <= x <= 0xFF:
+        raise ValueError
+    return x & 0x80 != 0
+
+
+def _first_byte_to_len(x: int, maxlen: int) -> int:
+    if not 2 <= maxlen <= 128:
+        raise ValueError("must be from rang 0<=x<=128")
+    if not _is_power_of_two(maxlen):
+        raise ValueError("not a power of two")
+    if not _is_highest_bit_set(x):
+        raise ValueError("Highest bit not set")
+    return (x & (maxlen - 1))
+
+
+def _random_first_byte() -> int:
+    x = random.randint(0, 0x7F)
+    x = _set_highest_bit(x)
+    return x
+
+
 class IntroPadding:
     """When the encrypted content always starts with the same bytes, this
     could hypothetically make it easier to crack the cipher. So I put a little
@@ -24,38 +52,59 @@ class IntroPadding:
 
     __slots__ = ["max_len"]
 
-    def __init__(self, maxlen: int):
+    def __init__(self, max_len: int):
 
         # technically 1 is a power of two (2**0), but the minimum value is 2.
         # So all max_len values are positive and even
 
-        if not 2 <= maxlen <= 0xFF:
+        if not 2 <= max_len <= 0x80:
             raise ValueError("Range error")
-        if not _is_power_of_two(maxlen):
+        if not _is_power_of_two(max_len):
             raise ValueError("not a power of two")
-        self.max_len = maxlen
+        self.max_len = max_len
 
     def first_byte_to_len(self, x: int) -> int:
-        """Returns number from range 0..63"""
-        if not 0 <= x <= 0xFF:
-            raise ValueError
-        return x & (self.max_len - 1)
+        return _first_byte_to_len(x, self.max_len)
+        # """Returns number from range 0..63"""
+        # if not 0 <= x <= 0xFF:
+        #     raise ValueError
+        # return x & (self.max_len - 1)
 
     def gen_bytes(self):
-        # first byte is completely random
-        first_byte = random.randint(0, 0xFF)
+        # The first byte is almost random.
+        #
+        # The lower bits of the first byte store the padding size: the
+        # number of bytes to skip. And those bits are random.
+        #
+        # Higher bits mean nothing, so they are just random.
+        #
+        # But the highest bit is always set to 1. This is bad because it
+        # makes the byte less random.
+        #
+        # The padding itself will be encrypted. But now a potential
+        # brute-forcer knows that the first bit inside the encryption is one.
+        # This poses a problem very hypothetically. It is unlikely that anyone
+        # would adopt the knowledge of a single bit.
+        #
+        # But this bit is very useful. If we ever change our mind about
+        # starting encrypted data with padding, we can communicate this
+        # with the zero most significant bit.
+
+        first_byte = _random_first_byte()
+        assert _is_highest_bit_set(first_byte)
+
         result = bytes((first_byte,))
 
         # the least significant four bits of the first (random) byte
         # indicate the number of bytes remaining: minimum 0, maximum 15
         length = self.first_byte_to_len(first_byte)
-        assert 0 <= length <= self.max_len - 1
+        assert 0 <= length < self.max_len
 
         # generating the random padding
         if length > 0:
             result += get_noncrypt_random_bytes(length)
 
-        assert 1 <= len(result) <= 64
+        assert 0 <= len(result) < 128
         return result
 
     def skip_in_file(self, df: BinaryIO):
