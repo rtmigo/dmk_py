@@ -3,7 +3,7 @@
 
 import unittest
 
-from ksf.utils.randoms import get_noncrypt_random_bytes
+from codn.utils.randoms import get_noncrypt_random_bytes
 
 
 class TestRandomBytes(unittest.TestCase):

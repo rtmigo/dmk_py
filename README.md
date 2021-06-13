@@ -5,7 +5,7 @@
 **This is experimental code. It is not ready to use. This description is also a
 draft.**
 
-# [codn](https://github.com/rtmigo/ksf_py)
+# [codn](https://github.com/rtmigo/codn_py)
 
 ---
 
@@ -22,7 +22,7 @@ password** and **no table of contents**. The **files** are obfuscated to
 # Install
 
 ``` bash
-$ pip install git+https://github.com/rtmigo/ksf_py#egg=ksf
+$ pip install git+https://github.com/rtmigo/codn_py#egg=codn
 ```
 
 # Codenames
@@ -60,12 +60,12 @@ For example, information about a bitcoin wallet can be stored under codename
 
 ## Obfuscation
 
-`ksf` stores encrypted data in a directory.
+`codn` stores encrypted data in a directory.
 
 The directory can contain any number of entries. Or contain none at all.
 
 The directory content is obfuscated. It is not even possible to determine that
-the directory was created by the `ksf`.
+the directory was created by the `codn`.
 
 ```
 Size  | Timestamp    | Filename

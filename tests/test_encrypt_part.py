@@ -7,10 +7,10 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from ksf.cryptodir.fileset._25_encrypt_part import Encrypt, \
+from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
+from codn.cryptodir.fileset._25_encrypt_part import Encrypt, \
     is_content, DecryptedIO, GroupImprintMismatch
-from ksf.utils.randoms import get_noncrypt_random_bytes
+from codn.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
 

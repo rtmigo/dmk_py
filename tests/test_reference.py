@@ -5,8 +5,8 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ksf.cryptodir._10_kdf import FilesetPrivateKey
-from ksf.cryptodir._20_cryptodir import CryptoDir
+from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.cryptodir._20_cryptodir import CryptoDir
 
 ref_content = [
     ('one', bytes([11, 22, 33])),

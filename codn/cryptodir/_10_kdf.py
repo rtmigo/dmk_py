@@ -6,7 +6,7 @@ from typing import Optional
 
 from Crypto.Protocol.KDF import scrypt
 
-from ksf._common import PK_SALT_SIZE
+from codn._common import PK_SALT_SIZE
 
 
 class FilesetPrivateKey:

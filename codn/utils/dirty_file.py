@@ -4,7 +4,7 @@
 import os
 from pathlib import Path
 
-from ksf._common import looks_like_random_basename
+from codn._common import looks_like_random_basename
 
 
 class WritingToTempFile:
