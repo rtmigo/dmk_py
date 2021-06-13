@@ -33,22 +33,22 @@ decrypts it. It is a secret. And it must be unique.
 For example, information about a bitcoin wallet can be stored under codename
 `"b1TC01n"` or `"bitcoin_secret123"`.
 
-# Set and get string
+# Save and read text
 
 In one line:
 
-``` bash
+``` 
 $ codn set -n topsecret123 -v "My lover's jokes are not that funny"
 ```
 
-``` bash
+``` 
 $ codn get -n 'topsecret123'
 
 My lover's jokes are not that funny
 ```
 
 Interactively:
-``` bash
+``` 
 $ codn set
 
 Codename: topsecret123
@@ -56,7 +56,7 @@ Repeat: topsecret123
 Entry value: My lover's jokes are not that funny
 ```
 
-``` bash
+``` 
 $ codn get
 
 Codename: topsecret123
