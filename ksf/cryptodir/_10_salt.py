@@ -66,9 +66,22 @@ def _write_smth_to_file(target: Path, first_bytes: bytes):
     target.write_bytes(data)
 
 
+def _random_byte_with_lowest_bit_on() -> int:
+    x = random.randint(0, 0xFF)
+    return x | 1
+
+
 def _write_salt_to_file(target: Path) -> bytes:
     salt = get_random_bytes(PK_SALT_SIZE)
-    _write_smth_to_file(target, salt)
+
+    # Just in case, I add a special byte to the beginning. In this byte, the
+    # least significant bit is set to one. This is the only non-random,
+    # unencrypted bit in the entire directory. This bit indicates that
+    # we are using the first version of the format. So far the only one.
+
+    version = bytes([_random_byte_with_lowest_bit_on()])
+
+    _write_smth_to_file(target, version + salt)
     return salt
 
 
@@ -126,6 +139,7 @@ def read_salt(file: Path):
         raise SaltFileTooLarge
 
     with file.open('rb') as f:
+        ver = read_or_fail(f, 1)
         salt = read_or_fail(f, PK_SALT_SIZE)
 
     assert len(salt) == PK_SALT_SIZE
@@ -137,7 +151,7 @@ def find_salt_in_dir(parent: Path) -> Optional[bytes]:
     # we need to sort bt name, not just sort paths, because otherwise
     # on Windows paths are sorted in case-insensitive manner
     for fn in sorted(parent.glob('*'), key=lambda p: p.name):
-        #print(f"trying salt {fn}")
+        # print(f"trying salt {fn}")
         if looks_like_random_basename(
                 fn.name) and fn.stat().st_size <= MAX_SALT_FILE_SIZE:
             salt_file = fn
