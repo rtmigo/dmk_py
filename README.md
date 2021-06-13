@@ -31,7 +31,7 @@ For example, information about a bitcoin wallet can be stored under codename
 
 ## Encryption
 
-1) URandom creates **256-bit salt** when we initialize the directory. The salt
+1) **URandom** creates **256-bit salt** when we initialize the directory. The salt
    is saved openly in one of the files. This salt never changes. It is required
    for any other actions on the directory.
 
@@ -39,7 +39,7 @@ For example, information about a bitcoin wallet can be stored under codename
    salted (1) codename.
 
 3) **Blake2b** computes 192-bit **hashes** from the private key (2) combined
-   with a 192-bit nonce. These hash+nonce pairs are openly saved to files that
+   with a 192-bit **nonce**. These hash+nonce pairs are openly saved to files that
    contain encrypted entries.
 
    Having the private key (2) and the nonce (3), we can recompute the same
@@ -58,10 +58,9 @@ For example, information about a bitcoin wallet can be stored under codename
 
 The directory can contain any number of entries. Including zero entries.
 
-The utility deliberately obfuscates the directory structure.
-
-It does not reveal any information about the entries. It is not even possible to
-determine that the directory was created by the `ksf`.
+The directory content is obfuscated. It does not reveal information about the 
+entries. It is not even possible to determine that the directory was created 
+by the `ksf`.
 
 ```
 Size  | Timestamp    | Filename
