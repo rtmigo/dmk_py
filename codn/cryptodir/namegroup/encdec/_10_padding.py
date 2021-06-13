@@ -73,22 +73,24 @@ class IntroPadding:
     def gen_bytes(self):
         # The first byte is almost random.
         #
-        # The lower bits of the first byte store the padding size: the
+        # Its bits look like that: 1RRRSSSS. The number of Rs and Ls
+        # depends on max_len.
+        #
+        # The lower bits (SSSS) of the first byte store the padding size: the
         # number of bytes to skip. And those bits are random.
         #
-        # Higher bits mean nothing, so they are just random.
+        # Higher bits (RRR) are random without any meaning.
         #
-        # But the highest bit is always set to 1. This is bad because it
-        # makes the byte less random.
+        # But the highest bit is always set to 1. If we ever change our mind
+        # about starting encrypted data with padding, or decide to change the
+        # padding format, we can communicate this with the same bit set to
+        # zero.
         #
-        # The padding itself will be encrypted. But now a potential
-        # brute-forcer knows that the first bit inside the encryption is one.
-        # This poses a problem very hypothetically. It is unlikely that anyone
-        # would adopt the knowledge of a single bit.
-        #
-        # But this bit is very useful. If we ever change our mind about
-        # starting encrypted data with padding, we can communicate this
-        # with the zero most significant bit.
+        # Setting the bit to constant is not good. The first byte will be
+        # encrypted. But now a potential brute-forcer knows that the first
+        # bit inside the encryption is one. This poses a problem very
+        # hypothetically. It is unlikely that anyone would adopt the
+        # knowledge of a single bit.
 
         first_byte = _random_first_byte()
         assert _is_highest_bit_set(first_byte)
