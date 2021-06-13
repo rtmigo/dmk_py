@@ -2,6 +2,11 @@
 [![Generic badge](https://img.shields.io/badge/Python-3.7+-blue.svg)](#)
 [![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS%20|%20Windows-blue.svg)](#)
 
+**This is experimental code. It is not ready to use.
+This description is also a draft.**
+
+---
+
 `ksf` encrypts individual data entries. Entries
 can be added, updated and removed. Entries are files or strings.
 
