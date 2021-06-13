@@ -36,14 +36,14 @@ For example, information about a bitcoin wallet can be stored under codename
    is saved openly in one of the files. This salt never changes. It is required
    for any other actions on the directory.
 
-2) **Scrypt** (CPU/Memory cost = 2^17) creates 256-bit **private key** from
+2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
    salted (1) codename.
 
-3) **Blake2b** creates 192-bit **hashes** from the private key (2) combined with
+3) **Blake2b** computes 192-bit **hashes** from the private key (2) combined with
    a 192-bit nonce. These hash+nonce pairs are openly saved to files that
    contain encrypted entries.
 
-   Having the private key and the nonce, we can recreate the same hash (3) and
+   Having the private key and the nonce, we can recompute the same hash (3) and
    check if the file contains it. If yes, then the file belongs to the given
    codename.
 
