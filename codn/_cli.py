@@ -76,20 +76,20 @@ from ._constants import __version__, __copyright__
 
 @click.group()
 @click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
-def cli():
+def codn_cli():
     """
     See https://github.com/rtmigo/ksf_py#readme
     """
     pass
 
 
-cli.add_command(bench)
-cli.add_command(config)
-cli.add_command(set_cmd)
-cli.add_command(get)
-cli.add_command(eval)
-cli.add_command(clear)
+codn_cli.add_command(bench)
+codn_cli.add_command(config)
+codn_cli.add_command(set_cmd)
+codn_cli.add_command(get)
+codn_cli.add_command(eval)
+codn_cli.add_command(clear)
 
 if __name__ == '__main__':
     # config = Config()
-    cli()
+    codn_cli()

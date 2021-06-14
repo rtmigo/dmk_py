@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Optional, BinaryIO
 
 from ._10_kdf import FilesetPrivateKey
-from ._10_salt import find_salt_in_dir, write_salt_and_fakes
-from .namegroup import NewNameGroup, decrypt_from_files, update_namegroup
+from ._10_salt_files_old import find_salt_in_dir, write_salt_and_fakes
+from .namegroup import NewNameGroup, decrypt_from_dios, update_namegroup
 
 
 class CryptoDir:
@@ -34,6 +34,6 @@ class CryptoDir:
                 return None
 
             with BytesIO() as decrypted:
-                decrypt_from_files(nng.fresh_content_files, decrypted)
+                decrypt_from_dios(nng.fresh_content_files, decrypted)
                 decrypted.seek(0, io.SEEK_SET)
                 return decrypted.read()

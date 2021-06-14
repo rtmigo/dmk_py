@@ -39,7 +39,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'codn = codn:cli',
+            'codn = codn:codn_cli',
         ]},
 
     keywords="".split(),

@@ -10,7 +10,7 @@ from typing import List, Set
 from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from codn.cryptodir.namegroup.fakes import create_fake
 from codn.cryptodir.namegroup.encdec._25_encdec_part import is_file_from_namegroup
-from codn.cryptodir.namegroup.navigator import NewNameGroup
+from codn.cryptodir.namegroup.navigator_old import NewNameGroup
 from tests.common import testing_salt
 
 

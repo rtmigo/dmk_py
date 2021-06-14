@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 from codn._common import PK_SALT_SIZE, MAX_SALT_FILE_SIZE, InsufficientData, \
     unique_filename
-from codn.cryptodir._10_salt import write_salt_and_fakes, read_salt, \
+from codn.cryptodir._10_salt_files_old import write_salt_and_fakes, read_salt, \
     SaltFileBadName, \
     SaltFileTooLarge, find_salt_in_dir, SaltFileIsNotFile, \
     _random_byte_with_lowest_bit_on

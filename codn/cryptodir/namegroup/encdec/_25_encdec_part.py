@@ -315,6 +315,8 @@ class DecryptedIO:
         # reads and interprets IMPRINT_A
         if self._belongs_to_namegroup is None:
             try:
+                if self.source.seek(0, io.SEEK_SET) != 0:
+                    raise ValueError("Unexpected stream position")
                 imp = read_or_fail(self.source, Imprint.FULL_LEN)
                 self._belongs_to_namegroup = \
                     pk_matches_imprint_bytes(self.fpk, imp)

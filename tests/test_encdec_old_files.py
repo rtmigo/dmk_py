@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from codn.cryptodir.namegroup import DecryptedIO
 from codn.cryptodir.namegroup.encdec._26_encdec_full import encrypt_to_files, \
-    decrypt_from_files, split_random_sizes
+    decrypt_from_dios, split_random_sizes
 from codn.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
@@ -99,7 +99,7 @@ class TestEncryptDecryptFiles(unittest.TestCase):
                                    for f in files]
                 random.shuffle(decrypted_parts)
                 with BytesIO() as decrypted_full_io:
-                    decrypt_from_files(decrypted_parts, decrypted_full_io)
+                    decrypt_from_dios(decrypted_parts, decrypted_full_io)
                     decrypted_full_io.seek(0)
                     decrypted_full_bytes = decrypted_full_io.read()
                 self.assertEqual(decrypted_full_bytes, body)

@@ -1,12 +1,14 @@
 import io
 import random
 from pathlib import Path
-from typing import BinaryIO, List
+from typing import BinaryIO, List, Set
 
 from codn._common import unique_filename
 from codn.cryptodir._10_kdf import FilesetPrivateKey
-from codn.cryptodir.namegroup.encdec._25_encdec_part import get_stream_size, Encrypt, \
+from codn.cryptodir.namegroup.encdec._25_encdec_part import get_stream_size, \
+    Encrypt, \
     DecryptedIO
+from codn.utils.randoms import set_random_last_modified
 
 
 def split_random_sizes(full_size: int) -> List[int]:
@@ -43,10 +45,99 @@ def split_random_sizes(full_size: int) -> List[int]:
     return part_sizes
 
 
+class MultipartEncryptor:
+    def __init__(self,
+                 fpk: FilesetPrivateKey,
+                 source_io: BinaryIO,
+                 content_version: int):
+        self.fpk = fpk
+        self.source_io = source_io
+        self.content_version = content_version
+
+        full_size = get_stream_size(source_io)
+        self.part_sizes = split_random_sizes(full_size)
+        assert sum(self.part_sizes) == full_size
+
+        self.encrypted_indices: Set[int] = set()
+
+    def encrypt(self, part_idx: int, target_io: BinaryIO):
+        if part_idx in self.encrypted_indices:
+            raise ValueError(f"The part {part_idx} is already encrypted.")
+
+        src_pos = sum(self.part_sizes[:part_idx])
+        self.source_io.seek(src_pos, io.SEEK_SET)
+
+        Encrypt(self.fpk,
+                parts_len=len(self.part_sizes),
+                part_idx=part_idx,
+                part_size=self.part_sizes[part_idx],
+                data_version=self.content_version
+                ).io_to_io(self.source_io, target_io)
+
+        self.encrypted_indices.add(part_idx)
+
+    def encrypt_all_to_list(self) -> List[bytes]:
+        result: List[bytes] = []
+        for part_idx in range(len(self.part_sizes)):
+            with io.BytesIO() as outio:
+                self.encrypt(part_idx, outio)
+                outio.seek(0, io.SEEK_SET)
+                result.append(outio.read())
+        assert self.all_encrypted
+        return result
+
+    @property
+    def all_encrypted(self) -> bool:
+        return len(self.encrypted_indices) == len(self.part_sizes)
+
+
 def encrypt_to_files(fpk: FilesetPrivateKey,
                      source_io: BinaryIO,
                      target_dir: Path,
                      content_version: int) -> List[Path]:
+    # todo remove this method
+    # it is outdated and it does not use WTF
+    # is is kept temporarily for transition period
+    me = MultipartEncryptor(fpk, source_io, content_version)
+
+    files: List[Path] = []
+
+    for i in range(len(me.part_sizes)):
+        target_file = unique_filename(target_dir)
+        files.append(target_file)
+        with target_file.open('wb') as f:
+            me.encrypt(i, f)
+        set_random_last_modified(target_file)
+
+    assert len(files) == len(me.part_sizes)
+    return files
+    #
+    #
+    #
+    # full_size = get_stream_size(source_io)
+    # part_sizes = split_random_sizes(full_size)
+    # assert sum(part_sizes) == full_size
+    #
+    #
+    #
+    # for part_idx, part_size in enumerate(part_sizes):
+    #     target_file = unique_filename(target_dir)
+    #     files.append(target_file)
+    #     Encrypt(fpk,
+    #             parts_len=len(part_sizes),
+    #             part_idx=part_idx,
+    #             part_size=part_size,
+    #             data_version=content_version
+    #             ).io_to_file(source_io, target_file)
+    #
+    # assert len(files) == len(part_sizes)
+    # return files
+
+
+def encrypt_to_files_old(fpk: FilesetPrivateKey,
+                         source_io: BinaryIO,
+                         target_dir: Path,
+                         content_version: int) -> List[Path]:
     full_size = get_stream_size(source_io)
     part_sizes = split_random_sizes(full_size)
     assert sum(part_sizes) == full_size
@@ -71,8 +162,8 @@ class BadFilesetError(Exception):
     pass
 
 
-def decrypt_from_files(files: List[DecryptedIO],
-                       target_io: BinaryIO):
+def decrypt_from_dios(files: List[DecryptedIO],
+                      target_io: BinaryIO):
     if not files:
         raise ValueError("Zero files passed")
 

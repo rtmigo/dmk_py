@@ -12,7 +12,7 @@ from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
 from codn.cryptodir.namegroup.fakes import create_fake
 from codn.cryptodir.namegroup.encdec._25_encdec_part import is_fake, is_content
 from codn.cryptodir.namegroup.encdec._26_encdec_full import encrypt_to_files
-from codn.cryptodir.namegroup.navigator import NewNameGroup, update_namegroup
+from codn.cryptodir.namegroup.navigator_old import NewNameGroup, update_namegroup
 from codn.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 

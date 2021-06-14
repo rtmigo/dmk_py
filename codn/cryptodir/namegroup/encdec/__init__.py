@@ -1,1 +1,1 @@
-from ._26_encdec_full import decrypt_from_files, encrypt_to_files
+from ._26_encdec_full import decrypt_from_dios, encrypt_to_files
