@@ -7,7 +7,7 @@ from typing import Optional
 from Crypto.Random import get_random_bytes
 
 from codn._common import bytes_to_fn_str, blake192, BASENAME_SIZE
-from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.cryptodir._10_kdf import CodenameKey
 
 
 class Imprint:
@@ -38,8 +38,8 @@ class Imprint:
     DIGEST_LEN = 24
     FULL_LEN = NONCE_LEN + DIGEST_LEN
 
-    def __init__(self, pk: FilesetPrivateKey, nonce: bytes = None):
-        if not isinstance(pk, FilesetPrivateKey):
+    def __init__(self, pk: CodenameKey, nonce: bytes = None):
+        if not isinstance(pk, CodenameKey):
             raise TypeError
         self.__private_key = pk
         self.__salt: Optional[bytes] = nonce
@@ -47,7 +47,7 @@ class Imprint:
         self.__as_str: Optional[str] = None
 
     @property
-    def private_key(self) -> FilesetPrivateKey:
+    def private_key(self) -> CodenameKey:
         return self.__private_key
 
     @property
@@ -97,7 +97,7 @@ assert Imprint.FULL_LEN == BASENAME_SIZE
 #     return codename == Imprint(pk, nonce=nonce).as_str
 #
 #
-def pk_matches_imprint_bytes(pk: FilesetPrivateKey, imprint: bytes) -> bool:
+def pk_matches_imprint_bytes(pk: CodenameKey, imprint: bytes) -> bool:
     nonce = Imprint.bytes_to_nonce(imprint)
     return Imprint(pk, nonce=nonce).as_bytes == imprint
 

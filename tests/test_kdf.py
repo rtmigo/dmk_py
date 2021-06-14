@@ -3,14 +3,14 @@
 
 import unittest
 
-from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.cryptodir._10_kdf import CodenameKey
 from tests.common import testing_salt
 
 
 class TestKdf(unittest.TestCase):
 
     def test_constant(self):
-        assert FilesetPrivateKey._power >= 16
+        assert CodenameKey._power >= 16
         # self.assertEqual(FilesetPrivateKey('password'))
         # self.assertEqual(len(FilesetPrivateKey.salt), 32)
 
@@ -18,11 +18,11 @@ class TestKdf(unittest.TestCase):
     #     self.assertEqual(len(FilesetPrivateKey.salt), 32)
 
     def test_key_len(self):
-        self.assertEqual(len(FilesetPrivateKey('pass', testing_salt).as_bytes), 32)
+        self.assertEqual(len(CodenameKey('pass', testing_salt).as_bytes), 32)
 
     def test_keys_are_different(self):
-        self.assertNotEqual(FilesetPrivateKey('abc', testing_salt).as_bytes,
-                            FilesetPrivateKey('d', testing_salt).as_bytes)
+        self.assertNotEqual(CodenameKey('abc', testing_salt).as_bytes,
+                            CodenameKey('d', testing_salt).as_bytes)
 
     def test(self):
         # the password to key returns cached values, so we
@@ -33,28 +33,28 @@ class TestKdf(unittest.TestCase):
         seen = set()
 
         PWD = "password"
-        POWER = FilesetPrivateKey._power
-        p = FilesetPrivateKey(PWD, testing_salt)
+        POWER = CodenameKey._power
+        p = CodenameKey(PWD, testing_salt)
         self.assertNotIn(p.as_bytes, seen)
         seen.add(p.as_bytes)
         self.assertIn(p.as_bytes, seen)
 
         # different password
-        p = FilesetPrivateKey("other password", testing_salt)
+        p = CodenameKey("other password", testing_salt)
         self.assertNotIn(p.as_bytes, seen)
         seen.add(p.as_bytes)
 
         # different power
         try:
-            FilesetPrivateKey._power -= 1
+            CodenameKey._power -= 1
 
             # different power
-            p = FilesetPrivateKey(PWD, testing_salt)
+            p = CodenameKey(PWD, testing_salt)
             self.assertNotIn(p.as_bytes, seen)
             seen.add(p.as_bytes)
 
         finally:
-            FilesetPrivateKey._power = POWER
+            CodenameKey._power = POWER
 
         self.assertEqual(len(seen), 3)
 

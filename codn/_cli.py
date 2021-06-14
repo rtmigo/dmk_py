@@ -6,7 +6,7 @@ import click
 
 from codn._common import PK_SALT_SIZE
 from codn._main import Main
-from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.cryptodir._10_kdf import CodenameKey
 from codn.utils.randoms import get_noncrypt_random_bytes
 
 
@@ -17,7 +17,7 @@ def bench():
     random_salt = get_noncrypt_random_bytes(PK_SALT_SIZE)
     for i in range(4):
         t = time.monotonic()
-        FilesetPrivateKey(str(i), random_salt)
+        CodenameKey(str(i), random_salt)
         d = time.monotonic() - t
         a.append(d)
         print(f'{i + 1} {d:.3f} sec')

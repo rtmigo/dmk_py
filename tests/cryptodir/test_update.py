@@ -7,9 +7,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Set
 
-from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
+from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
 from codn.cryptodir.namegroup.encdec._25_encdec_part import is_fake, is_content
-from codn.cryptodir.namegroup.navigator_old import NewNameGroup, update_namegroup
+from codn.cryptodir.namegroup.navigator_old import NewNameGroup, update_namegroup_old
 from tests.common import testing_salt, sizes_are_random, dates_are_random
 
 
@@ -36,13 +36,13 @@ class TestFileWithFakes(unittest.TestCase):
     def test_update_adds_fakes_and_content(self):
         with TemporaryDirectory() as temp_dir_str:
             temp_dir = Path(temp_dir_str)
-            pk = FilesetPrivateKey("abc", testing_salt)
+            pk = CodenameKey("abc", testing_salt)
 
             self.assertFalse(any(is_content(pk, f) for f in temp_dir.glob('*')))
             self.assertFalse(any(is_fake(pk, f) for f in temp_dir.glob('*')))
 
             with BytesIO(b'abc') as inp:
-                update_namegroup(inp, pk, temp_dir)
+                update_namegroup_old(inp, pk, temp_dir)
 
             self.assertTrue(any(is_content(pk, f) for f in temp_dir.glob('*')))
             self.assertTrue(any(is_fake(pk, f) for f in temp_dir.glob('*')))
@@ -50,12 +50,12 @@ class TestFileWithFakes(unittest.TestCase):
     def test_fakes_have_random_sizes_and_dates(self):
         with TemporaryDirectory() as temp_dir_str:
             temp_dir = Path(temp_dir_str)
-            pk = FilesetPrivateKey("abc", testing_salt)
+            pk = CodenameKey("abc", testing_salt)
 
             # updating until at least 10 fakes found
             for _ in range(100):
                 with BytesIO(b'abc') as inp:
-                    update_namegroup(inp, pk, temp_dir)
+                    update_namegroup_old(inp, pk, temp_dir)
                 fakes = [f for f in temp_dir.glob('*') if is_fake(pk, f)]
                 if len(fakes) >= 10:
                     break
@@ -66,12 +66,12 @@ class TestFileWithFakes(unittest.TestCase):
     def test_content_have_random_dates(self):
         with TemporaryDirectory() as temp_dir_str:
             temp_dir = Path(temp_dir_str)
-            pk = FilesetPrivateKey("abc", testing_salt)
+            pk = CodenameKey("abc", testing_salt)
 
             # updating until at least 10 content files found
             for _ in range(100):
                 with BytesIO(b'abc') as inp:
-                    update_namegroup(inp, pk, temp_dir)
+                    update_namegroup_old(inp, pk, temp_dir)
                 content = [f for f in temp_dir.glob('*') if is_content(pk, f)]
                 if len(content) >= 10:
                     break
@@ -81,7 +81,7 @@ class TestFileWithFakes(unittest.TestCase):
     def test_content_have_random_sizes(self):
 
 
-            pk = FilesetPrivateKey("abc", testing_salt)
+            pk = CodenameKey("abc", testing_salt)
 
             # updating until at least 10 content files found
 
@@ -92,7 +92,7 @@ class TestFileWithFakes(unittest.TestCase):
                 with TemporaryDirectory() as temp_dir_str:
                     temp_dir = Path(temp_dir_str)
                     with BytesIO(b'0'*1024*128) as inp:
-                        update_namegroup(inp, pk, temp_dir)
+                        update_namegroup_old(inp, pk, temp_dir)
                     with NewNameGroup(temp_dir, pk) as nng:
                         part_sizes = [
                             gf.dio.header.part_size

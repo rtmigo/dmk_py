@@ -6,7 +6,7 @@ import unittest
 from io import BytesIO
 from typing import List, Optional
 
-from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
+from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
 from codn.cryptodir.namegroup import DecryptedIO
 from codn.cryptodir.namegroup.encdec._26_encdec_full import decrypt_from_dios, \
     split_random_sizes, MultipartEncryptor
@@ -59,7 +59,7 @@ class TestEncryptDecryptFiles(unittest.TestCase):
 
     def _encrypt_decrypt(self, name: str, body: bytes):
 
-        fpk = FilesetPrivateKey(name, testing_salt)
+        fpk = CodenameKey(name, testing_salt)
 
         encrypted_parts: List[bytes] = []
 

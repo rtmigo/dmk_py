@@ -1,2 +1,2 @@
-from ._blobs_list_io import BlobsIndexedReader, BlobsReader, BlobsWriter
-from ._container import ContainerWriter, ContainerReader
+from ._20_blobs_list_io import BlobsIndexedReader, BlobsSequentialReader, BlobsSequentialWriter
+from ._30_storage_file import StorageFileWriter, StorageFileReader

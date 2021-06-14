@@ -8,11 +8,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Set
 
-from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
+from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
 from codn.cryptodir.namegroup.fakes import create_fake
 from codn.cryptodir.namegroup.encdec._25_encdec_part import is_fake, is_content
 from codn.cryptodir.namegroup.encdec._26_encdec_full import encrypt_to_files
-from codn.cryptodir.namegroup.navigator_old import NewNameGroup, update_namegroup
+from codn.cryptodir.namegroup.navigator_old import NewNameGroup, update_namegroup_old
 from codn.utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
@@ -40,7 +40,7 @@ class TestNamegroup(unittest.TestCase):
     def test_namegroup_in_empty_dir(self):
         with TemporaryDirectory() as temp_dir_str:
             temp_dir = Path(temp_dir_str)
-            pk = FilesetPrivateKey("abc", testing_salt)
+            pk = CodenameKey("abc", testing_salt)
 
             with NewNameGroup(temp_dir, pk) as ng:
                 self.assertEqual(ng.all_content_versions, set())
@@ -53,7 +53,7 @@ class TestNamegroup(unittest.TestCase):
             temp_dir = Path(temp_dir_str)
 
             SECRET_NAME = "abc"
-            pk = FilesetPrivateKey(SECRET_NAME, testing_salt)
+            pk = CodenameKey(SECRET_NAME, testing_salt)
 
             # creating some fake files that will be ignored
             for _ in range(9):
@@ -103,7 +103,7 @@ class TestNamegroup(unittest.TestCase):
 
             # WITH WRONG KEY NOTHING FOUND
 
-            wrong_key = FilesetPrivateKey("incorrect", testing_salt)
+            wrong_key = CodenameKey("incorrect", testing_salt)
             with NewNameGroup(temp_dir, wrong_key) as ng:
                 found_wrong = name_group_to_content_files(ng)
             self.assertEqual(len(found_wrong), 0)
@@ -111,13 +111,13 @@ class TestNamegroup(unittest.TestCase):
     def test_update_adds_fakes_and_content(self):
         with TemporaryDirectory() as temp_dir_str:
             temp_dir = Path(temp_dir_str)
-            pk = FilesetPrivateKey("abc", testing_salt)
+            pk = CodenameKey("abc", testing_salt)
 
             self.assertFalse(any(is_content(pk, f) for f in temp_dir.glob('*')))
             self.assertFalse(any(is_fake(pk, f) for f in temp_dir.glob('*')))
 
             with BytesIO(b'abc') as inp:
-                update_namegroup(inp, pk, temp_dir)
+                update_namegroup_old(inp, pk, temp_dir)
 
             self.assertTrue(any(is_content(pk, f) for f in temp_dir.glob('*')))
             self.assertTrue(any(is_fake(pk, f) for f in temp_dir.glob('*')))

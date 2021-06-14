@@ -2,17 +2,16 @@ from __future__ import annotations
 
 import io
 import zlib
-from typing import BinaryIO, Tuple, Optional, List
+from typing import BinaryIO, Tuple, Optional, List, Iterable
 
 from codn._common import read_or_fail, InsufficientData
-from codn.container._fragment_io import FragmentIO
+from codn.container._10_fragment_io import FragmentIO
 from codn.cryptodir.namegroup.encdec._20_byte_funcs import uint32_to_bytes, \
-    bytes_to_uint32
+    bytes_to_uint32, uint16_to_bytes, bytes_to_uint16
 
 
-class BlobsWriter:
+class BlobsSequentialWriter:
     """Writes BLOBs sequentially to a binary stream.
-
     Each BLOB record is just:
         blob_size:  uint32
         blob_crc32: uint32
@@ -23,8 +22,14 @@ class BlobsWriter:
         self.target_io = target_io
 
     def write_bytes(self, buffer: bytes):
-        self.target_io.write(uint32_to_bytes(zlib.crc32(buffer)))
-        self.target_io.write(uint32_to_bytes(len(buffer)))
+        if len(buffer) > 0xFFFF:
+            raise ValueError(f"Too large: {len(buffer)}")
+
+        checksum = zlib.crc32(buffer)
+        self.target_io.write(uint32_to_bytes(checksum))
+
+        size_obfuscated = (len(buffer) ^ checksum) & 0xFFFF
+        self.target_io.write(uint16_to_bytes(size_obfuscated))
         self.target_io.write(buffer)
 
     def write_io(self, source_io: BinaryIO, size: int):
@@ -37,9 +42,8 @@ class BlobChecksumMismatch(Exception):
     pass
 
 
-class BlobsReader:
+class BlobsSequentialReader:
     """Iterates BLOBs sequentially from a stream created by BlobsWriter.
-
     Reading data is optional: the read_io method only returns FragmentReaderIO
     objects that know about the position of the BLOB in the original stream.
     """
@@ -53,15 +57,15 @@ class BlobsReader:
         if self._next_blob_pos is not None:
             self.source_io.seek(self._next_blob_pos, io.SEEK_SET)
 
-        part_length_bytes = self.source_io.read(4)
-        if len(part_length_bytes) == 0:
+        part_checksum_bytes = self.source_io.read(4)
+        if len(part_checksum_bytes) == 0:
             return None
-        if len(part_length_bytes) != 4:
-            raise InsufficientData(f'bytes read: {len(part_length_bytes)}')
+        if len(part_checksum_bytes) != 4:
+            raise InsufficientData(f'bytes read: {len(part_checksum_bytes)}')
 
-        part_checksum = bytes_to_uint32(read_or_fail(self.source_io, 4))
-        part_length = bytes_to_uint32(part_length_bytes)
-
+        part_checksum = bytes_to_uint32(part_checksum_bytes)
+        part_length_obfuscated = bytes_to_uint16(read_or_fail(self.source_io, 2))
+        part_length = (part_length_obfuscated ^ part_checksum) & 0xFFFF
 
         outer_stream_pos = self.source_io.seek(0, io.SEEK_CUR)
         self._next_blob_pos = outer_stream_pos + part_length
@@ -88,9 +92,7 @@ class BlobsReader:
 class BlobsIndexedReader:
     """Scans the complete list of BLOBs in the stream and lets you access
     them in random order.
-
     BLOB data is not read, checksums are not verified.
-
     The blobs are just converted to FragmentIO and stored to the list.
     """
 
@@ -99,7 +101,7 @@ class BlobsIndexedReader:
         # The blobs list must start at the current stream position.
         # But not necessarily from the beginning of the stream.
 
-        br = BlobsReader(source_io)
+        br = BlobsSequentialReader(source_io)
         self._items: List[Tuple[FragmentIO, int]] = []
         while True:
             tpl = br.read_io()
@@ -121,6 +123,10 @@ class BlobsIndexedReader:
             frio.seek(0, io.SEEK_SET)
             if zlib.crc32(frio.read()) != crc:
                 raise ValueError("CRC mismatch")
+
+    def __iter__(self) -> Iterable[FragmentIO]:
+        for frio, _ in self._items:
+            yield frio
 
     def __len__(self):
         return len(self._items)

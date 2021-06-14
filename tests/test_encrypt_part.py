@@ -7,7 +7,8 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
+from codn._common import MAX_BLOB_SIZE, MAX_PART_CONTENT_SIZE
+from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
 from codn.cryptodir.namegroup.encdec._25_encdec_part import Encrypt, \
     is_content, DecryptedIO, GroupImprintMismatch
 from codn.utils.randoms import get_noncrypt_random_bytes
@@ -36,13 +37,13 @@ class TestEncryptDecrypt(unittest.TestCase):
             right = td / "irrelevant"
             NAME = 'abc'
             # name_to_hash(NAME)
-            Encrypt(FilesetPrivateKey(NAME, testing_salt)) \
+            Encrypt(CodenameKey(NAME, testing_salt)) \
                 .file_to_file(source, right)
             self.assertTrue(
-                is_content(FilesetPrivateKey(NAME, testing_salt),
+                is_content(CodenameKey(NAME, testing_salt),
                            right))
             self.assertFalse(
-                is_content(FilesetPrivateKey('labuda', testing_salt),
+                is_content(CodenameKey('labuda', testing_salt),
                            right))
 
     def test_encdec_constant(self):
@@ -66,6 +67,17 @@ class TestEncryptDecrypt(unittest.TestCase):
                                     part_size=0,
                                     part_idx=2)
         self.assertEqual(dec, b'')
+
+    def test_encdec_part_sized_max(self):
+        buf = b'0'*(MAX_PART_CONTENT_SIZE*2)
+        for _ in range(25):
+            # catching random overflows
+            self._encrypt_decrypt('name', buf,
+                                    pos=0,
+                                    parts_len=5,
+                                    part_size=MAX_PART_CONTENT_SIZE,
+                                    part_idx=2)
+
 
     # @unittest.skip('temp')
     def test_encdec_part_random(self):
@@ -117,7 +129,7 @@ class TestEncryptDecrypt(unittest.TestCase):
         else:
             expected_part_content = body
 
-        fpk = FilesetPrivateKey(name, testing_salt)
+        fpk = CodenameKey(name, testing_salt)
 
         with BytesIO(body) as original_io:
             original_io.seek(pos)
@@ -139,7 +151,7 @@ class TestEncryptDecrypt(unittest.TestCase):
         # checking the we cannot decrypt the data with wrong key
         if check_wrong:
             with self.assertRaises(GroupImprintMismatch):
-                wrong_key = FilesetPrivateKey('WrOnG', testing_salt)
+                wrong_key = CodenameKey('WrOnG', testing_salt)
                 with BytesIO(encrypted) as input_io:
                     DecryptedIO(wrong_key, input_io).read_data()
 
@@ -155,6 +167,8 @@ class TestEncryptDecrypt(unittest.TestCase):
 
             decrypted_part_content = df.read_data()
             self.assertEqual(decrypted_part_content, expected_part_content)
+
+        self.assertLessEqual(len(decrypted_part_content), MAX_BLOB_SIZE)
 
         return decrypted_part_content
 

@@ -7,7 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
+from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
 from codn.cryptodir.namegroup import DecryptedIO
 from codn.cryptodir.namegroup.encdec._26_encdec_full import encrypt_to_files, \
     decrypt_from_dios, split_random_sizes
@@ -89,7 +89,7 @@ class TestEncryptDecryptFiles(unittest.TestCase):
 
         with TemporaryDirectory() as temp_dir_str:
             temp_dir = Path(temp_dir_str)
-            fpk = FilesetPrivateKey(name, testing_salt)
+            fpk = CodenameKey(name, testing_salt)
             with BytesIO(body) as original_io:
                 files = encrypt_to_files(fpk, original_io, temp_dir,
                                          content_version=1)

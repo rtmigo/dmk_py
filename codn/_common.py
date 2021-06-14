@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 import random
+import io
 from base64 import urlsafe_b64encode, urlsafe_b64decode, b32encode
 from pathlib import Path
 from typing import BinaryIO, Tuple
@@ -16,6 +17,11 @@ BASENAME_SIZE = 48
 
 MAX_SALT_FILE_SIZE = 1023
 MIN_DATA_FILE_SIZE = MAX_SALT_FILE_SIZE + 1
+
+MAX_BLOB_SIZE = 0xFFFF
+MAX_SIZE_BEFORE_CONTENT = 1024  # hashes, intro-padding, header, nonce
+
+MAX_PART_CONTENT_SIZE = MAX_BLOB_SIZE-MAX_SIZE_BEFORE_CONTENT
 
 assert MIN_DATA_FILE_SIZE > MAX_SALT_FILE_SIZE
 assert PK_SIZE * 8 == 256
@@ -41,7 +47,7 @@ def random_basename() -> str:
 
 
 def looks_like_random_basename(txt: str) -> bool:
-    return all(c.isalnum() and c.lower()==c for c in txt) \
+    return all(c.isalnum() and c.lower() == c for c in txt) \
            and contains_digit(txt) \
            and contains_alpha(txt)
 

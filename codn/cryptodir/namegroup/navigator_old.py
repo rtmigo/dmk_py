@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import List, BinaryIO, Optional
 
 from codn._common import MIN_DATA_FILE_SIZE
-from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.cryptodir._10_kdf import CodenameKey
 from codn.cryptodir.namegroup.fakes import create_fake
 from codn.cryptodir.namegroup.encdec._25_encdec_part import DecryptedIO
 from codn.cryptodir.namegroup.encdec._26_encdec_full import encrypt_to_files
@@ -57,7 +57,7 @@ class NameGroupFile:
 
 
 class NewNameGroup:
-    def __init__(self, parent: Path, fpk: FilesetPrivateKey):
+    def __init__(self, parent: Path, fpk: CodenameKey):
         self.parent = parent
         self.fpk = fpk
         self._streams: List[BinaryIO] = []
@@ -216,7 +216,7 @@ def dir_to_file_sizes(d: Path) -> List[int]:
 #     return random.randint(1, 999999)
 
 
-def increased_data_version(fileset: NewNameGroup) -> int:
+def increased_data_version_old(fileset: NewNameGroup) -> int:
     MAX_INT64 = 0x7FFFFFFFFFFFFFFF
     if len(fileset.all_content_versions) <= 0:
         return random.randint(1, 999999)
@@ -294,9 +294,9 @@ def increased_data_version(fileset: NewNameGroup) -> int:
 #             raise TypeError
 
 
-def update_namegroup(source_io: BinaryIO,
-                     fpk: FilesetPrivateKey,
-                     target_dir: Path):
+def update_namegroup_old(source_io: BinaryIO,
+                         fpk: CodenameKey,
+                         target_dir: Path):
     # we will remove and add some surrogates, and also remove old real file
     # add new real file. We will do this in random order, so as not to give
     # out which files are real and which are surrogates
@@ -317,7 +317,7 @@ def update_namegroup(source_io: BinaryIO,
 
     with NewNameGroup(target_dir, fpk) as name_group:
 
-        new_data_version = increased_data_version(name_group)
+        new_data_version = increased_data_version_old(name_group)
 
         max_to_delete = 4
         max_to_fake = max_to_delete - 1  # +1 real file will be written

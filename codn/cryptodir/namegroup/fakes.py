@@ -3,12 +3,13 @@
 
 import datetime
 from pathlib import Path
+import random
 
 from Crypto.Random import get_random_bytes
 
 from codn._common import MIN_DATA_FILE_SIZE, looks_like_random_basename, \
-    unique_filename
-from codn.cryptodir._10_kdf import FilesetPrivateKey
+    unique_filename, MAX_BLOB_SIZE
+from codn.cryptodir._10_kdf import CodenameKey
 from codn.cryptodir.namegroup.imprint import Imprint
 from codn.utils.dirty_file import WritingToTempFile
 from codn.utils.randoms import MICROSECONDS_PER_DAY, set_random_last_modified
@@ -17,7 +18,7 @@ assert datetime.timedelta(microseconds=MICROSECONDS_PER_DAY) \
            .total_seconds() == 60 * 60 * 24
 
 
-def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
+def create_fake(fpk: CodenameKey, target_size: int, target_dir: Path):
     """Creates a fake file.
 
     WRONG DOC (NEEDS REWRITE)
@@ -59,7 +60,7 @@ def create_fake(fpk: FilesetPrivateKey, target_size: int, target_dir: Path):
     return target_file
 
 
-def create_fake_bytes(fpk: FilesetPrivateKey, target_size: int) -> bytes:
+def create_fake_bytes(fpk: CodenameKey) -> bytes:
     """Creates a fake file.
 
     WRONG DOC (NEEDS REWRITE)
@@ -77,6 +78,8 @@ def create_fake_bytes(fpk: FilesetPrivateKey, target_size: int) -> bytes:
     """
 
     # todo test instead "create file"
+
+    target_size = random.randint(0, MAX_BLOB_SIZE)
 
     return Imprint(fpk).as_bytes + get_random_bytes(
         target_size - Imprint.FULL_LEN)

@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Set
 
-from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
+from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
 from codn.cryptodir.namegroup.fakes import create_fake
 from codn.cryptodir.namegroup.encdec._25_encdec_part import is_file_from_namegroup
 from codn.cryptodir.namegroup.navigator_old import NewNameGroup
@@ -39,7 +39,7 @@ class TestFileWithFakes(unittest.TestCase):
             td = Path(tds)
 
             N = 10
-            pk = FilesetPrivateKey('abc', testing_salt)
+            pk = CodenameKey('abc', testing_salt)
             for _ in range(N):
                 fake_file = create_fake(pk, 2000, td)
                 # self.assertTrue(is_file_from_group(pk, fake_file))

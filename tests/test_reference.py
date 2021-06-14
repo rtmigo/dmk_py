@@ -5,7 +5,7 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn.cryptodir._10_kdf import CodenameKey
 from codn.cryptodir._20_cryptodir import CryptoDir
 
 ref_content = [
@@ -18,7 +18,7 @@ refs_dir = Path(__file__).parent / "data_refs"
 
 
 def generate_references():
-    assert FilesetPrivateKey._power >= 17
+    assert CodenameKey._power >= 17
 
     if not input(f"Really replace {refs_dir} (y/N)? ").lower().startswith('y'):
         print("Canceled")

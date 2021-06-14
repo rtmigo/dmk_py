@@ -49,8 +49,9 @@ def random_size_like_file(ref_size: int) -> int:
 
 
 def random_size_like_file_greater(ref_size: int) -> int:
+    # todo remove
     for _ in range(999999):
         result = random_size_like_file(ref_size)
-        if result > ref_size:
+        if result >= ref_size:
             return result
     raise RuntimeError("Dead loop prevented")

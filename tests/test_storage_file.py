@@ -3,7 +3,7 @@ import unittest
 from io import BytesIO
 
 from codn._common import PK_SALT_SIZE
-from codn.container._container import ContainerWriter, ContainerReader
+from codn.container._30_storage_file import StorageFileWriter, StorageFileReader
 from codn.utils.randoms import get_noncrypt_random_bytes
 
 
@@ -12,13 +12,13 @@ class TestContainerFile(unittest.TestCase):
         salt = get_noncrypt_random_bytes(PK_SALT_SIZE)
 
         with BytesIO() as stream:
-            writer = ContainerWriter(stream, salt)
+            writer = StorageFileWriter(stream, salt)
             writer.blobs.write_bytes(b'abc')
             writer.blobs.write_bytes(b'x')
             writer.blobs.write_bytes(b'zz')
 
             stream.seek(0, io.SEEK_SET)
-            reader = ContainerReader(stream)
+            reader = StorageFileReader(stream)
             self.assertEqual(reader.salt, salt)
             self.assertEqual(len(reader.blobs), 3)
             self.assertEqual(reader.blobs.io(1).read(), b'x')

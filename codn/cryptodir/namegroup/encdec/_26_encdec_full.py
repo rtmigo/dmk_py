@@ -3,8 +3,8 @@ import random
 from pathlib import Path
 from typing import BinaryIO, List, Set
 
-from codn._common import unique_filename
-from codn.cryptodir._10_kdf import FilesetPrivateKey
+from codn._common import unique_filename, MAX_BLOB_SIZE, MAX_PART_CONTENT_SIZE
+from codn.cryptodir._10_kdf import CodenameKey
 from codn.cryptodir.namegroup.encdec._25_encdec_part import get_stream_size, \
     Encrypt, \
     DecryptedIO
@@ -12,7 +12,7 @@ from codn.utils.randoms import set_random_last_modified
 
 
 def split_random_sizes(full_size: int) -> List[int]:
-    MAX_PART_SIZE = 0xFFFF
+
 
     if full_size < 0:
         raise ValueError
@@ -28,9 +28,9 @@ def split_random_sizes(full_size: int) -> List[int]:
         assert not truncated_last_part
 
         # up to 64 kb, even if we do not have so much data
-        next_part_size = random.randint(1, MAX_PART_SIZE)
+        next_part_size = random.randint(1, MAX_PART_CONTENT_SIZE)
         # adjusting the last part size
-        limit = min(MAX_PART_SIZE, full_size - sum_sizes)
+        limit = min(MAX_PART_CONTENT_SIZE, full_size - sum_sizes)
         assert limit > 0
         if next_part_size > limit:
             next_part_size = limit
@@ -41,13 +41,13 @@ def split_random_sizes(full_size: int) -> List[int]:
         part_sizes.append(next_part_size)
 
     assert sum(part_sizes) == full_size, f"{sum(part_sizes)} {full_size}"
-    assert all(1 <= p <= MAX_PART_SIZE for p in part_sizes)
+    assert all(1 <= p <= MAX_PART_CONTENT_SIZE for p in part_sizes)
     return part_sizes
 
 
 class MultipartEncryptor:
     def __init__(self,
-                 fpk: FilesetPrivateKey,
+                 fpk: CodenameKey,
                  source_io: BinaryIO,
                  content_version: int):
         self.fpk = fpk
@@ -73,6 +73,7 @@ class MultipartEncryptor:
                 part_size=self.part_sizes[part_idx],
                 data_version=self.content_version
                 ).io_to_io(self.source_io, target_io)
+        assert target_io.seek(0, io.SEEK_END) <= MAX_BLOB_SIZE
 
         self.encrypted_indices.add(part_idx)
 
@@ -91,7 +92,7 @@ class MultipartEncryptor:
         return len(self.encrypted_indices) == len(self.part_sizes)
 
 
-def encrypt_to_files(fpk: FilesetPrivateKey,
+def encrypt_to_files(fpk: CodenameKey,
                      source_io: BinaryIO,
                      target_dir: Path,
                      content_version: int) -> List[Path]:
@@ -134,7 +135,7 @@ def encrypt_to_files(fpk: FilesetPrivateKey,
     # return files
 
 
-def encrypt_to_files_old(fpk: FilesetPrivateKey,
+def encrypt_to_files_old(fpk: CodenameKey,
                          source_io: BinaryIO,
                          target_dir: Path,
                          content_version: int) -> List[Path]:

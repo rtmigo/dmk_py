@@ -3,21 +3,23 @@ import unittest
 import zlib
 from io import BytesIO
 
-from codn.container._blobs_list_io import BlobsWriter, BlobsReader, BlobChecksumMismatch, \
+from codn.container._20_blobs_list_io import BlobsSequentialWriter, BlobsSequentialReader, BlobChecksumMismatch, \
     BlobsIndexedReader
 
 
 class TestBlobsListFile(unittest.TestCase):
+
+
     def test_write_read_bytes(self):
         with BytesIO() as large_io:
-            writer = BlobsWriter(large_io)
+            writer = BlobsSequentialWriter(large_io)
             writer.write_bytes(b'abc')
             writer.write_bytes(b'hello')
             writer.write_bytes(b'')
             writer.write_bytes(b'777')
 
             large_io.seek(0, io.SEEK_SET)
-            reader = BlobsReader(large_io)
+            reader = BlobsSequentialReader(large_io)
             self.assertEqual(reader.read_bytes(), b'abc')
             self.assertEqual(reader.read_bytes(), b'hello')
             self.assertEqual(reader.read_bytes(), b'')
@@ -27,14 +29,14 @@ class TestBlobsListFile(unittest.TestCase):
 
     def test_write_read_bytes_no_data(self):
         with BytesIO() as empty_io:
-            brr = BlobsReader(empty_io)
+            brr = BlobsSequentialReader(empty_io)
             self.assertEqual(brr.read_bytes(), None)
             self.assertEqual(brr.read_bytes(), None)
 
     def test_write_crc_mismatch(self):
         with BytesIO() as empty_io:
             with BytesIO() as large_io:
-                writer = BlobsWriter(large_io)
+                writer = BlobsSequentialWriter(large_io)
                 writer.write_bytes(b'abc')
                 writer.write_bytes(b'hello')
 
@@ -42,7 +44,7 @@ class TestBlobsListFile(unittest.TestCase):
                 large_io.write(b'x')
 
                 large_io.seek(0, io.SEEK_SET)
-                reader = BlobsReader(large_io)
+                reader = BlobsSequentialReader(large_io)
                 with self.assertRaises(BlobChecksumMismatch):
                     reader.read_bytes()
 
@@ -53,7 +55,7 @@ class TestBlobsListFile(unittest.TestCase):
             large_io.write(b'this_line_is_a_header_stub')
             blobs_start_idx = large_io.seek(0, io.SEEK_CUR)
 
-            writer = BlobsWriter(large_io)
+            writer = BlobsSequentialWriter(large_io)
             writer.write_bytes(b'abc')
             writer.write_bytes(b'hello')
             writer.write_bytes(b'')
