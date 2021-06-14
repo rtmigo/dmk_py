@@ -23,8 +23,8 @@ class BlobsWriter:
         self.target_io = target_io
 
     def write_bytes(self, buffer: bytes):
-        self.target_io.write(uint32_to_bytes(len(buffer)))
         self.target_io.write(uint32_to_bytes(zlib.crc32(buffer)))
+        self.target_io.write(uint32_to_bytes(len(buffer)))
         self.target_io.write(buffer)
 
     def write_io(self, source_io: BinaryIO, size: int):
@@ -59,8 +59,9 @@ class BlobsReader:
         if len(part_length_bytes) != 4:
             raise InsufficientData(f'bytes read: {len(part_length_bytes)}')
 
-        part_length = bytes_to_uint32(part_length_bytes)
         part_checksum = bytes_to_uint32(read_or_fail(self.source_io, 4))
+        part_length = bytes_to_uint32(part_length_bytes)
+
 
         outer_stream_pos = self.source_io.seek(0, io.SEEK_CUR)
         self._next_blob_pos = outer_stream_pos + part_length
@@ -90,6 +91,7 @@ class BlobsIndexedReader:
 
     BLOB data is not read, checksums are not verified.
 
+    The blobs are just converted to FragmentIO and stored to the list.
     """
 
     def __init__(self, source_io: BinaryIO):
