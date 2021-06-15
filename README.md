@@ -9,15 +9,17 @@ draft.**
 
 ---
 
-`codn` encrypts data entries. Entries can be added, updated and removed. Entries
+`codn` encrypts data entries. Entries can be added, updated, and removed. Entries
 are files or strings.
 
-You need to know the **codename** of the entry to access the data of the entry.
-Without the codename, it is impossible even to find out if the entry exists.
+Each entry is independent and opens with a unique **codename**.
 
-There is **no way to decrypt the entire storage**, since there is no master
-password and no table of contents. The **files** are obfuscated to
-**reveal nothing** even indirectly.
+Knowing one codename reveals nothing about other entries. Neither the user nor
+the utility has that information. It's tightly encrypted.
+
+By design, `codn` reveals very little besides the particular entry.
+There is no table of contents and no master decryption keys. Even number 
+and size of entries are obfuscated.
 
 # Install
 
@@ -38,11 +40,11 @@ For example, information about a bitcoin wallet can be stored under codename
 Encrypted files are stored in a directory on the file system.
 
 If the `-d` argument is given, it specifies the directory.
-   
+
 ``` bash
 $ codn get -d /path/to/storage -n codename123  
 ```
-   
+
 If `-d` is not specified, the path is read from `$CODN_DIR` environment
 variable.
 
@@ -51,8 +53,8 @@ $ export CODN_DIR=/path/to/storage
 $ codn get -n codename123  
 ```
 
-Keep in mind that mixing storage files with other files is not desirable. 
-Therefore, you should not save other files to the directory. This can lead to 
+Keep in mind that mixing storage files with other files is not desirable.
+Therefore, you should not save other files to the directory. This can lead to
 data not being correctly encrypted or decrypted.
 
 # Save and read text
@@ -70,6 +72,7 @@ My lover's jokes are not that funny
 ```
 
 Interactively:
+
 ``` 
 $ codn set
 
@@ -86,75 +89,46 @@ Codename: topsecret123
 My lover's jokes are not that funny
 ```
 
-
-
 # Under the hood
+
+## Obfuscation
+
+`codn` stores encrypted entries inside blobs. The number and size of blobs is no
+secret. Their contents are secret.
+
+- Which blobs refer to the same codename is unknown and cryptographically hidden
+
+- The blob sizes are random. They are unrelated to the size of the entries.
+  Large entries are broken into parts, and small ones are padded
+
+- Many blobs are fake. They are indistinguishable from real data, but do not
+  contain anything meaningful
+
+- Random actions are taken every time the vault is updated: some fake blobs are
+  added, and some are removed
+
+The file itself, at first glance, does not have format-identifying information,
+and does not have any evident structure.
 
 ## Encryption
 
-1) **URandom** creates 256-bit **salt** when we initialize the directory. The
-   salt is saved openly in one of the files. This salt never changes. It is
-   required for any other actions on the directory.
+1) **URandom** creates 256-bit **salt** when we initialize the vault file. The
+   salt is saved openly in the file header. This salt never changes. It is
+   required for any other actions on the vault.
 
 2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
    salted (1) codename.
 
 3) **Blake2b** computes 192-bit **hashes** from the private key (2) combined
-   with a 192-bit **nonce**. These hash+nonce pairs are openly saved to files
+   with a 192-bit **nonce**. These hash+nonce pairs are openly saved to blobs
    that contain encrypted entries.
 
    Having the private key (2) and the nonce (3), we can recompute the same
-   hash (3) and check if the file contains it. If yes, then the file belongs to
+   hash (3) and check if the blob contains it. If yes, then the blob belongs to
    the given codename.
 
-4) **ChaCha20** encrypts the entry data using the private key (2) and a newly
+4) **ChaCha20** encrypts the blob data using the private key (2) and a newly
    generated 64-bit nonce.
 
 5) **CRC-32** checksums (encrypted by ChaCha20) verify the integrity of the
    decoded data.
-
-## Obfuscation
-
-`codn` stores encrypted data in a directory.
-
-The directory can contain any number of entries. Or contain none at all.
-
-The directory content is obfuscated. It is not even possible to determine that
-the directory was created by the `codn`.
-
-```
-Size  | Timestamp    | Filename
-------|--------------|--------------------
- 1897 | Mar  5  2019 | 2r6wsjiktoply4eiwe
-55043 | May 26  2017 | 4ba7ucpwnnzq
- 1681 | Oct  9  2016 | d3vh7ifow4
-58041 | Dec 25  2016 | e47grv7dkx4q
- 1775 | Oct 16  2012 | f34q
- 1901 | Mar  6  2020 | f445pmidvzok2
- 1842 | Sep 15  2020 | fswxug7rse
- 1946 | Jul 23  2018 | g335bk657nbtleinea
-45491 | Apr 28  2012 | jbzbww3hyihdn3i
-  389 | Feb 13  2015 | mgamw25dv3dsbji
-19376 | Jul  7  2019 | n4w5soq
- 1886 | Jun  5  2012 | npqlqxkendgyl3qz4gea
-   94 | Jan 28  2014 | pm5hk7sm
-  587 | May 16  2019 | rjsgposhcx6a
- 1481 | Feb 11  2016 | to4q5gn7uu
-52400 | Mar 18  2012 | v7uq
-  450 | Jun 20  2019 | von5d4lo6xfytfep
-```
-
-Content of each file is indistinguishable from a random data: there are no
-recognizable identifiers or structures. Literally not a single predictable byte,
-until you have the decryption key.
-
-- The file names are random
-
-- The file modification dates are random
-
-- The file sizes are random. Large entries are split into small file parts.
-  Small entries are supplemented with random padding
-
-- The number of files is random: some files are fakes that do not contain real
-  data
-
