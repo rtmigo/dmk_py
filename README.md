@@ -12,12 +12,13 @@ draft.**
 `codn` encrypts data entries. Entries can be added, updated and removed. Entries
 are files or strings.
 
-You need to know the **codename** of the entry to access the data of the entry.
-Without the codename, it is impossible even to find out if the entry exists.
+The vault does not have a master password. Each entry is independent and opens
+with a unique **codename**.
 
-There is **no way to decrypt the entire storage**, since there is no master
-password and no table of contents. The **files** are obfuscated to
-**reveal nothing** even indirectly.
+By design, `codn` reveals a very little information about the vault. It
+obfuscates the vault with random data making the number and size of entries
+unclear.
+
 
 # Install
 
@@ -38,11 +39,11 @@ For example, information about a bitcoin wallet can be stored under codename
 Encrypted files are stored in a directory on the file system.
 
 If the `-d` argument is given, it specifies the directory.
-   
+
 ``` bash
 $ codn get -d /path/to/storage -n codename123  
 ```
-   
+
 If `-d` is not specified, the path is read from `$CODN_DIR` environment
 variable.
 
@@ -51,8 +52,8 @@ $ export CODN_DIR=/path/to/storage
 $ codn get -n codename123  
 ```
 
-Keep in mind that mixing storage files with other files is not desirable. 
-Therefore, you should not save other files to the directory. This can lead to 
+Keep in mind that mixing storage files with other files is not desirable.
+Therefore, you should not save other files to the directory. This can lead to
 data not being correctly encrypted or decrypted.
 
 # Save and read text
@@ -70,6 +71,7 @@ My lover's jokes are not that funny
 ```
 
 Interactively:
+
 ``` 
 $ codn set
 
@@ -85,8 +87,6 @@ Codename: topsecret123
  
 My lover's jokes are not that funny
 ```
-
-
 
 # Under the hood
 
@@ -115,46 +115,20 @@ My lover's jokes are not that funny
 
 ## Obfuscation
 
-`codn` stores encrypted data in a directory.
+`codn` stores encrypted entries inside blobs. The number and size of blobs 
+is no secret. Their contents are secret.
 
-The directory can contain any number of entries. Or contain none at all.
+- Which blobs refer to the same codename is unknown and cryptographically 
+  hidden
 
-The directory content is obfuscated. It is not even possible to determine that
-the directory was created by the `codn`.
+- The blob sizes are random. They are unrelated to the size of the entries.
+  Large entries are broken into parts, and small ones are padded
+  
+- Many blobs are fake. They are indistinguishable from real data, but do not 
+  contain anything meaningful
+  
+- Random actions are taken every time the vault is updated: some fake blobs 
+  are added, and some are removed 
 
-```
-Size  | Timestamp    | Filename
-------|--------------|--------------------
- 1897 | Mar  5  2019 | 2r6wsjiktoply4eiwe
-55043 | May 26  2017 | 4ba7ucpwnnzq
- 1681 | Oct  9  2016 | d3vh7ifow4
-58041 | Dec 25  2016 | e47grv7dkx4q
- 1775 | Oct 16  2012 | f34q
- 1901 | Mar  6  2020 | f445pmidvzok2
- 1842 | Sep 15  2020 | fswxug7rse
- 1946 | Jul 23  2018 | g335bk657nbtleinea
-45491 | Apr 28  2012 | jbzbww3hyihdn3i
-  389 | Feb 13  2015 | mgamw25dv3dsbji
-19376 | Jul  7  2019 | n4w5soq
- 1886 | Jun  5  2012 | npqlqxkendgyl3qz4gea
-   94 | Jan 28  2014 | pm5hk7sm
-  587 | May 16  2019 | rjsgposhcx6a
- 1481 | Feb 11  2016 | to4q5gn7uu
-52400 | Mar 18  2012 | v7uq
-  450 | Jun 20  2019 | von5d4lo6xfytfep
-```
-
-Content of each file is indistinguishable from a random data: there are no
-recognizable identifiers or structures. Literally not a single predictable byte,
-until you have the decryption key.
-
-- The file names are random
-
-- The file modification dates are random
-
-- The file sizes are random. Large entries are split into small file parts.
-  Small entries are supplemented with random padding
-
-- The number of files is random: some files are fakes that do not contain real
-  data
-
+The file itself, at first glance, does not have format-identifying information, 
+and does not have any visible structure at all.
