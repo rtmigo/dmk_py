@@ -1,18 +1,16 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
+import io
 import random
 import unittest
 from io import BytesIO
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
 from codn._common import MAX_BLOB_SIZE, MAX_PART_CONTENT_SIZE
 from codn.a_base.kdf import FasterKDF, CodenameKey
-from codn.b_cryptoblobs._20_encdec_part import Encrypt, is_content, \
-    DecryptedIO, GroupImprintMismatch
-
 from codn.a_utils.randoms import get_noncrypt_random_bytes
+from codn.b_cryptoblobs._20_encdec_part import Encrypt, \
+    DecryptedIO, GroupImprintMismatch, is_content_io, is_fake_io
 from tests.common import testing_salt
 
 
@@ -29,23 +27,37 @@ class TestEncryptDecrypt(unittest.TestCase):
         cls.faster.end()
 
     def test_imprint_match(self):
-        with TemporaryDirectory() as tds:
-            td = Path(tds)
+        data = bytes([77, 88, 99])
+        NAME = 'abc'
 
-            source = td / "source"
-            source.write_bytes(bytes([77, 88, 99]))
+        encrypted_io = BytesIO()
 
-            right = td / "irrelevant"
-            NAME = 'abc'
-            # name_to_hash(NAME)
-            Encrypt(CodenameKey(NAME, testing_salt)) \
-                .file_to_file(source, right)
+        Encrypt(CodenameKey(NAME, testing_salt)) \
+            .io_to_io(BytesIO(data), encrypted_io)
+
+        with self.subTest("with right key: is a content"):
+            encrypted_io.seek(0, io.SEEK_SET)
             self.assertTrue(
-                is_content(CodenameKey(NAME, testing_salt),
-                           right))
+                is_content_io(CodenameKey(NAME, testing_salt),
+                              encrypted_io))
+
+        with self.subTest("with right key: not a fake (has content)"):
+            encrypted_io.seek(0, io.SEEK_SET)
+            self.assertTrue(
+                not is_fake_io(CodenameKey(NAME, testing_salt),
+                               encrypted_io))
+
+        with self.subTest("with wrong key: not a content"):
+            encrypted_io.seek(0, io.SEEK_SET)
             self.assertFalse(
-                is_content(CodenameKey('labuda', testing_salt),
-                           right))
+                is_content_io(CodenameKey("lalala", testing_salt),
+                              encrypted_io))
+
+        with self.subTest("with wrong key: not a fake (not from namegroup)"):
+            encrypted_io.seek(0, io.SEEK_SET)
+            self.assertTrue(
+                not is_fake_io(CodenameKey("lalala", testing_salt),
+                               encrypted_io))
 
     def test_encdec_constant(self):
         self._encrypt_decrypt('name', b'qwertyuiop!qwertyuiop')
@@ -70,15 +82,14 @@ class TestEncryptDecrypt(unittest.TestCase):
         self.assertEqual(dec, b'')
 
     def test_encdec_part_sized_max(self):
-        buf = b'0'*(MAX_PART_CONTENT_SIZE*2)
+        buf = b'0' * (MAX_PART_CONTENT_SIZE * 2)
         for _ in range(25):
             # catching random overflows
             self._encrypt_decrypt('name', buf,
-                                    pos=0,
-                                    parts_len=5,
-                                    part_size=MAX_PART_CONTENT_SIZE,
-                                    part_idx=2)
-
+                                  pos=0,
+                                  parts_len=5,
+                                  part_size=MAX_PART_CONTENT_SIZE,
+                                  part_idx=2)
 
     # @unittest.skip('temp')
     def test_encdec_part_random(self):

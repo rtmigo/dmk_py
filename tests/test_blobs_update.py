@@ -5,13 +5,12 @@ import unittest
 from io import BytesIO
 from typing import BinaryIO
 
-from codn.b_storage_file import BlobsIndexedReader, BlobsSequentialWriter
 from codn.a_base.kdf import FasterKDF, CodenameKey
-from codn.c_namegroups._update import update_namegroup_b
-
 # from codn.cryptodir.namegroup.navigator_old import NewNameGroup, update_namegroup
 from codn.b_cryptoblobs._20_encdec_part import is_content_io, \
     is_fake_io
+from codn.b_storage_file import BlobsIndexedReader, BlobsSequentialWriter
+from codn.c_namegroups._update import update_namegroup_b
 from tests.common import testing_salt
 
 

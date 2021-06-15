@@ -7,11 +7,10 @@ from io import BytesIO
 from typing import List, Optional
 
 from codn.a_base.kdf import FasterKDF, CodenameKey
+from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn.b_cryptoblobs import DecryptedIO
-
 from codn.b_cryptoblobs._30_encdec_multipart import decrypt_from_dios, \
     split_random_sizes, MultipartEncryptor
-from codn.a_utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
 
