@@ -25,12 +25,12 @@ class Config:
 
         data_path_str = os.path.expanduser(data_path_str)
         data_path_str = os.path.expandvars(data_path_str)
-        #print(data_path_str)
+        # print(data_path_str)
         self.data_dir = Path(data_path_str)
-        #print(self.data_dir)
+        # print(self.data_dir)
         if not self.data_dir.is_absolute():
             self.data_dir = (config_file.parent / self.data_dir).resolve()
-        #print(self.data_dir)
+        # print(self.data_dir)
 
     @staticmethod
     def _create_default(config_file: Path):

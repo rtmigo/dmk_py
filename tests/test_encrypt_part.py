@@ -8,10 +8,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from codn._common import MAX_BLOB_SIZE, MAX_PART_CONTENT_SIZE
-from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
-from codn.cryptodir.namegroup.encdec._25_encdec_part import Encrypt, \
-    is_content, DecryptedIO, GroupImprintMismatch
-from codn.utils.randoms import get_noncrypt_random_bytes
+from codn.a_base.kdf import FasterKDF, CodenameKey
+from codn.b_cryptoblobs._20_encdec_part import Encrypt, is_content, \
+    DecryptedIO, GroupImprintMismatch
+
+from codn.a_utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
 

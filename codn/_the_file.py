@@ -5,14 +5,13 @@ from typing import BinaryIO, Optional
 
 from Crypto.Random import get_random_bytes
 
-from codn._common import PK_SALT_SIZE
-from codn.container import StorageFileReader, StorageFileWriter, \
+from .a_base.kdf import CodenameKey
+from .a_utils.dirty_file import WritingToTempFile
+from .b_cryptoblobs import decrypt_from_dios
+from .b_storage_file import StorageFileReader, StorageFileWriter, \
     BlobsIndexedReader
-from codn.cryptodir._10_kdf import CodenameKey
-from codn.cryptodir.namegroup import decrypt_from_dios
-from codn.cryptodir.namegroup.blob_navigator import NameGroup
-from codn.cryptodir.namegroup.blob_updater import update_namegroup_b
-from codn.utils.dirty_file import WritingToTempFile
+from .c_namegroups import NameGroup, update_namegroup_b
+from ._common import PK_SALT_SIZE
 
 
 class TheFile:
@@ -64,7 +63,7 @@ class TheFile:
             ng = NameGroup(old_blobs, ck)
 
             if not ng.fresh_content_files:
-                #print(f"No fresh content case blobs: {len(old_blobs)}")
+                # print(f"No fresh content case blobs: {len(old_blobs)}")
                 return None
 
             with BytesIO() as decrypted:

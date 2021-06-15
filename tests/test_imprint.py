@@ -5,8 +5,8 @@ import unittest
 from difflib import SequenceMatcher
 
 from codn._common import bytes_to_fn_str, fnstr_to_bytes
-from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
-from codn.cryptodir.namegroup.imprint import Imprint, \
+from codn.a_base.kdf import FasterKDF, CodenameKey
+from codn.b_cryptoblobs._10_imprint import Imprint, \
     pk_matches_imprint_bytes
 from tests.common import testing_salt
 

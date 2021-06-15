@@ -2,13 +2,11 @@ import io
 import random
 from typing import List, BinaryIO, Set
 
-from codn.container import BlobsIndexedReader, BlobsSequentialWriter
-from codn.cryptodir._10_kdf import CodenameKey
-from codn.cryptodir.namegroup.blob_navigator import NameGroup
-from codn.cryptodir.namegroup.encdec import MultipartEncryptor
-from codn.cryptodir.namegroup.fakes import create_fake_bytes
-from codn.cryptodir.namegroup.random_sizes import \
-    random_size_like_others_in_dir, random_size_like_file
+from codn.a_base.kdf import CodenameKey
+from codn.b_cryptoblobs import MultipartEncryptor
+from codn.b_storage_file import BlobsIndexedReader, BlobsSequentialWriter
+from codn.c_namegroups.fakes import create_fake_bytes
+from codn.c_namegroups._namegroup import NameGroup
 
 
 def increased_data_version(namegroup: NameGroup) -> int:
@@ -57,7 +55,7 @@ def update_namegroup_b(cdk: CodenameKey,
     # add new real file. We will do this in random order, so as not to give
     # out which files are real and which are surrogates
 
-    #old_file_sizes = [frio.length for frio in iter(old_blobs)]
+    # old_file_sizes = [frio.length for frio in iter(old_blobs)]
 
     # def fake_size():
     #     result = random_size_like_others_in_dir(old_file_sizes)
@@ -107,7 +105,8 @@ def update_namegroup_b(cdk: CodenameKey,
 
     FAKE_TASK = -1
 
-    me = MultipartEncryptor(cdk, new_content_io, increased_data_version(name_group))
+    me = MultipartEncryptor(cdk, new_content_io,
+                            increased_data_version(name_group))
     for part_idx in range(len(me.part_sizes)):
         assert part_idx != FAKE_TASK
         tasks.append(part_idx)

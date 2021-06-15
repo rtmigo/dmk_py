@@ -1,13 +1,12 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
-import binascii
 from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
+from codn.a_base.kdf import CodenameKey
 from codn._common import bytes_to_fn_str, blake192, BASENAME_SIZE
-from codn.cryptodir._10_kdf import CodenameKey
 
 
 class Imprint:

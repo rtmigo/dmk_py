@@ -4,10 +4,10 @@ import io
 import zlib
 from typing import BinaryIO, Tuple, Optional, List, Iterable
 
-from codn._common import read_or_fail, InsufficientData
-from codn.container._10_fragment_io import FragmentIO
-from codn.cryptodir.namegroup.encdec._20_byte_funcs import uint32_to_bytes, \
+from codn.b_cryptoblobs._10_byte_funcs import uint32_to_bytes, \
     bytes_to_uint32, uint16_to_bytes, bytes_to_uint16
+from codn.b_storage_file._10_fragment_io import FragmentIO
+from codn._common import read_or_fail, InsufficientData
 
 
 class BlobsSequentialWriter:
@@ -130,10 +130,10 @@ class BlobsIndexedReader:
 
         return FragmentIO(frio.outer, frio.start, frio.length)
 
-        #frio.seek(0, io.SEEK_SET)
+        # frio.seek(0, io.SEEK_SET)
         return frio
 
-    #def get_bytes(self, idx: ):
+    # def get_bytes(self, idx: ):
 
     def crc(self, idx: int) -> int:
         frio, crc = self._items[idx]

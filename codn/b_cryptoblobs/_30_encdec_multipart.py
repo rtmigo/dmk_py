@@ -3,17 +3,15 @@ import random
 from pathlib import Path
 from typing import BinaryIO, List, Set
 
-from codn._common import unique_filename, MAX_BLOB_SIZE, MAX_PART_CONTENT_SIZE
-from codn.cryptodir._10_kdf import CodenameKey
-from codn.cryptodir.namegroup.encdec._25_encdec_part import get_stream_size, \
+from codn.a_base.kdf import CodenameKey
+from codn.a_utils.randoms import set_random_last_modified
+from codn.b_cryptoblobs._20_encdec_part import get_stream_size, \
     Encrypt, \
     DecryptedIO
-from codn.utils.randoms import set_random_last_modified
+from codn._common import unique_filename, MAX_BLOB_SIZE, MAX_PART_CONTENT_SIZE
 
 
 def split_random_sizes(full_size: int) -> List[int]:
-
-
     if full_size < 0:
         raise ValueError
 

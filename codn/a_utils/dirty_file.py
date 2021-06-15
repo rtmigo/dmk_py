@@ -4,8 +4,6 @@
 import os
 from pathlib import Path
 
-from codn._common import looks_like_random_basename
-
 
 class WritingToTempFile:
     """We will write data to a temporary file first, and when it's

@@ -3,8 +3,8 @@ import unittest
 from io import BytesIO
 
 from codn._common import PK_SALT_SIZE
-from codn.container._30_storage_file import StorageFileWriter, StorageFileReader
-from codn.utils.randoms import get_noncrypt_random_bytes
+from codn.b_storage_file._30_storage_file import StorageFileWriter, StorageFileReader
+from codn.a_utils.randoms import get_noncrypt_random_bytes
 
 
 class TestContainerFile(unittest.TestCase):

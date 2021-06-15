@@ -3,7 +3,7 @@
 
 import unittest
 
-from codn.cryptodir._10_kdf import CodenameKey
+from codn.a_base.kdf import CodenameKey
 from tests.common import testing_salt
 
 

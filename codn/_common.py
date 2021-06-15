@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 import random
-import io
 from base64 import urlsafe_b64encode, urlsafe_b64decode, b32encode
 from pathlib import Path
 from typing import BinaryIO, Tuple
@@ -9,7 +8,7 @@ from typing import BinaryIO, Tuple
 from Crypto.Hash import BLAKE2b
 from Crypto.Random import get_random_bytes
 
-from codn.utils.randoms import get_noncrypt_random_bytes
+from codn.a_utils.randoms import get_noncrypt_random_bytes
 
 PK_SALT_SIZE = 32
 PK_SIZE = 32
@@ -21,7 +20,7 @@ MIN_DATA_FILE_SIZE = MAX_SALT_FILE_SIZE + 1
 MAX_BLOB_SIZE = 0xFFFF
 MAX_SIZE_BEFORE_CONTENT = 1024  # hashes, intro-padding, header, nonce
 
-MAX_PART_CONTENT_SIZE = MAX_BLOB_SIZE-MAX_SIZE_BEFORE_CONTENT
+MAX_PART_CONTENT_SIZE = MAX_BLOB_SIZE - MAX_SIZE_BEFORE_CONTENT
 
 assert MIN_DATA_FILE_SIZE > MAX_SALT_FILE_SIZE
 assert PK_SIZE * 8 == 256

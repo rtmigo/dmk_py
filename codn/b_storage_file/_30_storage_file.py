@@ -10,8 +10,9 @@ from typing import BinaryIO
 
 from Crypto.Random import get_random_bytes
 
+from codn.b_storage_file._20_blobs_list_io import BlobsSequentialWriter, \
+    BlobsIndexedReader
 from codn._common import PK_SALT_SIZE, read_or_fail
-from codn.container._20_blobs_list_io import BlobsSequentialWriter, BlobsIndexedReader
 
 
 class StorageFileWriter:

@@ -11,16 +11,16 @@ from typing import Optional, NamedTuple, BinaryIO, Union
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
-from codn._common import read_or_fail, InsufficientData, MAX_BLOB_SIZE, \
-    MAX_PART_CONTENT_SIZE
-from codn.cryptodir._10_kdf import CodenameKey
-from codn.cryptodir.namegroup.imprint import Imprint, pk_matches_imprint_bytes
-from codn.utils.dirty_file import WritingToTempFile
-from codn.utils.randoms import set_random_last_modified
-from ._10_padding import IntroPadding
-from ._20_byte_funcs import bytes_to_uint32, \
+from codn.a_base.kdf import CodenameKey
+from codn.a_utils.dirty_file import WritingToTempFile
+from codn.a_utils.randoms import set_random_last_modified
+from codn.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
     bytes_to_int64, uint32_to_bytes, int64_to_bytes, uint8_to_bytes, \
     uint24_to_bytes, bytes_to_uint8, bytes_to_uint24
+from codn.b_cryptoblobs._10_imprint import Imprint, pk_matches_imprint_bytes
+from codn.b_cryptoblobs._10_padding import IntroPadding
+from codn._common import read_or_fail, InsufficientData, MAX_BLOB_SIZE, \
+    MAX_PART_CONTENT_SIZE
 
 _DEBUG_PRINT = False
 
@@ -308,8 +308,6 @@ class DecryptedIO:
             source.seek(0, io.SEEK_SET)
             data = source.read()
 
-
-
         self.fpk = fpk
         self._source: io.BytesIO = io.BytesIO(data)
 
@@ -344,7 +342,7 @@ class DecryptedIO:
 
         if self._belongs_to_namegroup is None:
             try:
-                self._source.seek(0, io.SEEK_SET) # todo temp
+                self._source.seek(0, io.SEEK_SET)  # todo temp
 
                 pos = self._source.tell()
                 if pos != 0:

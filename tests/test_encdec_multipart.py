@@ -6,11 +6,12 @@ import unittest
 from io import BytesIO
 from typing import List, Optional
 
-from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
-from codn.cryptodir.namegroup import DecryptedIO
-from codn.cryptodir.namegroup.encdec._26_encdec_full import decrypt_from_dios, \
+from codn.a_base.kdf import FasterKDF, CodenameKey
+from codn.b_cryptoblobs import DecryptedIO
+
+from codn.b_cryptoblobs._30_encdec_multipart import decrypt_from_dios, \
     split_random_sizes, MultipartEncryptor
-from codn.utils.randoms import get_noncrypt_random_bytes
+from codn.a_utils.randoms import get_noncrypt_random_bytes
 from tests.common import testing_salt
 
 
