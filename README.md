@@ -9,16 +9,17 @@ draft.**
 
 ---
 
-`codn` encrypts data entries. Entries can be added, updated and removed. Entries
+`codn` encrypts data entries. Entries can be added, updated, and removed. Entries
 are files or strings.
 
-The vault does not have a master password. Each entry is independent and opens
-with a unique **codename**.
+Each entry is independent and opens with a unique **codename**.
 
-By design, `codn` reveals a very little information about the vault. It
-obfuscates the vault with random data making the number and size of entries
-unclear.
+Knowing one codename reveals nothing about other entries. Neither the user nor
+the utility has that information. It's tightly encrypted.
 
+By design, `codn` reveals very little besides the particular entry.
+There is no table of contents and no master decryption keys. Even number 
+and size of entries are obfuscated.
 
 # Install
 
@@ -92,22 +93,21 @@ My lover's jokes are not that funny
 
 ## Obfuscation
 
-`codn` stores encrypted entries inside blobs. The number and size of blobs 
-is no secret. Their contents are secret.
+`codn` stores encrypted entries inside blobs. The number and size of blobs is no
+secret. Their contents are secret.
 
-- Which blobs refer to the same codename is unknown and cryptographically 
-  hidden
+- Which blobs refer to the same codename is unknown and cryptographically hidden
 
 - The blob sizes are random. They are unrelated to the size of the entries.
   Large entries are broken into parts, and small ones are padded
-  
-- Many blobs are fake. They are indistinguishable from real data, but do not 
-  contain anything meaningful
-  
-- Random actions are taken every time the vault is updated: some fake blobs 
-  are added, and some are removed 
 
-The file itself, at first glance, does not have format-identifying information, 
+- Many blobs are fake. They are indistinguishable from real data, but do not
+  contain anything meaningful
+
+- Random actions are taken every time the vault is updated: some fake blobs are
+  added, and some are removed
+
+The file itself, at first glance, does not have format-identifying information,
 and does not have any evident structure.
 
 ## Encryption
