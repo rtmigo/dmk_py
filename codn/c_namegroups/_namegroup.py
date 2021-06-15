@@ -4,7 +4,7 @@
 
 from typing import List, BinaryIO, Optional
 
-from codn.a_base.kdf import CodenameKey
+from codn.a_base import CodenameKey
 from codn.b_cryptoblobs import DecryptedIO
 from codn.b_storage_file import BlobsIndexedReader
 
@@ -88,10 +88,8 @@ class NameGroup:
                     gf.is_fresh_data = True
                 break
 
-        # print("blobs", len(blobs), "items", len(self.items), "content", len(all_content_files), "versions", self.all_content_versions)
-
     @property
-    def fresh_content_files(self) -> List[DecryptedIO]:
+    def fresh_content_dios(self) -> List[DecryptedIO]:
         if self._fresh_content_dios is None:
             self._fresh_content_dios = [gf.dio for gf in self.items
                                         if gf.is_fresh_data]

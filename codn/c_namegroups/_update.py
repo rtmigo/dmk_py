@@ -6,10 +6,10 @@ import io
 import random
 from typing import List, BinaryIO, Set
 
-from codn.a_base.kdf import CodenameKey
+from codn.a_base import CodenameKey
 from codn.b_cryptoblobs import MultipartEncryptor
 from codn.b_storage_file import BlobsIndexedReader, BlobsSequentialWriter
-from codn.c_namegroups.fakes import create_fake_bytes
+from codn.c_namegroups._fakes import create_fake_bytes
 from codn.c_namegroups._namegroup import NameGroup
 
 
@@ -58,14 +58,6 @@ def update_namegroup_b(cdk: CodenameKey,
     # we will remove and add some surrogates, and also remove old real file
     # add new real file. We will do this in random order, so as not to give
     # out which files are real and which are surrogates
-
-    # old_file_sizes = [frio.length for frio in iter(old_blobs)]
-
-    # def fake_size():
-    #     result = random_size_like_others_in_dir(old_file_sizes)
-    #     if result is None:
-    #         result = random_size_like_file(get_stream_size(new_content_io))
-    #     return result
 
     name_group = NameGroup(old_blobs, cdk)
 

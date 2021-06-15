@@ -1,14 +1,11 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
-import datetime
 import random
 
 from Crypto.Random import get_random_bytes
 
-from codn.a_base import CodenameKey
-
-from codn.b_cryptoblobs._10_imprint import Imprint
+from codn.a_base import CodenameKey, Imprint
 from codn._common import MAX_BLOB_SIZE
 
 

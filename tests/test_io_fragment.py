@@ -50,7 +50,7 @@ class Test(unittest.TestCase):
                 self.assertEqual(reader.seek(2, io.SEEK_SET), 2)
                 self.assertEqual(reader.read(), b'345')
 
-                self.assertEqual(reader.seek(20, io.SEEK_SET), 20)  # why?..
+                self.assertEqual(reader.seek(20, io.SEEK_SET), 5)
                 self.assertEqual(reader.read(), b'')
 
     #
@@ -71,6 +71,26 @@ class Test(unittest.TestCase):
         self.assertEqual(a, b, "a!=b")
         self.assertEqual(a, c, "a!=c")
 
+    # def test_random(self):
+    #     large_bytes = b'0123456789'
+    #     part_bytes = b'345678'
+    #     self.assertTrue(part_bytes in large_bytes)
+    #
+    #     with BytesIO(large_bytes) as large_io:
+    #         with FragmentIO(large_io, 3, 6) as partial:
+    #             partial.seek(0, io.SEEK_SET)
+    #             with BytesIO(part_bytes) as reference:
+    #
+    #                 with self.subTest("seek set"):
+    #                     for _ in range(100):
+    #                         pos = random.randint(0, 20)
+    #                         self.assertEqual(
+    #                             partial.seek(pos, io.SEEK_SET),
+    #                             reference.seek(pos, io.SEEK_SET))
+    #                         self.assertEqual(reference.tell(), partial.tell())
+    #                         self.assertEqual(reference.read(), partial.read())
+    #                         self.assertEqual(reference.tell(), partial.tell())
+
     #
     def test_compare_ref(self):
         large_bytes = b'0123456789'
@@ -78,104 +98,107 @@ class Test(unittest.TestCase):
         self.assertTrue(part_bytes in large_bytes)
 
         with BytesIO(large_bytes) as large_io:
-            with FragmentIO(large_io, 3, 6) as partial:
-                partial.seek(0, io.SEEK_SET)
-                with BytesIO(part_bytes) as reference:
+            with FragmentIO(large_io, 3, 6) as fragment:
+                fragment.seek(0, io.SEEK_SET)
+                with BytesIO(part_bytes) as bytesio:
                     self.assertAllEqual(
-                        reference.read(),
-                        partial.read(),
+                        bytesio.read(),
+                        fragment.read(),
                         b'345678')
 
                     with self.subTest('seek set'):
                         self.assertAllEqual(
-                            reference.seek(2, io.SEEK_SET),
-                            partial.seek(2, io.SEEK_SET),
+                            bytesio.seek(2, io.SEEK_SET),
+                            fragment.seek(2, io.SEEK_SET),
                             2)
 
                         self.assertAllEqual(
-                            reference.read(),
-                            partial.read(),
+                            bytesio.read(),
+                            fragment.read(),
                             b'5678')
 
                     with self.subTest('seek zero'):
                         self.assertAllEqual(
-                            reference.seek(0, io.SEEK_SET),
-                            partial.seek(0, io.SEEK_SET),
+                            bytesio.seek(0, io.SEEK_SET),
+                            fragment.seek(0, io.SEEK_SET),
                             0)
 
                         self.assertAllEqual(
-                            reference.read(),
-                            partial.read(),
+                            bytesio.read(),
+                            fragment.read(),
                             b'345678')
 
-                    with self.subTest('seek set far right'):
-                        self.assertAllEqual(
-                            reference.seek(25, io.SEEK_SET),
-                            partial.seek(25, io.SEEK_SET),
-                            25)
+                    with self.subTest('seek set far right keeps inside'):
+                        # unlike BytesIO, our stream cannot leave the range
+                        self.assertEqual(bytesio.seek(25, io.SEEK_SET), 25)
+                        self.assertEqual(fragment.seek(25, io.SEEK_SET), 6)
+                        self.assertEqual(fragment.tell(), 6)
 
+                        # but when reading results are the same
                         self.assertAllEqual(
-                            reference.read(),
-                            partial.read(),
+                            bytesio.read(),
+                            fragment.read(),
                             b'')
+
+                        self.assertEqual(fragment.tell(), 6)
 
                     with self.subTest('seek set far left'):
                         with self.assertRaises(ValueError):
-                            reference.seek(-10, io.SEEK_SET)
+                            bytesio.seek(-10, io.SEEK_SET)
                         with self.assertRaises(ValueError):
-                            partial.seek(-10, io.SEEK_SET)
+                            fragment.seek(-10, io.SEEK_SET)
 
                         self.assertAllEqual(
-                            reference.read(),
-                            partial.read(),
+                            bytesio.read(),
+                            fragment.read(),
                             b'')
 
                     with self.subTest('seek set'):
                         self.assertAllEqual(
-                            reference.seek(6, io.SEEK_SET),
-                            partial.seek(6, io.SEEK_SET),
+                            bytesio.seek(6, io.SEEK_SET),
+                            fragment.seek(6, io.SEEK_SET),
                             6)
 
                         self.assertAllEqual(
-                            reference.read(),
-                            partial.read(),
+                            bytesio.read(),
+                            fragment.read(),
                             b'')
 
                         self.assertAllEqual(
-                            reference.seek(5, io.SEEK_SET),
-                            partial.seek(5, io.SEEK_SET),
+                            bytesio.seek(5, io.SEEK_SET),
+                            fragment.seek(5, io.SEEK_SET),
                             5)
 
                         self.assertAllEqual(
-                            reference.read(),
-                            partial.read(),
+                            bytesio.read(),
+                            fragment.read(),
                             b'8')
 
                     with self.subTest('seek end'):
                         self.assertAllEqual(
-                            reference.seek(0, io.SEEK_END),
-                            partial.seek(0, io.SEEK_END),
+                            bytesio.seek(0, io.SEEK_END),
+                            fragment.seek(0, io.SEEK_END),
                             6)
 
                         self.assertAllEqual(
-                            reference.read(),
-                            partial.read(),
+                            bytesio.read(),
+                            fragment.read(),
                             b'')
 
                         self.assertAllEqual(
-                            reference.seek(-2, io.SEEK_END),
-                            partial.seek(-2, io.SEEK_END),
+                            bytesio.seek(-2, io.SEEK_END),
+                            fragment.seek(-2, io.SEEK_END),
                             4)
 
                         self.assertAllEqual(
-                            reference.read(),
-                            partial.read(),
+                            bytesio.read(),
+                            fragment.read(),
                             b'78')
 
                     with self.subTest('seek end too far'):
                         self.assertAllEqual(
-                            reference.seek(-100, io.SEEK_END),
-                            partial.seek(-100, io.SEEK_END),
+                            bytesio.seek(-100, io.SEEK_END),
+                            fragment.seek(-100, io.SEEK_END),
                             0)
 
 

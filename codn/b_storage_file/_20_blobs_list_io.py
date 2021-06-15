@@ -132,7 +132,7 @@ class BlobsIndexedReader:
         # we will not actually actually use the fragment io, but return
         # its copy
 
-        return FragmentIO(frio.outer, frio.start, frio.length)
+        return FragmentIO(frio.underlying, frio.start, frio.length)
 
         # frio.seek(0, io.SEEK_SET)
         #return frio
@@ -151,7 +151,7 @@ class BlobsIndexedReader:
 
     def __iter__(self) -> Iterable[FragmentIO]:
         for frio, _ in self._items:
-            yield FragmentIO(frio.outer, frio.start, frio.length)
+            yield FragmentIO(frio.underlying, frio.start, frio.length)
 
     def __len__(self):
         return len(self._items)

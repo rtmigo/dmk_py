@@ -7,7 +7,7 @@ import unittest
 from io import BytesIO
 
 from codn._common import MAX_BLOB_SIZE, MAX_PART_CONTENT_SIZE
-from codn.a_base.kdf import FasterKDF, CodenameKey
+from codn.a_base._10_kdf import FasterKDF, CodenameKey
 from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn.b_cryptoblobs._20_encdec_part import Encrypt, \
     DecryptedIO, GroupImprintMismatch, is_content_io, is_fake_io

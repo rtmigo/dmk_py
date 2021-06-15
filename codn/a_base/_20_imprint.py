@@ -5,21 +5,21 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from codn.a_base.kdf import CodenameKey
 from codn._common import bytes_to_fn_str, blake192, BASENAME_SIZE
+from codn.a_base._10_kdf import CodenameKey
 
 
 class Imprint:
-    """Each PK has a conventionally infinite number of imprints
+    """Each codename key (CK) has a conventionally infinite number of imprints
     (2^192 or six octodecillion).
 
-    Each new imprint is unique, although the PK is the same.
+    Each new imprint is unique, although the key is the same.
 
-    Knowing the PK, we can tell if the imprint belongs to it.
+    Knowing the key, we can tell if the imprint belongs to it.
 
-    Without knowing the PK, we can hardly do anything. We cannot
-    reconstruct a PK from an imprint, or even suggest it. We cannot say
-    whether two imprints correspond to the same PK or to different ones.
+    Without knowing the CK, we can hardly do anything. We cannot
+    reconstruct a CK from an imprint, or even suggest it. We cannot say
+    whether two imprints correspond to the same CK or to different ones.
 
     ==
 
@@ -81,21 +81,6 @@ class Imprint:
 assert Imprint.FULL_LEN == BASENAME_SIZE
 
 
-# def pk_matches_codename(pk: FilesetPrivateKey, codename: str) -> bool:
-#     try:
-#         bts = fnstr_to_bytes(codename)
-#     except binascii.Error:
-#         return False
-#
-#     if len(bts) != Imprint.FULL_LEN:
-#         return False
-#
-#     nonce = Imprint.bytes_to_nonce(bts)
-#
-#     assert len(nonce) == Imprint.NONCE_LEN
-#     return codename == Imprint(pk, nonce=nonce).as_str
-#
-#
 def pk_matches_imprint_bytes(pk: CodenameKey, imprint: bytes) -> bool:
     nonce = Imprint.bytes_to_nonce(imprint)
     return Imprint(pk, nonce=nonce).as_bytes == imprint

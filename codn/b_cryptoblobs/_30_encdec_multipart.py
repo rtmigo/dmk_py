@@ -7,7 +7,7 @@ import random
 from pathlib import Path
 from typing import BinaryIO, List, Set
 
-from codn.a_base.kdf import CodenameKey
+from codn.a_base._10_kdf import CodenameKey
 from codn.a_utils.randoms import set_random_last_modified
 from codn.b_cryptoblobs._20_encdec_part import get_stream_size, \
     Encrypt, \
