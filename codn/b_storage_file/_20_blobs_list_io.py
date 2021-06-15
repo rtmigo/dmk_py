@@ -8,10 +8,20 @@ import io
 import zlib
 from typing import BinaryIO, Tuple, Optional, List, Iterable
 
+from codn._common import read_or_fail, InsufficientData
 from codn.b_cryptoblobs._10_byte_funcs import uint32_to_bytes, \
     bytes_to_uint32, uint16_to_bytes, bytes_to_uint16
 from codn.b_storage_file._10_fragment_io import FragmentIO
-from codn._common import read_or_fail, InsufficientData
+
+
+def _obfuscate_size(size16: int, crc32: int) -> int:
+    if not 0 <= size16 <= 0xFFFF:
+        raise ValueError(f"size: {size16}")
+    if not 0 <= crc32 <= 0xFFFFFFFF:
+        raise ValueError(f"crc32: {crc32}")
+
+    mix_mask = (crc32 >> 16) ^ crc32
+    return (size16 ^ mix_mask) & 0xFFFF
 
 
 class BlobsSequentialWriter:
@@ -135,7 +145,7 @@ class BlobsIndexedReader:
         return FragmentIO(frio.underlying, frio.start, frio.length)
 
         # frio.seek(0, io.SEEK_SET)
-        #return frio
+        # return frio
 
     # def get_bytes(self, idx: ):
 

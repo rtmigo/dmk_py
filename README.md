@@ -12,13 +12,13 @@ draft.**
 `codn` encrypts data entries. Entries can be added, updated, and removed.
 Entries are files or strings.
 
-Each entry is independent and opens with a unique **codename**.
+Each entry is independent and protected with a unique **codename**. The codename
+serves as a name and password at the same time.
 
-Knowing one codename reveals nothing about other entries. Neither the user nor
-the utility has that information. Everything in the vault either
-cryptographically secure or overly obfuscated. There is no table of contents and
-no master decryption keys.
-
+Codename allows access to one entry. It reveals nothing about other entries,
+even whether they exist. Neither the user nor `codn` has that information. The
+vault is cryptographically secure and overly obfuscated. There is no table of
+contents and no master decryption keys.
 
 # Install
 
@@ -90,24 +90,45 @@ My lover's jokes are not that funny
 
 # Under the hood
 
-## Obfuscation
+- Entries are encrypted really well
+- Number of entries cannot be determined
+
+## Entries obfuscation
 
 `codn` stores encrypted entries inside blobs. The number and size of blobs is no
 secret. Their contents are secret.
 
-- Which blobs refer to the same codename is unknown and cryptographically hidden
+- The number of blobs is random. Many blobs are fake. They are indistinguishable
+  from real data, but do not contain anything meaningful
 
 - The blob sizes are random. They are unrelated to the size of the entries.
   Large entries are broken into parts, and small ones are padded
 
-- Many blobs are fake. They are indistinguishable from real data, but do not
-  contain anything meaningful
+- Which blobs refer to the same codename is unknown. We can only determine blobs
+  associated with a particular codename if the user provided this codename
 
 - Random actions are taken every time the vault is updated: some fake blobs are
   added, and some are removed
 
+Thus, **number and size of entries cannot be determined** by the size of the
+vault file or number of blobs.
+
+The payload is smaller than the vault size. Only this is known for certain.
+
+## File obfuscation
+
 The file itself, at first glance, does not have format-identifying information,
 and does not have any evident structure.
+
+For example, in a regular binary file, the 32-bit number 42 looks
+like `00 00 00 2A`. In an obfuscated `codn` file, the same number would be
+something like `F8 70 4A 52`. Thus, literally all bytes appear to be encrypted.
+Even the first four bytes identifying the `codn` format are different each time.
+
+It is worth clarifying that this obfuscation is mainly decorative. You can 
+check if a file is in the `codn` format with the `codn` utility, if you aware 
+of it.
+ 
 
 ## Encryption
 
