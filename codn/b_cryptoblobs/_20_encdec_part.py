@@ -299,17 +299,9 @@ class DecryptedIO:
 
     def __init__(self,
                  fpk: CodenameKey,
-                 source: Union[bytes, BinaryIO]):
-
-        # if isinstance(source, bytes):
-        #     data = source
-        # else:
-        #     # todo make this obsolete, only accept bytes
-        #     source.seek(0, io.SEEK_SET)
-        #     data = source.read()
-
+                 source: BinaryIO):
         self.fpk = fpk
-        self._source = source #@io.BytesIO = io.BytesIO(data)
+        self._source = source
 
         self._header: Optional[Header] = None
         self._data_read = False
@@ -320,7 +312,7 @@ class DecryptedIO:
         self._imprint_a_checked = False
         self._imprint_b_checked = False
 
-        pos = self._source.seek(0, io.SEEK_CUR)
+        pos = self._source.tell()
         if pos != 0:
             raise ValueError(f"Unexpected stream position {pos}")
 
