@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 from __future__ import annotations
 
 import io

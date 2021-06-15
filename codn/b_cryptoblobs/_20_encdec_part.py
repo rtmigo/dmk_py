@@ -6,11 +6,13 @@ import os
 import random
 import zlib
 from pathlib import Path
-from typing import Optional, NamedTuple, BinaryIO, Union
+from typing import Optional, NamedTuple, BinaryIO
 
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
+from codn._common import read_or_fail, InsufficientData, MAX_BLOB_SIZE, \
+    MAX_PART_CONTENT_SIZE
 from codn.a_base.kdf import CodenameKey
 from codn.a_utils.dirty_file import WritingToTempFile
 from codn.a_utils.randoms import set_random_last_modified
@@ -19,8 +21,6 @@ from codn.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
     uint24_to_bytes, bytes_to_uint8, bytes_to_uint24
 from codn.b_cryptoblobs._10_imprint import Imprint, pk_matches_imprint_bytes
 from codn.b_cryptoblobs._10_padding import IntroPadding
-from codn._common import read_or_fail, InsufficientData, MAX_BLOB_SIZE, \
-    MAX_PART_CONTENT_SIZE
 
 _DEBUG_PRINT = False
 
@@ -316,8 +316,6 @@ class DecryptedIO:
         if pos != 0:
             raise ValueError(f"Unexpected stream position {pos}")
 
-        # self.__read_imprint()
-
     def __read_and_decrypt(self, n: int) -> bytes:
         encrypted = self._source.read(n)
         assert encrypted is not None
@@ -328,14 +326,9 @@ class DecryptedIO:
     @property
     def belongs_to_namegroup(self) -> bool:
         # reads and interprets IMPRINT_A
-        # pos = self.source.seek(0, io.SEEK_CUR)
-        # if pos != 0:
-        #     raise ValueError(f"Unexpected stream position: {pos}")
 
         if self._belongs_to_namegroup is None:
             try:
-                self._source.seek(0, io.SEEK_SET)  # todo temp
-
                 pos = self._source.tell()
                 if pos != 0:
                     raise ValueError(f"Unexpected stream position {pos}")
@@ -484,47 +477,6 @@ class _DecryptedFile:
         target.write_bytes(self.data)
 
 
-# def encrypt_file_to_dir(source_file: Path, fpk: FilesetPrivateKey,
-#                         target_dir: Path,
-#                         data_version: int = 0) -> Path:
-#     # todo remove this method
-#     with source_file.open('rb') as f:
-#         return encrypt_io_to_dir(f,
-#                                  fpk,
-#                                  target_dir,
-#                                  data_version)
-#
-#
-# def encrypt_io_to_dir(source_io: BinaryIO,
-#                       fpk: FilesetPrivateKey,
-#                       target_dir: Path,
-#                       data_version: int = 0) -> Path:
-#     # todo remove
-#     raise NotImplemented
-#     fn = unique_filename(target_dir)  # / imprint.as_str
-#     assert looks_like_random_basename(fn.name)
-#     if fn.exists():
-#         raise HashCollision
-#     Encrypt(fpk, data_version).io_to_file(source_io, fn)
-#     return fn
-
-
-def is_file_from_namegroup(fpk: CodenameKey, file: Path) -> bool:
-    with file.open('rb') as f:
-        return DecryptedIO(fpk, f).belongs_to_namegroup
-
-
-def is_content(fpk: CodenameKey, file: Path) -> bool:
-    with file.open('rb') as f:
-        return DecryptedIO(fpk, f).contains_data
-
-
-def is_fake(fpk: CodenameKey, file: Path) -> bool:
-    with file.open('rb') as f:
-        dio = DecryptedIO(fpk, f)
-        return dio.belongs_to_namegroup and not dio.contains_data
-
-
 def is_content_io(fpk: CodenameKey, stream: BinaryIO) -> bool:
     return DecryptedIO(fpk, stream).contains_data
 
@@ -532,7 +484,3 @@ def is_content_io(fpk: CodenameKey, stream: BinaryIO) -> bool:
 def is_fake_io(fpk: CodenameKey, stream: BinaryIO) -> bool:
     dio = DecryptedIO(fpk, stream)
     return dio.belongs_to_namegroup and not dio.contains_data
-
-    # is_file_from_namegroup(fpk, f)
-    # with file.open('rb') as f:
-#        return DecryptedIO(fpk, f).contains_data

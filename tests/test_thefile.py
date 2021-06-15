@@ -6,9 +6,8 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from codn.a_base.kdf import FasterKDF
-
 from codn._the_file import TheFile
+from codn.a_base.kdf import FasterKDF
 from tests.common import gen_random_content, gen_random_names
 
 

@@ -3,7 +3,8 @@ import unittest
 import zlib
 from io import BytesIO
 
-from codn.b_storage_file._20_blobs_list_io import BlobsSequentialWriter, BlobsSequentialReader, BlobChecksumMismatch, \
+from codn.b_storage_file._20_blobs_list_io import BlobsSequentialWriter, \
+    BlobsSequentialReader, BlobChecksumMismatch, \
     BlobsIndexedReader
 
 
