@@ -90,29 +90,6 @@ My lover's jokes are not that funny
 
 # Under the hood
 
-## Encryption
-
-1) **URandom** creates 256-bit **salt** when we initialize the directory. The
-   salt is saved openly in one of the files. This salt never changes. It is
-   required for any other actions on the directory.
-
-2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
-   salted (1) codename.
-
-3) **Blake2b** computes 192-bit **hashes** from the private key (2) combined
-   with a 192-bit **nonce**. These hash+nonce pairs are openly saved to files
-   that contain encrypted entries.
-
-   Having the private key (2) and the nonce (3), we can recompute the same
-   hash (3) and check if the file contains it. If yes, then the file belongs to
-   the given codename.
-
-4) **ChaCha20** encrypts the entry data using the private key (2) and a newly
-   generated 64-bit nonce.
-
-5) **CRC-32** checksums (encrypted by ChaCha20) verify the integrity of the
-   decoded data.
-
 ## Obfuscation
 
 `codn` stores encrypted entries inside blobs. The number and size of blobs 
@@ -131,4 +108,27 @@ is no secret. Their contents are secret.
   are added, and some are removed 
 
 The file itself, at first glance, does not have format-identifying information, 
-and does not have any visible structure at all.
+and does not have any evident structure.
+
+## Encryption
+
+1) **URandom** creates 256-bit **salt** when we initialize the vault file. The
+   salt is saved openly in the file header. This salt never changes. It is
+   required for any other actions on the vault.
+
+2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
+   salted (1) codename.
+
+3) **Blake2b** computes 192-bit **hashes** from the private key (2) combined
+   with a 192-bit **nonce**. These hash+nonce pairs are openly saved to blobs
+   that contain encrypted entries.
+
+   Having the private key (2) and the nonce (3), we can recompute the same
+   hash (3) and check if the blob contains it. If yes, then the blob belongs to
+   the given codename.
+
+4) **ChaCha20** encrypts the blob data using the private key (2) and a newly
+   generated 64-bit nonce.
+
+5) **CRC-32** checksums (encrypted by ChaCha20) verify the integrity of the
+   decoded data.
