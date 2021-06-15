@@ -9,17 +9,16 @@ draft.**
 
 ---
 
-`codn` encrypts data entries. Entries can be added, updated, and removed. Entries
-are files or strings.
+`codn` encrypts data entries. Entries can be added, updated, and removed.
+Entries are files or strings.
 
 Each entry is independent and opens with a unique **codename**.
 
 Knowing one codename reveals nothing about other entries. Neither the user nor
-the utility has that information. It's tightly encrypted.
+the utility has that information. Everything in the vault either
+cryptographically secure or overly obfuscated. There is no table of contents and
+no master decryption keys.
 
-By design, `codn` reveals very little besides the particular entry.
-There is no table of contents and no master decryption keys. Even number 
-and size of entries are obfuscated.
 
 # Install
 
