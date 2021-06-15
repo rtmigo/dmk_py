@@ -37,6 +37,7 @@ class NameGroup:
 
         for idx in range(len(self.blobs)):
             input_io = self.blobs.io(idx)
+            assert input_io.tell() == 0
             dio = DecryptedIO(self.cnk, input_io)
             if not dio.belongs_to_namegroup:
                 continue
@@ -82,6 +83,8 @@ class NameGroup:
                 for gf in files_by_ver:
                     gf.is_fresh_data = True
                 break
+
+        #print("blobs", len(blobs), "items", len(self.items), "content", len(all_content_files), "versions", self.all_content_versions)
 
     @property
     def fresh_content_files(self) -> List[DecryptedIO]:

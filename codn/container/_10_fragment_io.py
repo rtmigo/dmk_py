@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import io
-#from abc import ABC
+# from abc import ABC
 from types import TracebackType
 from typing import BinaryIO, Optional, Type, Iterator, AnyStr, Iterable
 
@@ -24,10 +24,17 @@ class FragmentIO(BinaryIO):
     def __init__(self, outer: BinaryIO, start: int, length: int):
         super().__init__()
         self.outer = outer
-        self.inner_pos = 0  # local position
-        self.outer_start = start  # location of substream in the outer stream
-        self.length = length
-        self._seeked = False
+        self.__pos = 0  # local position
+        self.__start = start  # location of substream in the outer stream
+        self.__length = length
+
+    @property
+    def start(self) -> int:
+        return self.__start
+
+    @property
+    def length(self) -> int:
+        return self.__length
 
     # @property
     # def inner_pos(self) -> int:
@@ -39,30 +46,48 @@ class FragmentIO(BinaryIO):
 
     @property
     def _remaining_bytes(self):
-        result = self.length - self.inner_pos
+        result = self.length - self.__pos
         assert 0 <= result <= self.length
         return result
 
-    def _seek_from_start(self, offset: int):
-        offset = max(offset, 0)
-        offset = min(offset, self.length)
-        self.outer.seek(self.outer_start + offset, io.SEEK_SET)
-        self.inner_pos = offset
-        assert 0 <= self.inner_pos <= self.length
+    def _seek_to_pos(self):
+        self.__pos = max(self.__pos, 0)
+        self.__pos = min(self.__pos, self.length)
+        assert 0 <= self.__pos <= self.length
+        self.outer.seek(self.start + self.__pos, io.SEEK_SET)
+
+    def _bounded_pos(self, position: int) -> int:
+        position = max(position, 0)
+        position = min(position, self.length)
+        assert 0 <= position <= self.length
+        return position
 
     def seek(self, offset: int, whence: int = io.SEEK_SET) -> int:
-        self._seeked = True
+
         if whence == io.SEEK_SET:
             if offset < 0:
                 raise ValueError(f"negative seek value {offset}")
-            self._seek_from_start(offset)
+            # self._seek_from_start(offset)
+            self.__pos = self._bounded_pos(offset)
+
+            # it's strange, but even if offset is set past the end
+            # of the stream, BytesIO returns the offset, not the truncated
+            # position inside the stream
             return offset
         elif whence == io.SEEK_END:
-            new_pos = max(0, self.length + offset)
-            self._seek_from_start(new_pos)
-            return self.inner_pos
+            self.__pos = self._bounded_pos(max(0, self.length + offset))
+            # todo max unnecessary?
+            # self._seek_from_start(new_pos)
+            return self.__pos
+
+        elif whence == io.SEEK_CUR:
+            if offset == 0:
+                return self.__pos
+            else:
+                raise NotImplementedError(
+                    f"Not implemented offset!=0 with whence={whence}")
         else:
-            raise NotImplementedError(f"Not implemented for whence={whence}")
+            raise ValueError(whence)
 
     def read(self, size: int = -1) -> bytes:
 
@@ -74,11 +99,11 @@ class FragmentIO(BinaryIO):
             return b''
 
         # in case the position in the outer stream has been changed
-        self._seek_from_start(self.inner_pos)
+        self._seek_to_pos()
 
         buffer = self.outer.read(bytes_to_read)
-        self.inner_pos += len(buffer)
-        assert 0 <= self.inner_pos <= self.length
+        self.__pos += len(buffer)
+        assert 0 <= self.__pos <= self.length
         return buffer
 
     def __enter__(self) -> BinaryIO:
@@ -91,13 +116,13 @@ class FragmentIO(BinaryIO):
         raise NotImplementedError
 
     def flush(self) -> None:
-        raise NotImplementedError
+        self.outer.flush()
 
     def isatty(self) -> bool:
         raise NotImplementedError
 
     def readable(self) -> bool:
-        raise NotImplementedError
+        return self.outer.readable()
 
     def readline(self, limit: int = ...) -> AnyStr:
         raise NotImplementedError
@@ -109,13 +134,13 @@ class FragmentIO(BinaryIO):
         raise NotImplementedError
 
     def tell(self) -> int:
-        raise NotImplementedError
+        return self.__pos
 
     def truncate(self, size: Optional[int] = ...) -> int:
         raise NotImplementedError
 
     def writable(self) -> bool:
-        raise NotImplementedError
+        return self.outer.writable()
 
     def write(self, s: AnyStr) -> int:
         raise NotImplementedError

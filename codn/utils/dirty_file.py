@@ -18,7 +18,6 @@ class WritingToTempFile:
     def __init__(self, file: Path):
         self.final = file
         self.dirty = file.parent / (file.name + ".tmp")
-        assert not looks_like_random_basename(self.dirty.name)
 
     def __enter__(self):
         return self

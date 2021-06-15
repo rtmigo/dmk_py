@@ -64,7 +64,8 @@ class BlobsSequentialReader:
             raise InsufficientData(f'bytes read: {len(part_checksum_bytes)}')
 
         part_checksum = bytes_to_uint32(part_checksum_bytes)
-        part_length_obfuscated = bytes_to_uint16(read_or_fail(self.source_io, 2))
+        part_length_obfuscated = bytes_to_uint16(
+            read_or_fail(self.source_io, 2))
         part_length = (part_length_obfuscated ^ part_checksum) & 0xFFFF
 
         outer_stream_pos = self.source_io.seek(0, io.SEEK_CUR)
@@ -96,23 +97,43 @@ class BlobsIndexedReader:
     The blobs are just converted to FragmentIO and stored to the list.
     """
 
-    def __init__(self, source_io: BinaryIO):
+    def __init__(self, source_io: Optional[BinaryIO], close_stream=False):
+
+        self.source_io = source_io
+        self.close_stream = close_stream
 
         # The blobs list must start at the current stream position.
         # But not necessarily from the beginning of the stream.
 
-        br = BlobsSequentialReader(source_io)
         self._items: List[Tuple[FragmentIO, int]] = []
-        while True:
-            tpl = br.read_io()
-            if tpl is None:
-                break
-            self._items.append(tpl)
+
+        if source_io is not None:
+            br = BlobsSequentialReader(source_io)
+            while True:
+                tpl = br.read_io()
+                if tpl is None:
+                    break
+                self._items.append(tpl)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.close_stream:
+            self.source_io.close()
 
     def io(self, idx: int) -> FragmentIO:
         frio, crc = self._items[idx]
-        frio.seek(0, io.SEEK_SET)
+
+        # we will not actually actually use the fragment io, but return
+        # its copy
+
+        return FragmentIO(frio.outer, frio.start, frio.length)
+
+        #frio.seek(0, io.SEEK_SET)
         return frio
+
+    #def get_bytes(self, idx: ):
 
     def crc(self, idx: int) -> int:
         frio, crc = self._items[idx]

@@ -22,8 +22,8 @@ def name_group_to_content_blobs(ng: NameGroup) -> List[bytes]:
     result = list()
     for gf in ng.items:
         if gf.is_fresh_data:
-            gf.dio.source.seek(0, io.SEEK_SET)
-            result.append(gf.dio.source.read())
+            gf.dio._source.seek(0, io.SEEK_SET)
+            result.append(gf.dio._source.read())
     return result
 
 
@@ -93,6 +93,9 @@ class TestNamegroup(unittest.TestCase):
                     ng = NameGroup(r, pk)
                     self.assertEqual(ng.all_content_versions, {1})
                     found_1 = name_group_to_content_blobs(ng)
+
+                    self.assertEqual(len(ng.fresh_content_files),
+                                     len(found_1))
 
                 self.assertEqual(set(found_1),
                                  set(content_blobs_1))

@@ -95,7 +95,7 @@ class TestEncryptDecryptFiles(unittest.TestCase):
         finally:
             if decrypted_parts:
                 for s in decrypted_parts:
-                    s.source.close()
+                    s._source.close()
 
 
 if __name__ == "__main__":

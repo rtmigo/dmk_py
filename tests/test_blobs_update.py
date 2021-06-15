@@ -3,6 +3,7 @@
 import io
 import unittest
 from io import BytesIO
+from typing import BinaryIO
 
 from codn.container import BlobsIndexedReader, BlobsSequentialWriter
 from codn.cryptodir._10_kdf import FasterKDF, CodenameKey
@@ -24,7 +25,7 @@ from tests.common import testing_salt
 # def gen_empty_reader() -> BlobsIndexedReader:
 # = BlobsIndexedReader(BytesIO())
 
-def full_stream_to_bytes(stream: BytesIO) -> bytes:
+def full_stream_to_bytes(stream: BinaryIO) -> bytes:
     stream.seek(0, io.SEEK_SET)
     return stream.read()
 

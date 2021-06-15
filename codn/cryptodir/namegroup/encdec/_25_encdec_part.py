@@ -6,7 +6,7 @@ import os
 import random
 import zlib
 from pathlib import Path
-from typing import Optional, NamedTuple, BinaryIO
+from typing import Optional, NamedTuple, BinaryIO, Union
 
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
@@ -109,7 +109,8 @@ class Encrypt:
             raise ValueError(f"part_idx={part_idx}")
         if not 1 <= parts_len <= 0xFF + 1:
             raise ValueError(f"parts_len={parts_len}")
-        if part_size is not None and not (0 <= part_size <= MAX_PART_CONTENT_SIZE):
+        if part_size is not None and not (
+                0 <= part_size <= MAX_PART_CONTENT_SIZE):
             raise ValueError(f"part_size={part_size}")
 
         self.cnk = cnk
@@ -298,9 +299,19 @@ class DecryptedIO:
 
     def __init__(self,
                  fpk: CodenameKey,
-                 source: BinaryIO):
+                 source: Union[bytes, BinaryIO]):
+
+        if isinstance(source, bytes):
+            data = source
+        else:
+            # todo make this obsolete, only accept bytes
+            source.seek(0, io.SEEK_SET)
+            data = source.read()
+
+
+
         self.fpk = fpk
-        self.source = source
+        self._source: io.BytesIO = io.BytesIO(data)
 
         self._header: Optional[Header] = None
         self._data_read = False
@@ -311,10 +322,14 @@ class DecryptedIO:
         self._imprint_a_checked = False
         self._imprint_b_checked = False
 
+        pos = self._source.seek(0, io.SEEK_CUR)
+        if pos != 0:
+            raise ValueError(f"Unexpected stream position {pos}")
+
         # self.__read_imprint()
 
     def __read_and_decrypt(self, n: int) -> bytes:
-        encrypted = self.source.read(n)
+        encrypted = self._source.read(n)
         assert encrypted is not None
         if len(encrypted) < n:
             raise InsufficientData
@@ -323,11 +338,18 @@ class DecryptedIO:
     @property
     def belongs_to_namegroup(self) -> bool:
         # reads and interprets IMPRINT_A
+        # pos = self.source.seek(0, io.SEEK_CUR)
+        # if pos != 0:
+        #     raise ValueError(f"Unexpected stream position: {pos}")
+
         if self._belongs_to_namegroup is None:
             try:
-                if self.source.seek(0, io.SEEK_SET) != 0:
-                    raise ValueError("Unexpected stream position")
-                imp = read_or_fail(self.source, Imprint.FULL_LEN)
+                self._source.seek(0, io.SEEK_SET) # todo temp
+
+                pos = self._source.tell()
+                if pos != 0:
+                    raise ValueError(f"Unexpected stream position {pos}")
+                imp = read_or_fail(self._source, Imprint.FULL_LEN)
                 self._belongs_to_namegroup = \
                     pk_matches_imprint_bytes(self.fpk, imp)
             except InsufficientData:
@@ -344,7 +366,7 @@ class DecryptedIO:
 
         if self._contains_data is None:
             try:
-                imp = read_or_fail(self.source, Imprint.FULL_LEN)
+                imp = read_or_fail(self._source, Imprint.FULL_LEN)
                 self._contains_data = pk_matches_imprint_bytes(self.fpk, imp)
             except InsufficientData:
                 self._contains_data = False
@@ -365,7 +387,7 @@ class DecryptedIO:
 
     def __read_header(self) -> Header:
 
-        nonce = read_or_fail(self.source, ENCRYPTION_NONCE_LEN)
+        nonce = read_or_fail(self._source, ENCRYPTION_NONCE_LEN)
 
         self.cfg = Cryptographer(fpk=self.fpk, nonce=nonce)
 

@@ -130,3 +130,4 @@ def update_namegroup_b(cdk: CodenameKey,
                            target_io=temp_io)
                 temp_io.seek(0, io.SEEK_SET)
                 new_blobs.write_bytes(temp_io.read())
+    assert me.all_encrypted
