@@ -4,7 +4,7 @@
 import io
 # from abc import ABC
 from types import TracebackType
-from typing import BinaryIO, Optional, Type, Iterator, AnyStr, Iterable
+from typing import BinaryIO, Optional, Type, Iterator, AnyStr, Iterable, List
 
 
 class FragmentIO(BinaryIO):
@@ -127,7 +127,7 @@ class FragmentIO(BinaryIO):
     def readline(self, limit: int = ...) -> AnyStr:
         raise NotImplementedError
 
-    def readlines(self, hint: int = ...) -> list[AnyStr]:
+    def readlines(self, hint: int = ...) -> List[AnyStr]:
         raise NotImplementedError
 
     def seekable(self) -> bool:
