@@ -32,3 +32,4 @@ def create_fake_bytes(fpk: CodenameKey) -> bytes:
 
     return Imprint(fpk).as_bytes + get_random_bytes(
         target_size - Imprint.FULL_LEN)
+
