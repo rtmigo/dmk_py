@@ -3,23 +3,24 @@
 
 import io
 import os
+import random
 import zlib
 from pathlib import Path
-from typing import Optional, BinaryIO, NamedTuple
+from typing import Optional, NamedTuple, BinaryIO, Union
 
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
-from codn._common import read_or_fail, InsufficientData
-from codn.cryptodir._10_kdf import FilesetPrivateKey
-from codn.cryptodir.namegroup.imprint import Imprint, pk_matches_imprint_bytes
-from codn.cryptodir.namegroup.random_sizes import random_size_like_file_greater
-from codn.utils.dirty_file import WritingToTempFile
-from codn.utils.randoms import set_random_last_modified
-from ._10_padding import IntroPadding
-from ._20_byte_funcs import bytes_to_uint32, \
+from codn.a_base.kdf import CodenameKey
+from codn.a_utils.dirty_file import WritingToTempFile
+from codn.a_utils.randoms import set_random_last_modified
+from codn.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
     bytes_to_int64, uint32_to_bytes, int64_to_bytes, uint8_to_bytes, \
     uint24_to_bytes, bytes_to_uint8, bytes_to_uint24
+from codn.b_cryptoblobs._10_imprint import Imprint, pk_matches_imprint_bytes
+from codn.b_cryptoblobs._10_padding import IntroPadding
+from codn._common import read_or_fail, InsufficientData, MAX_BLOB_SIZE, \
+    MAX_PART_CONTENT_SIZE
 
 _DEBUG_PRINT = False
 
@@ -59,7 +60,7 @@ def bytes_to_str(lst: bytes):
 
 class Cryptographer:
     def __init__(self,
-                 fpk: FilesetPrivateKey,
+                 fpk: CodenameKey,
                  nonce: Optional[bytes]):
         self.fpk = fpk
         if nonce is not None:
@@ -96,7 +97,8 @@ def get_stream_size(stream: BinaryIO) -> int:
 
 
 class Encrypt:
-    def __init__(self, fpk,
+    def __init__(self,
+                 cnk: CodenameKey,
                  data_version: int = 0,
                  # original_size: int = None,
                  part_idx: int = 0,
@@ -107,10 +109,11 @@ class Encrypt:
             raise ValueError(f"part_idx={part_idx}")
         if not 1 <= parts_len <= 0xFF + 1:
             raise ValueError(f"parts_len={parts_len}")
-        if part_size is not None and not (0 <= part_size <= 0xFFFFFF):
+        if part_size is not None and not (
+                0 <= part_size <= MAX_PART_CONTENT_SIZE):
             raise ValueError(f"part_size={part_size}")
 
-        self.fpk = fpk
+        self.cnk = cnk
         self.data_version = data_version
 
         # self.original_size = original_size
@@ -181,8 +184,8 @@ class Encrypt:
 
         """
 
-        imprint_a = Imprint(self.fpk)
-        imprint_b = Imprint(self.fpk)
+        imprint_a = Imprint(self.cnk)
+        imprint_b = Imprint(self.cnk)
         assert imprint_a.as_bytes != imprint_b.as_bytes
 
         # if total_size is None:
@@ -225,7 +228,7 @@ class Encrypt:
         body_bytes = read_or_fail(source, self.part_size)
         body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
 
-        cryptographer = Cryptographer(fpk=self.fpk,
+        cryptographer = Cryptographer(fpk=self.cnk,
                                       nonce=None)
 
         if _DEBUG_PRINT:
@@ -244,6 +247,8 @@ class Encrypt:
 
         outfile.write(cryptographer.nonce)
 
+        assert outfile.seek(0, io.SEEK_CUR) <= 1024
+
         def encrypt_and_write(data: bytes):
             outfile.write(cryptographer.cipher.encrypt(data))
 
@@ -257,10 +262,15 @@ class Encrypt:
         # adding random data to the end of file.
         # This data is not encrypted, it's from urandom (is it ok?)
         current_size = outfile.seek(0, os.SEEK_CUR)
-        target_size = random_size_like_file_greater(current_size)
+        assert current_size <= MAX_BLOB_SIZE, current_size
+
+        target_size = random.randint(current_size, MAX_BLOB_SIZE)
+
         padding_size = target_size - current_size
         assert padding_size >= 0
         outfile.write(get_random_bytes(padding_size))
+
+        assert outfile.seek(0, os.SEEK_CUR) <= MAX_BLOB_SIZE
 
     def io_to_file(self,
                    source_io: BinaryIO,
@@ -288,10 +298,18 @@ class DecryptedIO:
     """
 
     def __init__(self,
-                 fpk: FilesetPrivateKey,
-                 source: BinaryIO):
+                 fpk: CodenameKey,
+                 source: Union[bytes, BinaryIO]):
+
+        if isinstance(source, bytes):
+            data = source
+        else:
+            # todo make this obsolete, only accept bytes
+            source.seek(0, io.SEEK_SET)
+            data = source.read()
+
         self.fpk = fpk
-        self.source = source
+        self._source: io.BytesIO = io.BytesIO(data)
 
         self._header: Optional[Header] = None
         self._data_read = False
@@ -302,10 +320,15 @@ class DecryptedIO:
         self._imprint_a_checked = False
         self._imprint_b_checked = False
 
+        pos = self._source.seek(0, io.SEEK_CUR)
+        if pos != 0:
+            raise ValueError(f"Unexpected stream position {pos}")
+
         # self.__read_imprint()
 
     def __read_and_decrypt(self, n: int) -> bytes:
-        encrypted = self.source.read(n)
+        encrypted = self._source.read(n)
+        assert encrypted is not None
         if len(encrypted) < n:
             raise InsufficientData
         return self.cfg.cipher.decrypt(encrypted)
@@ -313,9 +336,18 @@ class DecryptedIO:
     @property
     def belongs_to_namegroup(self) -> bool:
         # reads and interprets IMPRINT_A
+        # pos = self.source.seek(0, io.SEEK_CUR)
+        # if pos != 0:
+        #     raise ValueError(f"Unexpected stream position: {pos}")
+
         if self._belongs_to_namegroup is None:
             try:
-                imp = read_or_fail(self.source, Imprint.FULL_LEN)
+                self._source.seek(0, io.SEEK_SET)  # todo temp
+
+                pos = self._source.tell()
+                if pos != 0:
+                    raise ValueError(f"Unexpected stream position {pos}")
+                imp = read_or_fail(self._source, Imprint.FULL_LEN)
                 self._belongs_to_namegroup = \
                     pk_matches_imprint_bytes(self.fpk, imp)
             except InsufficientData:
@@ -332,7 +364,7 @@ class DecryptedIO:
 
         if self._contains_data is None:
             try:
-                imp = read_or_fail(self.source, Imprint.FULL_LEN)
+                imp = read_or_fail(self._source, Imprint.FULL_LEN)
                 self._contains_data = pk_matches_imprint_bytes(self.fpk, imp)
             except InsufficientData:
                 self._contains_data = False
@@ -353,7 +385,7 @@ class DecryptedIO:
 
     def __read_header(self) -> Header:
 
-        nonce = read_or_fail(self.source, ENCRYPTION_NONCE_LEN)
+        nonce = read_or_fail(self._source, ENCRYPTION_NONCE_LEN)
 
         self.cfg = Cryptographer(fpk=self.fpk, nonce=nonce)
 
@@ -440,7 +472,7 @@ class _DecryptedFile:
     # todo remove all usages of this class
     def __init__(self,
                  source_file: Path,
-                 fpk: FilesetPrivateKey,
+                 fpk: CodenameKey,
                  decrypt_body=True):
 
         with source_file.open('rb') as f:
@@ -485,21 +517,30 @@ class _DecryptedFile:
 #     return fn
 
 
-def is_file_from_namegroup(fpk: FilesetPrivateKey, file: Path) -> bool:
+def is_file_from_namegroup(fpk: CodenameKey, file: Path) -> bool:
     with file.open('rb') as f:
         return DecryptedIO(fpk, f).belongs_to_namegroup
 
 
-def is_content(fpk: FilesetPrivateKey, file: Path) -> bool:
+def is_content(fpk: CodenameKey, file: Path) -> bool:
     with file.open('rb') as f:
         return DecryptedIO(fpk, f).contains_data
 
 
-def is_fake(fpk: FilesetPrivateKey, file: Path) -> bool:
+def is_fake(fpk: CodenameKey, file: Path) -> bool:
     with file.open('rb') as f:
         dio = DecryptedIO(fpk, f)
         return dio.belongs_to_namegroup and not dio.contains_data
 
-        # is_file_from_namegroup(fpk, f)
+
+def is_content_io(fpk: CodenameKey, stream: BinaryIO) -> bool:
+    return DecryptedIO(fpk, stream).contains_data
+
+
+def is_fake_io(fpk: CodenameKey, stream: BinaryIO) -> bool:
+    dio = DecryptedIO(fpk, stream)
+    return dio.belongs_to_namegroup and not dio.contains_data
+
+    # is_file_from_namegroup(fpk, f)
     # with file.open('rb') as f:
 #        return DecryptedIO(fpk, f).contains_data

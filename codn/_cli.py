@@ -4,10 +4,10 @@ import time
 
 import click
 
+from codn.a_base.kdf import CodenameKey
+from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn._common import PK_SALT_SIZE
 from codn._main import Main
-from codn.cryptodir._10_kdf import FilesetPrivateKey
-from codn.utils.randoms import get_noncrypt_random_bytes
 
 
 @click.command(hidden=True)
@@ -17,7 +17,7 @@ def bench():
     random_salt = get_noncrypt_random_bytes(PK_SALT_SIZE)
     for i in range(4):
         t = time.monotonic()
-        FilesetPrivateKey(str(i), random_salt)
+        CodenameKey(str(i), random_salt)
         d = time.monotonic() - t
         a.append(d)
         print(f'{i + 1} {d:.3f} sec')
@@ -76,20 +76,20 @@ from ._constants import __version__, __copyright__
 
 @click.group()
 @click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
-def cli():
+def codn_cli():
     """
     See https://github.com/rtmigo/ksf_py#readme
     """
     pass
 
 
-cli.add_command(bench)
-cli.add_command(config)
-cli.add_command(set_cmd)
-cli.add_command(get)
-cli.add_command(eval)
-cli.add_command(clear)
+codn_cli.add_command(bench)
+codn_cli.add_command(config)
+codn_cli.add_command(set_cmd)
+codn_cli.add_command(get)
+codn_cli.add_command(eval)
+codn_cli.add_command(clear)
 
 if __name__ == '__main__':
     # config = Config()
-    cli()
+    codn_cli()

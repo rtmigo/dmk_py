@@ -5,8 +5,8 @@ import unittest
 from difflib import SequenceMatcher
 
 from codn._common import bytes_to_fn_str, fnstr_to_bytes
-from codn.cryptodir._10_kdf import FasterKDF, FilesetPrivateKey
-from codn.cryptodir.namegroup.imprint import Imprint, \
+from codn.a_base.kdf import FasterKDF, CodenameKey
+from codn.b_cryptoblobs._10_imprint import Imprint, \
     pk_matches_imprint_bytes
 from tests.common import testing_salt
 
@@ -44,13 +44,13 @@ class Test(unittest.TestCase):
         self.assertEqual(fnstr_to_bytes(encoded), b)
 
     def test_key_not_in_imprint(self):
-        pk = FilesetPrivateKey("pass", testing_salt)
+        pk = CodenameKey("pass", testing_salt)
         imp = Imprint(pk)
 
         self.assertLess(lccs(pk.as_bytes, imp.as_bytes), 4)
 
     def test_bytes_to_nonce(self):
-        pk = FilesetPrivateKey("pass", testing_salt)
+        pk = CodenameKey("pass", testing_salt)
         imp = Imprint(pk)
 
         self.assertIsInstance(imp.nonce, bytes)
@@ -74,27 +74,27 @@ class Test(unittest.TestCase):
 
     def test_match_bytes(self):
         name = 'abc.txt'
-        pk = FilesetPrivateKey(name, testing_salt)
+        pk = CodenameKey(name, testing_salt)
         imp_bytes = Imprint(pk).as_bytes
 
         self.assertTrue(pk_matches_imprint_bytes(pk, imp_bytes))
         self.assertFalse(
             pk_matches_imprint_bytes(
-                FilesetPrivateKey('other.txt', testing_salt), imp_bytes))
+                CodenameKey('other.txt', testing_salt), imp_bytes))
         self.assertFalse(
             pk_matches_imprint_bytes(
-                FilesetPrivateKey('another.txt', testing_salt),
+                CodenameKey('another.txt', testing_salt),
                 imp_bytes))
 
     def test_imporint_string_not_too_long(self):
         with FasterKDF():
             for i in range(50):
                 name = f'abc{i}.txt'
-                pk = FilesetPrivateKey(name, testing_salt)
+                pk = CodenameKey(name, testing_salt)
                 self.assertLess(len(Imprint(pk).as_str), 65)
 
     def test_encode_each_time_different(self):
-        pk = FilesetPrivateKey('the_same_key', testing_salt)
+        pk = CodenameKey('the_same_key', testing_salt)
         with FasterKDF():
             s = set()
             for _ in range(10):
@@ -104,7 +104,7 @@ class Test(unittest.TestCase):
     def test_hash_each_time_different(self):
         with FasterKDF():
             s = set()
-            pk = FilesetPrivateKey('the_same_key', testing_salt)
+            pk = CodenameKey('the_same_key', testing_salt)
             for _ in range(10):
                 s.add(Imprint(pk).as_bytes)
             self.assertEqual(len(s), 10)

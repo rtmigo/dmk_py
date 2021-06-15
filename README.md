@@ -33,6 +33,28 @@ decrypts it. It is a secret. And it must be unique.
 For example, information about a bitcoin wallet can be stored under codename
 `"b1TC01n"` or `"bitcoin_secret123"`.
 
+# Storage location
+
+Encrypted files are stored in a directory on the file system.
+
+If the `-d` argument is given, it specifies the directory.
+   
+``` bash
+$ codn get -d /path/to/storage -n codename123  
+```
+   
+If `-d` is not specified, the path is read from `$CODN_DIR` environment
+variable.
+
+``` bash
+$ export CODN_DIR=/path/to/storage
+$ codn get -n codename123  
+```
+
+Keep in mind that mixing storage files with other files is not desirable. 
+Therefore, you should not save other files to the directory. This can lead to 
+data not being correctly encrypted or decrypted.
+
 # Save and read text
 
 In one line:

@@ -1,6 +1,6 @@
 import unittest
 
-from codn.cryptodir.namegroup.encdec._20_byte_funcs import uint16_to_bytes, \
+from codn.b_cryptoblobs._10_byte_funcs import uint16_to_bytes, \
     bytes_to_uint16
 
 

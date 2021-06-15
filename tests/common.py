@@ -4,7 +4,7 @@ from base64 import b64encode
 from pathlib import Path
 from typing import List, Set
 
-from codn.utils.randoms import get_noncrypt_random_bytes
+from codn.a_utils.randoms import get_noncrypt_random_bytes
 
 testing_salt = b"\xef\x87\xffr_\xed\xe2\xc5\x92\x11\x8e'F\xe6-C\xf1" \
                b"\xa9\xd4\x9fu\xc8\x05Y\x8b\xc3\x94\xd1\xbd\x10#B"

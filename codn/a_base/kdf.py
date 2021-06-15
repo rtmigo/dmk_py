@@ -9,7 +9,7 @@ from Crypto.Protocol.KDF import scrypt
 from codn._common import PK_SALT_SIZE
 
 
-class FilesetPrivateKey:
+class CodenameKey:
     """The 256-bit private key.
 
     Fileset is a set of files related to the same item. One of these
@@ -40,7 +40,7 @@ class FilesetPrivateKey:
             password,
             salt,
             size=32,
-            pwr=FilesetPrivateKey._power)
+            pwr=CodenameKey._power)
 
 
 @lru_cache(10000)
@@ -68,11 +68,11 @@ class FasterKDF:
         self.original: Optional[int] = None
 
     def start(self):
-        self.original = FilesetPrivateKey._power
-        FilesetPrivateKey._power = 2
+        self.original = CodenameKey._power
+        CodenameKey._power = 2
 
     def end(self):
-        FilesetPrivateKey._power = self.original
+        CodenameKey._power = self.original
 
     def __enter__(self):
         self.start()

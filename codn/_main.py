@@ -2,9 +2,11 @@ import os
 import shutil
 import subprocess
 from io import BytesIO
+from pathlib import Path
 
 from codn._config import Config
-from codn.cryptodir import CryptoDir
+# from codn.cryptodir import CryptoDir
+from codn._the_file import TheFile
 
 
 def _confirm(txt: str):
@@ -22,16 +24,17 @@ class ItemNotFoundExit(SystemExit):
 class Main:
     def __init__(self):
         self.config = Config()
+        self.file_path = Path("/tmp/stub")  # stub
 
     def set(self, name: str, value: str):
         # todo test
-        crd = CryptoDir(self.config.data_dir)
+        crd = TheFile(self.file_path)
         with BytesIO(value.encode('utf-8')) as source_io:
             crd.set_from_io(name, source_io)
 
     def get(self, name: str):
         # todo test
-        crd = CryptoDir(self.config.data_dir)
+        crd = TheFile(self.file_path)
         decrypted_bytes = crd.get(name)
         if decrypted_bytes is None:
             raise ItemNotFoundExit
@@ -39,7 +42,7 @@ class Main:
 
     def eval(self, name: str):
         # todo test
-        crd = CryptoDir(self.config.data_dir)
+        crd = TheFile(self.file_path)
         decrypted_bytes = crd.get(name)
         if decrypted_bytes is None:
             raise ItemNotFoundExit
