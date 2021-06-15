@@ -301,15 +301,15 @@ class DecryptedIO:
                  fpk: CodenameKey,
                  source: Union[bytes, BinaryIO]):
 
-        if isinstance(source, bytes):
-            data = source
-        else:
-            # todo make this obsolete, only accept bytes
-            source.seek(0, io.SEEK_SET)
-            data = source.read()
+        # if isinstance(source, bytes):
+        #     data = source
+        # else:
+        #     # todo make this obsolete, only accept bytes
+        #     source.seek(0, io.SEEK_SET)
+        #     data = source.read()
 
         self.fpk = fpk
-        self._source: io.BytesIO = io.BytesIO(data)
+        self._source = source #@io.BytesIO = io.BytesIO(data)
 
         self._header: Optional[Header] = None
         self._data_read = False
