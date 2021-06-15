@@ -1,15 +1,32 @@
 import io
+import random
 import unittest
 import zlib
 from io import BytesIO
 
 from codn.b_storage_file._20_blobs_list_io import BlobsSequentialWriter, \
     BlobsSequentialReader, BlobChecksumMismatch, \
-    BlobsIndexedReader
+    BlobsIndexedReader, _obfuscate_size
 
 
 class TestBlobsListFile(unittest.TestCase):
 
+    def test_obfuscate_size_const(self):
+
+        x = 0x000A
+        obfuscated = 0xF4A3
+        crc = 0x1B83EF2A
+
+        self.assertEqual(_obfuscate_size(_obfuscate_size(x, crc), crc), x)
+        self.assertEqual(_obfuscate_size(x, crc), obfuscated)
+
+    def test_obfuscate_size_list(self):
+
+        for x in [0x0000, 0x1234, 0xFFFF]:
+            for _ in range(3):
+                crc = random.randint(0, 0xFFFFFFFF)
+                self.assertEqual(_obfuscate_size(_obfuscate_size(x, crc), crc),
+                                 x)
 
     def test_write_read_bytes(self):
         with BytesIO() as large_io:
@@ -64,8 +81,6 @@ class TestBlobsListFile(unittest.TestCase):
 
             large_io.seek(blobs_start_idx, io.SEEK_SET)
             bir = BlobsIndexedReader(large_io)
-
-            #self.fail()
 
             with self.subTest("Read content"):
                 self.assertEqual(bir.io(1).read(), b'hello')
