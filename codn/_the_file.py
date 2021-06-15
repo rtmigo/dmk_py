@@ -5,7 +5,7 @@ from typing import BinaryIO, Optional
 
 from Crypto.Random import get_random_bytes
 
-from .a_base.kdf import CodenameKey
+from .a_base._10_kdf import CodenameKey
 from .a_utils.dirty_file import WritingToTempFile
 from .b_cryptoblobs import decrypt_from_dios
 from .b_storage_file import StorageFileReader, StorageFileWriter, \
@@ -62,11 +62,11 @@ class TheFile:
         with self._old_blobs() as old_blobs:
             ng = NameGroup(old_blobs, ck)
 
-            if not ng.fresh_content_files:
+            if not ng.fresh_content_dios:
                 # print(f"No fresh content case blobs: {len(old_blobs)}")
                 return None
 
             with BytesIO() as decrypted:
-                decrypt_from_dios(ng.fresh_content_files, decrypted)
+                decrypt_from_dios(ng.fresh_content_dios, decrypted)
                 decrypted.seek(0, io.SEEK_SET)
                 return decrypted.read()

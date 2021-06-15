@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import io
-# from abc import ABC
 from types import TracebackType
 from typing import BinaryIO, Optional, Type, Iterator, AnyStr, Iterable, List
 
@@ -16,14 +15,9 @@ class FragmentIO(BinaryIO):
     only set the position within the fragment.
     """
 
-    def __exit__(self, t: Optional[Type[BaseException]],
-                 value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> Optional[bool]:
-        pass
-
-    def __init__(self, outer: BinaryIO, start: int, length: int):
+    def __init__(self, underlying: BinaryIO, start: int, length: int):
         super().__init__()
-        self.outer = outer
+        self.underlying = underlying
         self.__pos = 0  # local position
         self.__start = start  # location of substream in the outer stream
         self.__length = length
@@ -54,7 +48,7 @@ class FragmentIO(BinaryIO):
         self.__pos = max(self.__pos, 0)
         self.__pos = min(self.__pos, self.length)
         assert 0 <= self.__pos <= self.length
-        self.outer.seek(self.start + self.__pos, io.SEEK_SET)
+        self.underlying.seek(self.start + self.__pos, io.SEEK_SET)
 
     def _bounded_pos(self, position: int) -> int:
         position = max(position, 0)
@@ -69,11 +63,14 @@ class FragmentIO(BinaryIO):
                 raise ValueError(f"negative seek value {offset}")
             # self._seek_from_start(offset)
             self.__pos = self._bounded_pos(offset)
+            return self.__pos
 
-            # it's strange, but even if offset is set past the end
-            # of the stream, BytesIO returns the offset, not the truncated
-            # position inside the stream
-            return offset
+            # # unlik
+            #
+            # # it's strange, but even if offset is set past the end
+            # # of the stream, BytesIO returns the offset, not the truncated
+            # # position inside the stream
+            # return offset
         elif whence == io.SEEK_END:
             self.__pos = self._bounded_pos(max(0, self.length + offset))
             # todo max unnecessary?
@@ -101,13 +98,21 @@ class FragmentIO(BinaryIO):
         # in case the position in the outer stream has been changed
         self._seek_to_pos()
 
-        buffer = self.outer.read(bytes_to_read)
+        buffer = self.underlying.read(bytes_to_read)
         self.__pos += len(buffer)
         assert 0 <= self.__pos <= self.length
         return buffer
 
+    def write(self, s: AnyStr) -> int:
+        raise NotImplementedError
+
     def __enter__(self) -> BinaryIO:
         return self
+
+    def __exit__(self, t: Optional[Type[BaseException]],
+                 value: Optional[BaseException],
+                 traceback: Optional[TracebackType]) -> Optional[bool]:
+        pass
 
     def close(self) -> None:
         pass
@@ -116,13 +121,13 @@ class FragmentIO(BinaryIO):
         raise NotImplementedError
 
     def flush(self) -> None:
-        self.outer.flush()
+        self.underlying.flush()
 
     def isatty(self) -> bool:
         raise NotImplementedError
 
     def readable(self) -> bool:
-        return self.outer.readable()
+        return self.underlying.readable()
 
     def readline(self, limit: int = ...) -> AnyStr:
         raise NotImplementedError
@@ -140,10 +145,7 @@ class FragmentIO(BinaryIO):
         raise NotImplementedError
 
     def writable(self) -> bool:
-        return self.outer.writable()
-
-    def write(self, s: AnyStr) -> int:
-        raise NotImplementedError
+        return self.underlying.writable()
 
     def writelines(self, lines: Iterable[AnyStr]) -> None:
         raise NotImplementedError

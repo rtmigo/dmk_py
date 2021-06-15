@@ -9,12 +9,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Iterable
 
-from codn.a_base.kdf import FasterKDF, CodenameKey
+from codn.a_base._10_kdf import FasterKDF, CodenameKey
 from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn.b_cryptoblobs._30_encdec_multipart import MultipartEncryptor
 from codn.b_storage_file import BlobsIndexedReader, BlobsSequentialWriter
 from codn.c_namegroups._namegroup import NameGroup
-from codn.c_namegroups.fakes import create_fake_bytes
+from codn.c_namegroups._fakes import create_fake_bytes
 from tests.common import testing_salt
 
 
@@ -56,7 +56,7 @@ class TestNamegroup(unittest.TestCase):
                 ng = NameGroup(reader, pk)
                 self.assertEqual(ng.all_content_versions, set())
                 self.assertEqual(len(ng.items), 0)
-                self.assertEqual(len(ng.fresh_content_files), 0)
+                self.assertEqual(len(ng.fresh_content_dios), 0)
                 # found_1 = name_group_to_content_files(ng)
 
     def test_namegroup_finds_content(self):
@@ -94,7 +94,7 @@ class TestNamegroup(unittest.TestCase):
                     self.assertEqual(ng.all_content_versions, {1})
                     found_1 = name_group_to_content_blobs(ng)
 
-                    self.assertEqual(len(ng.fresh_content_files),
+                    self.assertEqual(len(ng.fresh_content_dios),
                                      len(found_1))
 
                 self.assertEqual(set(found_1),
