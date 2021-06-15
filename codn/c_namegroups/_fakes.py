@@ -9,8 +9,6 @@ from codn.a_base import CodenameKey, Imprint
 from codn._common import MAX_BLOB_SIZE
 
 
-
-
 def create_fake_bytes(fpk: CodenameKey) -> bytes:
     """Creates a fake file.
 

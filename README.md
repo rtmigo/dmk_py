@@ -18,8 +18,8 @@ Knowing one codename reveals nothing about other entries. Neither the user nor
 the utility has that information. It's tightly encrypted.
 
 By design, `codn` reveals very little besides the particular entry.
-There is no table of contents and no master decryption keys. Even number 
-and size of entries are obfuscated.
+Number and size of entries are obfuscated.
+There is no table of contents and no master decryption keys. 
 
 # Install
 
