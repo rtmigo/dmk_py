@@ -16,7 +16,7 @@ Each entry is independent and protected with a unique **codename**. The codename
 serves as a name and password at the same time.
 
 Codename allows access to one entry. It reveals nothing about other entries,
-even whether they exist. Neither the user nor `codn` has that information. The
+even whether they exist. The
 vault is cryptographically secure and overly obfuscated. There is no table of
 contents and no master decryption keys.
 
@@ -127,9 +127,8 @@ The payload is smaller than the vault size. Only this is known for certain.
 
 The vault file format is virtually **indistinguishable from random data**.
 
-The file has no header, no constant bytes (or even bits), no block boundaries
-are indicated. File size will not give clues: the file is randomly padded with a
-size that is not a multiple of the block.
+The file has no header, no constant bytes (or even bits), no block boundaries. File size will not give clues: the file is randomly padded with a
+size that is not a multiple of a block.
 
 The only predictable part of the file is the format version number encoded in
 the first two bytes. However, even the first two bytes are not constant.
