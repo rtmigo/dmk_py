@@ -6,11 +6,12 @@ import unittest
 from io import BytesIO
 from typing import List, Optional
 
+from codn._common import MAX_CLUSTER_CONTENT_SIZE
 from codn.a_base._10_kdf import FasterKDF, CodenameKey
 from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn.b_cryptoblobs import DecryptedIO
 from codn.b_cryptoblobs._30_encdec_multipart import decrypt_from_dios, \
-    split_random_sizes, MultipartEncryptor
+    split_random_sizes, MultipartEncryptor, split_cluster_sizes
 from tests.common import testing_salt
 
 
@@ -34,7 +35,36 @@ class TestEncryptDecryptFiles(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls.faster.end()
 
+    def test_split_cluster_sizes(self):
+
+        sizes = [0, 1,
+                 MAX_CLUSTER_CONTENT_SIZE - 1,
+                 MAX_CLUSTER_CONTENT_SIZE,
+                 MAX_CLUSTER_CONTENT_SIZE + 1]
+        for _ in range(1000):
+            sizes.append(random.randint(1, 1024*1024))
+
+        for s in sizes:
+            with self.subTest(f"Size {s}"):
+                parts = split_cluster_sizes(s)
+                # at least one part
+                self.assertGreaterEqual(len(parts), 1)
+                # sum match
+                self.assertEqual(sum(parts), s)
+                # it's only 1 or 2 lengths
+                self.assertLessEqual(len(set(parts)), 2)
+                self.assertGreaterEqual(len(set(parts)), 1)
+                # each not larger than allowed size
+                for p in parts:
+                    self.assertGreaterEqual(p, 0)
+                    self.assertLessEqual(p, MAX_CLUSTER_CONTENT_SIZE)
+                # if zero, it is the only element
+                if 0 in parts:
+                    self.assertEqual(len(parts), 1)
+
+
     def test_split_random_sizes(self):
+        # todo remove
         N = 999999
         a = split_random_sizes(N)
         b = split_random_sizes(N)

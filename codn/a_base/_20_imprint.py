@@ -5,8 +5,10 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from codn._common import bytes_to_fn_str, blake192, BASENAME_SIZE
+from codn._common import bytes_to_fn_str, blake192,  blake256
 from codn.a_base._10_kdf import CodenameKey
+
+
 
 
 class Imprint:
@@ -33,8 +35,8 @@ class Imprint:
 
     __slots__ = ['__private_key', '__salt', '__as_bytes', '__as_str']
 
-    NONCE_LEN = 24
-    DIGEST_LEN = 24
+    NONCE_LEN = 32
+    DIGEST_LEN = 32
     FULL_LEN = NONCE_LEN + DIGEST_LEN
 
     def __init__(self, pk: CodenameKey, nonce: bytes = None):
@@ -59,14 +61,16 @@ class Imprint:
     def as_bytes(self) -> bytes:
         if self.__as_bytes is None:
             self.__as_bytes = \
-                blake192(self.private_key.as_bytes, self.nonce) + self.nonce
-            assert len(self.__as_bytes) == Imprint.FULL_LEN
+                blake256(self.private_key.as_bytes, self.nonce) + self.nonce
+            assert len(self.__as_bytes) == Imprint.FULL_LEN, \
+                f"len={len(self.__as_bytes)}"
         return self.__as_bytes
 
     @property
     def as_str(self) -> str:
         """Returns the imprint as a string that can be used
         as a filename."""
+        # unused
         if self.__as_str is None:
             self.__as_str = bytes_to_fn_str(self.as_bytes)
         return self.__as_str
@@ -78,7 +82,7 @@ class Imprint:
         return h[-Imprint.NONCE_LEN:]
 
 
-assert Imprint.FULL_LEN == BASENAME_SIZE
+#assert Imprint.FULL_LEN == BASENAME_SIZE
 
 
 def pk_matches_imprint_bytes(pk: CodenameKey, imprint: bytes) -> bool:

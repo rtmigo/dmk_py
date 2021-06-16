@@ -6,7 +6,7 @@ import random
 import unittest
 from io import BytesIO
 
-from codn._common import MAX_BLOB_SIZE, MAX_PART_CONTENT_SIZE
+from codn._common import MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
 from codn.a_base._10_kdf import FasterKDF, CodenameKey
 from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn.b_cryptoblobs._20_encdec_part import Encrypt, \
@@ -64,7 +64,7 @@ class TestEncryptDecrypt(unittest.TestCase):
 
     def test_encdec_empty_data(self):
         self._encrypt_decrypt('empty', b'')
-
+    #
     def test_encdec_part(self):
         dec = self._encrypt_decrypt('name', b'0123abc000',
                                     pos=4,
@@ -72,7 +72,7 @@ class TestEncryptDecrypt(unittest.TestCase):
                                     part_size=3,
                                     part_idx=2)
         self.assertEqual(dec, b'abc')
-
+    #
     def test_encdec_part_sized_0(self):
         dec = self._encrypt_decrypt('name', b'0123abc000',
                                     pos=4,
@@ -80,17 +80,17 @@ class TestEncryptDecrypt(unittest.TestCase):
                                     part_size=0,
                                     part_idx=2)
         self.assertEqual(dec, b'')
-
+    #
     def test_encdec_part_sized_max(self):
-        buf = b'0' * (MAX_PART_CONTENT_SIZE * 2)
+        buf = b'0' * (MAX_CLUSTER_CONTENT_SIZE * 2)
         for _ in range(25):
             # catching random overflows
             self._encrypt_decrypt('name', buf,
                                   pos=0,
                                   parts_len=5,
-                                  part_size=MAX_PART_CONTENT_SIZE,
+                                  part_size=MAX_CLUSTER_CONTENT_SIZE,
                                   part_idx=2)
-
+    #
     # @unittest.skip('temp')
     def test_encdec_part_random(self):
         for _ in range(1000):
@@ -99,7 +99,7 @@ class TestEncryptDecrypt(unittest.TestCase):
                            for _ in range(name_len))
             assert len(name) == name_len
 
-            full_original_len = random.randint(0, 2048)
+            full_original_len = random.randint(0, MAX_CLUSTER_CONTENT_SIZE)
             full_original = get_noncrypt_random_bytes(full_original_len)
 
             if full_original_len > 0:
@@ -119,7 +119,7 @@ class TestEncryptDecrypt(unittest.TestCase):
                                   parts_len=parts_len,
                                   part_size=part_size,
                                   part_idx=part_idx)
-
+    #
     def _encrypt_decrypt(self,
                          name: str,
                          body: bytes,
@@ -153,6 +153,7 @@ class TestEncryptDecrypt(unittest.TestCase):
                     .io_to_io(original_io, encrypted_io)
                 encrypted_io.seek(0)
                 encrypted = encrypted_io.read()
+                self.assertEqual(len(encrypted), CLUSTER_SIZE)
 
         # checking that the original content can be found in original file,
         # but not in the encrypted file
@@ -167,6 +168,10 @@ class TestEncryptDecrypt(unittest.TestCase):
                 with BytesIO(encrypted) as input_io:
                     DecryptedIO(wrong_key, input_io).read_data()
 
+        # we did not accidentally save the private key to the encrypted data
+        self.assertNotIn(fpk.as_bytes, encrypted)
+
+
         with BytesIO(encrypted) as input_io:
             df = DecryptedIO(fpk, input_io)
             self.assertEqual(df.header.data_size, len(body))
@@ -180,7 +185,8 @@ class TestEncryptDecrypt(unittest.TestCase):
             decrypted_part_content = df.read_data()
             self.assertEqual(decrypted_part_content, expected_part_content)
 
-        self.assertLessEqual(len(decrypted_part_content), MAX_BLOB_SIZE)
+        self.assertLessEqual(len(decrypted_part_content),
+                             MAX_CLUSTER_CONTENT_SIZE)
 
         return decrypted_part_content
 
