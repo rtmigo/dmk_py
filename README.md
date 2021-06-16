@@ -110,7 +110,7 @@ The number of blocks is no secret. Their contents are secret.
 - The number of blocks is random. Many blocks are fake. They are
   indistinguishable from real data, but do not contain anything meaningful
 
-- The information about which record the entry belongs to is cryptographically
+- The information about which entry the block belongs to is cryptographically
   protected. It is impossible to even figure out if the blocks refer to the same
   entry
 
@@ -124,7 +124,7 @@ The payload is smaller than the vault size. Only this is known for certain.
 
 ## File obfuscation
 
-The vault file format is virtually indistinguishable from random data.
+The vault file format is virtually **indistinguishable from random data**.
 
 The file has no header, no constant bytes (or even bits), no block boundaries
 are indicated. File size will not give clues: the file is randomly padded with a
