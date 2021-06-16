@@ -12,7 +12,7 @@ from typing import List, Iterable
 from codn.a_base._10_kdf import FasterKDF, CodenameKey
 from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn.b_cryptoblobs._30_encdec_multipart import MultipartEncryptor
-from codn.b_storage_file import BlobsIndexedReader, BlobsSequentialWriter
+from codn.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
 from codn.c_namegroups._namegroup import NameGroup
 from codn.c_namegroups._fakes import create_fake_bytes
 from tests.common import testing_salt
@@ -28,7 +28,7 @@ def name_group_to_content_blobs(ng: NameGroup) -> List[bytes]:
 
 
 def write_blobs_to_stream(blobs: Iterable[bytes], out_io: BytesIO):
-    with BlobsSequentialWriter(out_io) as w:
+    with BlocksSequentialWriter(out_io) as w:
         for b in blobs:
             w.write_bytes(b)
 
@@ -51,7 +51,7 @@ class TestNamegroup(unittest.TestCase):
             pk = CodenameKey("abc", testing_salt)
 
             with BytesIO() as empty:
-                reader = BlobsIndexedReader(empty)
+                reader = BlocksIndexedReader(empty)
 
                 ng = NameGroup(reader, pk)
                 self.assertEqual(ng.all_content_versions, set())
@@ -88,7 +88,7 @@ class TestNamegroup(unittest.TestCase):
                     blobs_stream.seek(0, io.SEEK_SET)
 
                     # find the content blobs in the stream
-                    r = BlobsIndexedReader(blobs_stream)
+                    r = BlocksIndexedReader(blobs_stream)
                     #r.check_all_checksums()
                     ng = NameGroup(r, pk)
                     self.assertEqual(ng.all_content_versions, {1})
@@ -115,7 +115,7 @@ class TestNamegroup(unittest.TestCase):
                     blobs_stream.seek(0, io.SEEK_SET)
 
                     # find the content blobs in the stream
-                    r = BlobsIndexedReader(blobs_stream)
+                    r = BlocksIndexedReader(blobs_stream)
                     #r.check_all_checksums()
                     ng = NameGroup(r, pk)
                     self.assertEqual(ng.all_content_versions, {1, 2})
@@ -137,7 +137,7 @@ class TestNamegroup(unittest.TestCase):
                     blobs_stream.seek(0, io.SEEK_SET)
 
                     # find the content blobs in the stream
-                    r = BlobsIndexedReader(blobs_stream)
+                    r = BlocksIndexedReader(blobs_stream)
                     #r.check_all_checksums()
                     ng = NameGroup(r, pk)
                     self.assertEqual(ng.all_content_versions, {1, 2})
@@ -154,7 +154,7 @@ class TestNamegroup(unittest.TestCase):
                     blobs_stream.seek(0, io.SEEK_SET)
 
                     # find the content blobs in the stream
-                    r = BlobsIndexedReader(blobs_stream)
+                    r = BlocksIndexedReader(blobs_stream)
                     #r.check_all_checksums()
                     ng = NameGroup(r, wrong_key)
                     self.assertEqual(len(ng.all_content_versions), 0)

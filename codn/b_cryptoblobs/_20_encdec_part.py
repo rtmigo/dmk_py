@@ -16,7 +16,7 @@ from codn.a_base._20_imprint import Imprint, pk_matches_imprint_bytes
 from codn.a_utils.dirty_file import WritingToTempFile
 from codn.a_utils.randoms import set_random_last_modified
 from codn.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
-    uint32_to_bytes, uint24_to_bytes, bytes_to_uint24, uint16_to_bytes, \
+    uint32_to_bytes, uint16_to_bytes, \
     bytes_to_uint16
 from codn.b_cryptoblobs._10_padding import IntroPadding
 
@@ -80,10 +80,11 @@ class Cryptographer:
 
 class Header(NamedTuple):
     content_crc32: int
+    is_last_part: int
     # format_version: int  # todo rename
     data_version: int  # todo rename
-    data_size: int  # todo rename
-    parts_len: int
+    # data_size: int  # todo rename
+    # parts_len: int
     part_idx: int
     part_size: int
 
@@ -93,6 +94,29 @@ def get_stream_size(stream: BinaryIO) -> int:
     size = stream.seek(0, io.SEEK_END)
     stream.seek(pos, io.SEEK_SET)
     return size
+
+
+def get_highest_bit_16(x: int) -> bool:
+    if not 0 <= x <= 0xFFFF:
+        raise ValueError
+    return (0x8000 & x) != 0
+
+
+def set_highest_bit_16(x: int, value: bool) -> int:
+    if not 0 <= x <= 0xFFFF:
+        raise ValueError
+    if value:
+        x |= 0x8000
+        assert get_highest_bit_16(x)
+    else:
+        x = x & 0x7FFF
+        assert not get_highest_bit_16(x)
+    assert 0 <= x <= 0xFFFF
+    return x
+
+
+def get_lower15bits(x: int) -> int:
+    return x & 0x7FFF
 
 
 class Encrypt:
@@ -112,6 +136,10 @@ class Encrypt:
             raise ValueError(f"part_idx={part_idx}")
         if not 1 <= parts_len <= 0xFF + 1:
             raise ValueError(f"parts_len={parts_len}")
+
+        # we cannot fit blocks size larger than that into 15 bits
+        assert MAX_CLUSTER_CONTENT_SIZE <= 0x7FFF
+
         if part_size is not None and not (
                 0 <= part_size <= MAX_CLUSTER_CONTENT_SIZE):
             raise ValueError(f"part_size={part_size}")
@@ -146,21 +174,23 @@ class Encrypt:
         <imprint B/>
         <encrypted>
             <header>
-                CONTENT_CRC32 (uint32)
+                CONTENT_CRC32 (uint32)  Checksum of the partial data stored in
+                                        the current cluster
 
                 ITEM_VER      (uint32)  Increases on each write
 
-                FULL_SIZE     (uint24) Total size of the original data
+                PART_IDX      (uint16)  Zero-based part index. If we split
+                                        the data into three clusters, they
+                                        will have PART_IDX values 0, 1, 2.
 
-                PARTS_LEN     (uint16)  The total number of parts (files)
-                                       into which the original data was split
+                PART_SIZE     (uint16)  Lower 15 bits is the size of the
+                                        real data stored in the current
+                                        cluster (without the padding)
 
-                PART_IDX      (uint16)  Zero-based part number contained in
-                                       the current block
+                                        Highest bit is 1 if this is
+                                        the last cluster, 0 if not
 
-                PART_SIZE     (uint16) Size of the part contained in the
-                                       current block. This is the number of
-                                       bytes to read from the source_io
+                HEADER_END    (uint8)   '~' character
             </header>
 
             CONTENT_DATA: bytes
@@ -187,44 +217,39 @@ class Encrypt:
 
         # if total_size is None:
 
-        # # FORMAT_VER
-        # format_ver_bytes = bytes([1])  # todo remove
-
         # ITEM_VER
         item_version_bytes = uint32_to_bytes(self.data_version)
 
-        # FORMAT_ID
-        # format_id = 'LS'.encode('ascii')  # little secret # todo remove
-        # assert len(format_id) == 2
-
-        # FULL_SIZE
-        full_size = get_stream_size(source)
-        full_size_bytes = uint24_to_bytes(full_size)
+        # # FULL_SIZE
+        # full_size = get_stream_size(source)
+        # full_size_bytes = uint24_to_bytes(full_size)
 
         # PART_SIZE
         if self.part_size is None:
             assert self.parts_len == 1 and self.part_idx == 0
-            self.part_size = full_size
+            self.part_size = get_stream_size(source)
+
+        assert get_lower15bits(self.part_size) == self.part_size
+
+        is_last_part = self.part_idx == self.parts_len - 1
+
+        part_is_last_and_size = self.part_size
+        part_is_last_and_size = set_highest_bit_16(
+            part_is_last_and_size,
+            is_last_part
+        )
+
+        assert get_lower15bits(part_is_last_and_size) == self.part_size, \
+            (get_lower15bits(part_is_last_and_size), self.part_size)
+        assert get_highest_bit_16(part_is_last_and_size) == is_last_part
 
         body_bytes = read_or_fail(source, self.part_size)
         body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
 
-        parts_len_bytes = uint16_to_bytes(self.parts_len - 1)
+        # parts_len_bytes = uint16_to_bytes(self.parts_len - 1)
         part_idx_bytes = uint16_to_bytes(self.part_idx)
-        part_size_bytes = uint16_to_bytes(self.part_size)
+        part_size_bytes = uint16_to_bytes(part_is_last_and_size)
         header_end_marker = b'~'
-
-        header_bytes = b''.join((  # todo no need to join
-            body_crc_bytes,
-            # format_id,
-            # format_ver_bytes,
-            item_version_bytes,
-            full_size_bytes,
-            parts_len_bytes,
-            part_idx_bytes,
-            part_size_bytes,
-            header_end_marker
-        ))
 
         # header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
@@ -252,32 +277,29 @@ class Encrypt:
         def encrypt_and_write(data: bytes):
             outfile.write(cryptographer.cipher.encrypt(data))
 
-        # encrypt_and_write(_intro_padding_64.gen_bytes())
-        encrypt_and_write(header_bytes)
+        # CRC-32 are extremely unpredictable bytes. Therefore, we place
+        # them at the very beginning of the data to be encrypted.
+
+        encrypt_and_write(body_crc_bytes)
+        encrypt_and_write(item_version_bytes)
+        # encrypt_and_write(full_size_bytes)
+        # encrypt_and_write(parts_len_bytes)
+        encrypt_and_write(part_idx_bytes)
+        encrypt_and_write(part_size_bytes)
+        encrypt_and_write(header_end_marker)
+
+        # encrypt_and_write(header_bytes)
 
         assert outfile.tell() == CLUSTER_META_SIZE, f"pos is {outfile.tell()}"
 
-        # encrypt_and_write(header_crc_bytes)
-        # todo chunked r/w?
         encrypt_and_write(body_bytes)
-        # encrypt_and_write(body_crc_bytes)
 
-        # adding random data to the end of file.
+        # adding random data to the end of block.
         # This data is not encrypted, it's from urandom (is it ok?)
         current_size = outfile.tell()
         padding_size = self.target_size - current_size
         assert padding_size >= 0
         outfile.write(get_random_bytes(padding_size))
-
-        # assert current_size <= MAX_BLOB_SIZE, current_size
-        #
-        # target_size = random.randint(current_size, MAX_BLOB_SIZE)
-        #
-        # padding_size = target_size - current_size
-        # assert padding_size >= 0
-        # outfile.write(get_random_bytes(padding_size))
-        #
-        # assert outfile.seek(0, os.SEEK_CUR) <= MAX_BLOB_SIZE
 
     def io_to_file(self,
                    source_io: BinaryIO,
@@ -406,21 +428,24 @@ class DecryptedIO:
         data_version_bytes = self.__read_and_decrypt(4)
         data_version = bytes_to_uint32(data_version_bytes)
 
-        # FULL_SIZE is the size of original file
-        full_size_bytes = self.__read_and_decrypt(3)
-        size = bytes_to_uint24(full_size_bytes)
+        # # FULL_SIZE is the size of original file
+        # full_size_bytes = self.__read_and_decrypt(3)
+        # size = bytes_to_uint24(full_size_bytes)
 
-        # PARTS_LEN
-        parts_len_bytes = self.__read_and_decrypt(2)
-        parts_len = bytes_to_uint16(parts_len_bytes) + 1
+        # # PARTS_LEN
+        # parts_len_bytes = self.__read_and_decrypt(2)
+        # parts_len = bytes_to_uint16(parts_len_bytes) + 1
 
         # PART_IDX
         part_idx_bytes = self.__read_and_decrypt(2)
         part_idx = bytes_to_uint16(part_idx_bytes)
 
         # PART_SIZE
-        part_size_bytes = self.__read_and_decrypt(2)
-        part_size = bytes_to_uint16(part_size_bytes)
+        last_and_size = bytes_to_uint16(self.__read_and_decrypt(2))
+        part_size = get_lower15bits(last_and_size)
+        is_last = get_highest_bit_16(last_and_size)
+        # part_size_bytes = self.__read_and_decrypt(2)
+        # part_size = bytes_to_uint16(part_size_bytes)
 
         header_end_marker = self.__read_and_decrypt(1)
         if header_end_marker != b'~':
@@ -444,10 +469,11 @@ class DecryptedIO:
         return Header(content_crc32=content_crc32,
                       data_version=data_version,
                       # format_version=format_version,
-                      data_size=size,
+                      # data_size=size,
                       part_size=part_size,
-                      parts_len=parts_len,
-                      part_idx=part_idx)
+                      # parts_len=parts_len,
+                      part_idx=part_idx,
+                      is_last_part=is_last)
 
     def read_data(self) -> bytes:
         if self._data_read:

@@ -6,7 +6,7 @@ from typing import List, BinaryIO, Optional
 
 from codn.a_base import CodenameKey
 from codn.b_cryptoblobs import DecryptedIO
-from codn.b_storage_file import BlobsIndexedReader
+from codn.b_storage_file import BlocksIndexedReader
 
 
 class NameGroupItem:
@@ -31,7 +31,7 @@ class NameGroup:
     ignored.
     """
 
-    def __init__(self, blobs: BlobsIndexedReader, cnk: CodenameKey):
+    def __init__(self, blobs: BlocksIndexedReader, cnk: CodenameKey):
         self.blobs = blobs
         self.cnk = cnk
         self._streams: List[BinaryIO] = []
@@ -82,7 +82,16 @@ class NameGroup:
         for ver in sorted(self.all_content_versions, reverse=True):
             files_by_ver = [gf for gf in all_content_files
                             if gf.dio.header.data_version == ver]
-            if files_by_ver[0].dio.header.parts_len == len(files_by_ver):
+            last_part_idx: Optional[int] = next(
+                (gf.dio.header.part_idx
+                 for gf in files_by_ver
+                 if gf.dio.header.is_last_part),
+                None
+            )
+            if last_part_idx is None:
+                continue
+
+            if last_part_idx == len(files_by_ver)-1:
                 # okay, this is the fresh content with all parts
                 for gf in files_by_ver:
                     gf.is_fresh_data = True

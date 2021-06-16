@@ -30,14 +30,6 @@ class FragmentIO(BinaryIO):
     def length(self) -> int:
         return self.__length
 
-    # @property
-    # def inner_pos(self) -> int:
-    #     return self._inner_pos
-    #
-    # @inner_pos.setter
-    # def inner_pos(self, x):
-    #     return self._inner_pos
-
     @property
     def _remaining_bytes(self):
         result = self.length - self.__pos
@@ -136,7 +128,7 @@ class FragmentIO(BinaryIO):
         raise NotImplementedError
 
     def seekable(self) -> bool:
-        raise NotImplementedError
+        return self.underlying.seekable()
 
     def tell(self) -> int:
         return self.__pos

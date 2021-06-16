@@ -1,33 +1,14 @@
 import io
-import random
 import unittest
 from io import BytesIO
 
 from codn._common import CLUSTER_SIZE
 from codn.a_utils.randoms import get_noncrypt_random_bytes
-from codn.b_storage_file._20_blobs_list_io import BlobsSequentialWriter, \
- \
-    BlobsIndexedReader, _obfuscate_size
+from codn.b_storage_file._20_blocks_rw import BlocksSequentialWriter, \
+    BlocksIndexedReader
 
 
 class TestBlobsListFile(unittest.TestCase):
-
-    def test_obfuscate_size_const(self):
-
-        x = 0x000A
-        obfuscated = 0xF4A3
-        crc = 0x1B83EF2A
-
-        self.assertEqual(_obfuscate_size(_obfuscate_size(x, crc), crc), x)
-        self.assertEqual(_obfuscate_size(x, crc), obfuscated)
-
-    def test_obfuscate_size_list(self):
-
-        for x in [0x0000, 0x1234, 0xFFFF]:
-            for _ in range(3):
-                crc = random.randint(0, 0xFFFFFFFF)
-                self.assertEqual(_obfuscate_size(_obfuscate_size(x, crc), crc),
-                                 x)
 
     def test_without_tail(self):
 
@@ -46,7 +27,7 @@ class TestBlobsListFile(unittest.TestCase):
                 for _ in range(n):
 
                     with BytesIO() as large_io:
-                        with BlobsSequentialWriter(large_io) as writer:
+                        with BlocksSequentialWriter(large_io) as writer:
                             writer.write_bytes(a)
                             writer.write_bytes(b)
                             writer.write_bytes(c)
@@ -54,14 +35,13 @@ class TestBlobsListFile(unittest.TestCase):
                                 writer.write_tail()
 
                         large_io.seek(0, io.SEEK_SET)
-                        reader = BlobsIndexedReader(large_io)
+                        reader = BlocksIndexedReader(large_io)
                         self.assertEqual(len(reader), 3)
 
                         if tail:
                             self.assertGreater(reader.tail_size, 0)
                         else:
                             self.assertEqual(reader.tail_size, 0)
-
 
                         for _ in range(2):
                             self.assertEqual(reader.io(2).read(), c)
@@ -99,13 +79,13 @@ class TestBlobsListFile(unittest.TestCase):
 
     def test_empty_stream(self):
         with BytesIO() as empty_io:
-            brr = BlobsIndexedReader(empty_io)
+            brr = BlocksIndexedReader(empty_io)
             self.assertEqual(len(brr), 0)
 
     def test_end_of_stream(self):
         with BytesIO(b'123') as end_io:
             end_io.seek(0, io.SEEK_END)
-            brr = BlobsIndexedReader(end_io)
+            brr = BlocksIndexedReader(end_io)
             self.assertEqual(len(brr), 0)
 
             # self.assertEqual(brr.read_bytes(), None)
