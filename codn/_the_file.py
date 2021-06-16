@@ -59,7 +59,7 @@ class TheFile:
             # both files are closed now
             wtf.replace()  # todo securely remove old file
 
-    def get(self, name: str) -> Optional[bytes]:
+    def get_bytes(self, name: str) -> Optional[bytes]:
         ck = CodenameKey(name, self.salt)
         with self._old_blobs() as old_blobs:
             ng = NameGroup(old_blobs, ck)
