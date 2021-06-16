@@ -4,7 +4,7 @@ from base64 import b64encode
 from pathlib import Path
 from typing import List, Set
 
-from codn._common import PK_SALT_SIZE
+from codn._common import KEY_SALT_SIZE
 from codn.a_utils.randoms import get_noncrypt_random_bytes
 
 testing_salt = bytes(
@@ -45,4 +45,4 @@ def sizes_are_random(files: List[Path]) -> bool:
     return len(set(sizes)) >= 2
 
 if __name__ == "__main__":
-    print(list(get_noncrypt_random_bytes(PK_SALT_SIZE)))
+    print(list(get_noncrypt_random_bytes(KEY_SALT_SIZE)))

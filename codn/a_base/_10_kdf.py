@@ -6,7 +6,7 @@ from typing import Optional
 
 from Crypto.Protocol.KDF import scrypt
 
-from codn._common import PK_SALT_SIZE
+from codn._common import KEY_SALT_SIZE
 
 
 class CodenameKey:
@@ -34,7 +34,7 @@ class CodenameKey:
     #  18 | 0.65 sec       | 1.17 sec
 
     def __init__(self, password: str, salt: bytes):
-        if len(salt) != PK_SALT_SIZE:
+        if len(salt) != KEY_SALT_SIZE:
             raise ValueError("Wrong salt length")
         self.as_bytes = _password_to_key_cached(
             password,

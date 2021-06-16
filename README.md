@@ -92,60 +92,65 @@ My lover's jokes are not that funny
 
 - Entries are encrypted really well
 - Number of entries cannot be determined
+- It is impossible to identify the file format without knowing a codename
 
 ## Entries obfuscation
 
-`codn` stores encrypted entries inside blobs. The number and size of blobs is no
-secret. Their contents are secret.
+The vault file stores all data within multiple fixed-size blocks.
 
-- The number of blobs is random. Many blobs are fake. They are indistinguishable
-  from real data, but do not contain anything meaningful
+Small entries are padded so they become block-sized. Large entries are split and
+padded to fit into multiple blocks. In the end, they are all just a lot of
+blocks.
 
-- The blob sizes are random. They are unrelated to the size of the entries.
-  Large entries are broken into parts, and small ones are padded
+A block gives absolutely no information for someone who does not own the
+codename. All non-random data is either hashed or encrypted.
 
-- Which blobs refer to the same codename is unknown. We can only determine blobs
-  associated with a particular codename if the user provided this codename
+The number of blocks is no secret. Their contents are secret.
 
-- Random actions are taken every time the vault is updated: some fake blobs are
+- The number of blocks is random. Many blocks are fake. They are
+  indistinguishable from real data, but do not contain anything meaningful
+
+- The information about which record the entry belongs to is cryptographically
+  protected. It is impossible to even figure out if the blocks refer to the same
+  entry
+
+- Random actions are taken every time the vault is updated: some fake blocks are
   added, and some are removed
 
 Thus, **number and size of entries cannot be determined** by the size of the
-vault file or number of blobs.
+vault file or number of blocks.
 
 The payload is smaller than the vault size. Only this is known for certain.
 
 ## File obfuscation
 
-The file itself, at first glance, does not have format-identifying information,
-and does not have any evident structure.
+The vault file format is virtually indistinguishable from random data.
 
-For example, in a regular binary file, the 32-bit number 42 looks
-like `00 00 00 2A`. In an obfuscated `codn` file, the same number would be
-something like `F8 70 4A 52`. Thus, literally all bytes appear to be encrypted.
-Even the first four bytes identifying the `codn` format are different each time.
+The file has no header, no constant bytes (or even bits), no block boundaries
+are indicated. File size will not give clues: the file is randomly padded with a
+size that is not a multiple of the block.
 
-It is worth clarifying that this obfuscation is mainly decorative. You can 
-check if a file is in the `codn` format with the `codn` utility, if you aware 
-of it.
- 
+The only predictable part of the file is the format version number encoded in
+the first two bytes. However, even the first two bytes are not constant.
+Similar "version number" can be found literally in every fourth file, if it
+contains random rubbish.
 
 ## Encryption
 
-1) **URandom** creates 256-bit **salt** when we initialize the vault file. The
-   salt is saved openly in the file header. This salt never changes. It is
+1) **URandom** creates 192-bit **salt** when we initialize the vault file. The
+   salt is saved openly in the file. This salt never changes. It is
    required for any other actions on the vault.
 
 2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
    salted (1) codename.
 
-3) **Blake2b** computes 192-bit **hashes** from the private key (2) combined
-   with a 192-bit **nonce**. These hash+nonce pairs are openly saved to blobs
+3) **Blake2b** computes 256-bit **hashes** from the private key (2) combined
+   with a 256-bit **nonce**. These hash+nonce pairs are openly saved to blocks
    that contain encrypted entries.
 
    Having the private key (2) and the nonce (3), we can recompute the same
-   hash (3) and check if the blob contains it. If yes, then the blob belongs to
-   the given codename.
+   hash (3) and check if the block contains it. If yes, then the block belongs 
+   to the given codename.
 
 4) **ChaCha20** encrypts the blob data using the private key (2) and a newly
    generated 64-bit nonce.

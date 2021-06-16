@@ -5,7 +5,7 @@ import time
 
 import click
 
-from codn._common import PK_SALT_SIZE
+from codn._common import KEY_SALT_SIZE
 from codn._main import Main
 from codn.a_base._10_kdf import CodenameKey
 from codn.a_utils.randoms import get_noncrypt_random_bytes
@@ -15,7 +15,7 @@ from codn.a_utils.randoms import get_noncrypt_random_bytes
 def bench():
     """Measures the KDF speed: the private key computation time."""
     a = []
-    random_salt = get_noncrypt_random_bytes(PK_SALT_SIZE)
+    random_salt = get_noncrypt_random_bytes(KEY_SALT_SIZE)
     for i in range(4):
         t = time.monotonic()
         CodenameKey(str(i), random_salt)
