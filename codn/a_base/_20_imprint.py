@@ -5,10 +5,8 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from codn._common import bytes_to_fn_str, blake192,  blake256
+from codn._common import bytes_to_fn_str, blake256
 from codn.a_base._10_kdf import CodenameKey
-
-
 
 
 class Imprint:
@@ -82,7 +80,7 @@ class Imprint:
         return h[-Imprint.NONCE_LEN:]
 
 
-#assert Imprint.FULL_LEN == BASENAME_SIZE
+# assert Imprint.FULL_LEN == BASENAME_SIZE
 
 
 def pk_matches_imprint_bytes(pk: CodenameKey, imprint: bytes) -> bool:

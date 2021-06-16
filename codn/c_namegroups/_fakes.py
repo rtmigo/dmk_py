@@ -1,12 +1,10 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
-import random
-
 from Crypto.Random import get_random_bytes
 
-from codn.a_base import CodenameKey, Imprint
 from codn._common import CLUSTER_SIZE
+from codn.a_base import CodenameKey, Imprint
 
 
 def create_fake_bytes(fpk: CodenameKey) -> bytes:
@@ -28,10 +26,9 @@ def create_fake_bytes(fpk: CodenameKey) -> bytes:
 
     # todo test instead "create file"
 
-    #target_size =  # random.randint(0, MAX_BLOB_SIZE)
+    # target_size =  # random.randint(0, MAX_BLOB_SIZE)
 
     result = Imprint(fpk).as_bytes + get_random_bytes(
         CLUSTER_SIZE - Imprint.FULL_LEN)
     assert len(result) == CLUSTER_SIZE
     return result
-

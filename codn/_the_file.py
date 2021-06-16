@@ -5,13 +5,13 @@ from typing import BinaryIO, Optional
 
 from Crypto.Random import get_random_bytes
 
+from ._common import PK_SALT_SIZE
 from .a_base._10_kdf import CodenameKey
 from .a_utils.dirty_file import WritingToTempFile
 from .b_cryptoblobs import decrypt_from_dios
 from .b_storage_file import StorageFileReader, StorageFileWriter, \
     BlobsIndexedReader
 from .c_namegroups import NameGroup, update_namegroup_b
-from ._common import PK_SALT_SIZE
 
 
 class TheFile:

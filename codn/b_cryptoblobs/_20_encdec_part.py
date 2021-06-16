@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import io
-import os
-import random
 import zlib
 from pathlib import Path
 from typing import Optional, NamedTuple, BinaryIO
@@ -14,13 +12,12 @@ from Crypto.Random import get_random_bytes
 from codn._common import read_or_fail, InsufficientData, \
     MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE, CLUSTER_META_SIZE
 from codn.a_base._10_kdf import CodenameKey
+from codn.a_base._20_imprint import Imprint, pk_matches_imprint_bytes
 from codn.a_utils.dirty_file import WritingToTempFile
 from codn.a_utils.randoms import set_random_last_modified
 from codn.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
-    bytes_to_int64, uint32_to_bytes, int64_to_bytes, uint8_to_bytes, \
-    uint24_to_bytes, bytes_to_uint8, bytes_to_uint24, uint16_to_bytes, \
+    uint32_to_bytes, uint24_to_bytes, bytes_to_uint24, uint16_to_bytes, \
     bytes_to_uint16
-from codn.a_base._20_imprint import Imprint, pk_matches_imprint_bytes
 from codn.b_cryptoblobs._10_padding import IntroPadding
 
 _DEBUG_PRINT = False
@@ -83,7 +80,7 @@ class Cryptographer:
 
 class Header(NamedTuple):
     content_crc32: int
-    #format_version: int  # todo rename
+    # format_version: int  # todo rename
     data_version: int  # todo rename
     data_size: int  # todo rename
     parts_len: int
@@ -103,7 +100,7 @@ class Encrypt:
                  cnk: CodenameKey,
 
                  data_version: int = 0,
-                 target_size = CLUSTER_SIZE,
+                 target_size=CLUSTER_SIZE,
                  # original_size: int = None,
                  part_idx: int = 0,
                  parts_len: int = 1,
@@ -193,13 +190,12 @@ class Encrypt:
         # # FORMAT_VER
         # format_ver_bytes = bytes([1])  # todo remove
 
-
         # ITEM_VER
         item_version_bytes = uint32_to_bytes(self.data_version)
 
         # FORMAT_ID
-        #format_id = 'LS'.encode('ascii')  # little secret # todo remove
-        #assert len(format_id) == 2
+        # format_id = 'LS'.encode('ascii')  # little secret # todo remove
+        # assert len(format_id) == 2
 
         # FULL_SIZE
         full_size = get_stream_size(source)
@@ -213,7 +209,6 @@ class Encrypt:
         body_bytes = read_or_fail(source, self.part_size)
         body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
 
-
         parts_len_bytes = uint16_to_bytes(self.parts_len - 1)
         part_idx_bytes = uint16_to_bytes(self.part_idx)
         part_size_bytes = uint16_to_bytes(self.part_size)
@@ -221,8 +216,8 @@ class Encrypt:
 
         header_bytes = b''.join((  # todo no need to join
             body_crc_bytes,
-            #format_id,
-            #format_ver_bytes,
+            # format_id,
+            # format_ver_bytes,
             item_version_bytes,
             full_size_bytes,
             parts_len_bytes,
@@ -231,9 +226,7 @@ class Encrypt:
             header_end_marker
         ))
 
-        #header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
-
-
+        # header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
         cryptographer = Cryptographer(fpk=self.cnk,
                                       nonce=None)
@@ -259,15 +252,15 @@ class Encrypt:
         def encrypt_and_write(data: bytes):
             outfile.write(cryptographer.cipher.encrypt(data))
 
-        #encrypt_and_write(_intro_padding_64.gen_bytes())
+        # encrypt_and_write(_intro_padding_64.gen_bytes())
         encrypt_and_write(header_bytes)
 
-        assert outfile.tell()==CLUSTER_META_SIZE, f"pos is {outfile.tell()}"
+        assert outfile.tell() == CLUSTER_META_SIZE, f"pos is {outfile.tell()}"
 
-        #encrypt_and_write(header_crc_bytes)
+        # encrypt_and_write(header_crc_bytes)
         # todo chunked r/w?
         encrypt_and_write(body_bytes)
-        #encrypt_and_write(body_crc_bytes)
+        # encrypt_and_write(body_crc_bytes)
 
         # adding random data to the end of file.
         # This data is not encrypted, it's from urandom (is it ok?)
@@ -430,7 +423,7 @@ class DecryptedIO:
         part_size = bytes_to_uint16(part_size_bytes)
 
         header_end_marker = self.__read_and_decrypt(1)
-        if header_end_marker!=b'~':
+        if header_end_marker != b'~':
             raise RuntimeError("Header end marker not found")
 
         # reading and checking the header checksum
@@ -448,9 +441,9 @@ class DecryptedIO:
         # if zlib.crc32(header_bytes) != header_crc:
         #     raise ChecksumMismatch("Header CRC mismatch.")
 
-        return Header(content_crc32 = content_crc32,
-            data_version=data_version,
-                      #format_version=format_version,
+        return Header(content_crc32=content_crc32,
+                      data_version=data_version,
+                      # format_version=format_version,
                       data_size=size,
                       part_size=part_size,
                       parts_len=parts_len,
@@ -465,7 +458,7 @@ class DecryptedIO:
         assert self._source.tell() == CLUSTER_META_SIZE, f"pos is {self._source.tell()}"
 
         body = self.__read_and_decrypt(self.header.part_size)
-        #body_crc = bytes_to_uint32(self.__read_and_decrypt(4))
+        # body_crc = bytes_to_uint32(self.__read_and_decrypt(4))
         if zlib.crc32(body) != self.header.content_crc32:
             raise ChecksumMismatch("Body CRC mismatch.")
 
