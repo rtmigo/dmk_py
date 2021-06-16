@@ -4,8 +4,8 @@
 import random
 from typing import BinaryIO
 
-from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn._common import read_or_fail
+from codn.a_utils.randoms import get_noncrypt_random_bytes
 
 
 def _is_power_of_two(n: int) -> bool:

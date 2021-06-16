@@ -5,10 +5,10 @@ import time
 
 import click
 
-from codn.a_base._10_kdf import CodenameKey
-from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn._common import PK_SALT_SIZE
 from codn._main import Main
+from codn.a_base._10_kdf import CodenameKey
+from codn.a_utils.randoms import get_noncrypt_random_bytes
 
 
 @click.command(hidden=True)

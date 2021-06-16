@@ -14,7 +14,7 @@ from codn.c_namegroups._namegroup import NameGroup
 
 
 def increased_data_version(namegroup: NameGroup) -> int:
-    #MAX_INT64 = 0x7FFFFFFFFFFFFFFF
+    # MAX_INT64 = 0x7FFFFFFFFFFFFFFF
     MAX_UINT32 = 0xFFFFFFFF
     if len(namegroup.all_content_versions) <= 0:
         return random.randint(1, 9999)

@@ -72,7 +72,8 @@ class MultipartEncryptor:
         self.content_version = content_version
 
         full_size = get_stream_size(source_io)
-        self.part_sizes = split_cluster_sizes(full_size)# split_random_sizes(full_size)
+        self.part_sizes = split_cluster_sizes(
+            full_size)  # split_random_sizes(full_size)
         assert sum(self.part_sizes) == full_size
 
         self.encrypted_indices: Set[int] = set()

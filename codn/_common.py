@@ -28,10 +28,8 @@ CLUSTER_META_SIZE = 154
 MAX_CLUSTER_CONTENT_SIZE = CLUSTER_SIZE - CLUSTER_META_SIZE
 assert MAX_CLUSTER_CONTENT_SIZE <= CLUSTER_SIZE
 
+
 ######################
-
-
-
 
 
 def read_or_fail(f: BinaryIO, n: int) -> bytes:
