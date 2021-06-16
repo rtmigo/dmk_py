@@ -132,7 +132,7 @@ size that is not a multiple of the block.
 
 The only predictable part of the file is the format version number encoded in
 the first two bytes. However, even the first two bytes are not constant.
-Similar "version number" can be found literally in every fourth file, if it
+Similar "version number" can be found literally in every fourth file, even if it
 contains random rubbish.
 
 ## Encryption
