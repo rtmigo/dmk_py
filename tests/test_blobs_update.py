@@ -52,13 +52,14 @@ class TestUpdate(unittest.TestCase):
             empty_reader = BlobsIndexedReader(BytesIO())
 
             new_storage_io = BytesIO()
-            writer = BlobsSequentialWriter(new_storage_io)
-            original_content_io = BytesIO(b'0'*(1024*128))
-            update_namegroup_b(pk, original_content_io, empty_reader, writer)
+            with BlobsSequentialWriter(new_storage_io) as writer:
+                original_content_io = BytesIO(b'0'*(1024*128))
+                update_namegroup_b(pk, original_content_io, empty_reader, writer)
 
             new_storage_io.seek(0, io.SEEK_SET)
             new_reader = BlobsIndexedReader(new_storage_io)
             self.assertGreater(len(new_reader), 0)
+            self.assertGreater(new_reader.tail_size, 0)
 
             with self.subTest("Content appeared"):
                 content_blobs = [full_stream_to_bytes(s) for s in new_reader
@@ -76,11 +77,11 @@ class TestUpdate(unittest.TestCase):
         with self.subTest("Number of fakes is random"):
             self.assertGreaterEqual(len(fake_nums), 3)
 
-        with self.subTest("Number of content files is random"):
-            self.assertGreaterEqual(len(part_nums), 3)
-
-        with self.subTest("Size of content blobs was different"):
-            self.assertGreaterEqual(len(content_sizes), 3)
+        # with self.subTest("Number of content files is random"):
+        #     self.assertGreaterEqual(len(part_nums), 3)
+        #
+        # with self.subTest("Size of content blobs was different"):
+        #     self.assertGreaterEqual(len(content_sizes), 3)
 
 
         #

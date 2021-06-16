@@ -7,15 +7,16 @@ import random
 from pathlib import Path
 from typing import BinaryIO, List, Set
 
+from codn._common import unique_filename, MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
 from codn.a_base._10_kdf import CodenameKey
 from codn.a_utils.randoms import set_random_last_modified
 from codn.b_cryptoblobs._20_encdec_part import get_stream_size, \
     Encrypt, \
     DecryptedIO
-from codn._common import unique_filename, MAX_BLOB_SIZE, MAX_PART_CONTENT_SIZE
 
 
 def split_random_sizes(full_size: int) -> List[int]:
+    # todo remove
     if full_size < 0:
         raise ValueError
 
@@ -30,9 +31,9 @@ def split_random_sizes(full_size: int) -> List[int]:
         assert not truncated_last_part
 
         # up to 64 kb, even if we do not have so much data
-        next_part_size = random.randint(1, MAX_PART_CONTENT_SIZE)
+        next_part_size = random.randint(1, MAX_CLUSTER_CONTENT_SIZE)
         # adjusting the last part size
-        limit = min(MAX_PART_CONTENT_SIZE, full_size - sum_sizes)
+        limit = min(MAX_CLUSTER_CONTENT_SIZE, full_size - sum_sizes)
         assert limit > 0
         if next_part_size > limit:
             next_part_size = limit
@@ -43,8 +44,22 @@ def split_random_sizes(full_size: int) -> List[int]:
         part_sizes.append(next_part_size)
 
     assert sum(part_sizes) == full_size, f"{sum(part_sizes)} {full_size}"
-    assert all(1 <= p <= MAX_PART_CONTENT_SIZE for p in part_sizes)
+    assert all(1 <= p <= MAX_CLUSTER_CONTENT_SIZE for p in part_sizes)
     return part_sizes
+
+
+def split_cluster_sizes(full_size: int) -> List[int]:
+    if full_size < 0:
+        raise ValueError
+    if full_size == 0:
+        return [0]
+    result: List[int] = []
+    s = full_size
+    while s > 0:
+        result.append(min(s, MAX_CLUSTER_CONTENT_SIZE))
+        s -= MAX_CLUSTER_CONTENT_SIZE
+    assert sum(result) == full_size
+    return result
 
 
 class MultipartEncryptor:
@@ -57,7 +72,7 @@ class MultipartEncryptor:
         self.content_version = content_version
 
         full_size = get_stream_size(source_io)
-        self.part_sizes = split_random_sizes(full_size)
+        self.part_sizes = split_cluster_sizes(full_size)# split_random_sizes(full_size)
         assert sum(self.part_sizes) == full_size
 
         self.encrypted_indices: Set[int] = set()
@@ -75,7 +90,7 @@ class MultipartEncryptor:
                 part_size=self.part_sizes[part_idx],
                 data_version=self.content_version
                 ).io_to_io(self.source_io, target_io)
-        assert target_io.seek(0, io.SEEK_END) <= MAX_BLOB_SIZE
+        assert target_io.seek(0, io.SEEK_END) == CLUSTER_SIZE
 
         self.encrypted_indices.add(part_idx)
 

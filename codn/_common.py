@@ -11,20 +11,27 @@ from Crypto.Random import get_random_bytes
 
 from codn.a_utils.randoms import get_noncrypt_random_bytes
 
-PK_SALT_SIZE = 32
+PK_SALT_SIZE = 24
 PK_SIZE = 32
-BASENAME_SIZE = 48
-
-MAX_SALT_FILE_SIZE = 1023
-MIN_DATA_FILE_SIZE = MAX_SALT_FILE_SIZE + 1
-
-MAX_BLOB_SIZE = 0xFFFF
-MAX_SIZE_BEFORE_CONTENT = 1024  # hashes, intro-padding, header, nonce
-
-MAX_PART_CONTENT_SIZE = MAX_BLOB_SIZE - MAX_SIZE_BEFORE_CONTENT
-
-assert MIN_DATA_FILE_SIZE > MAX_SALT_FILE_SIZE
 assert PK_SIZE * 8 == 256
+
+########################
+
+CLUSTER_SIZE = 4096
+
+# all the meta data in cluster: imprints and nonce, header.
+# Some of this is kept open, some is the beginning of encrypted data.
+# It takes a fixed number of bytes anyway
+CLUSTER_META_SIZE = 154
+
+# the maximum amount of data (in bytes) that can be saved in single cluster
+MAX_CLUSTER_CONTENT_SIZE = CLUSTER_SIZE - CLUSTER_META_SIZE
+assert MAX_CLUSTER_CONTENT_SIZE <= CLUSTER_SIZE
+
+######################
+
+
+
 
 
 def read_or_fail(f: BinaryIO, n: int) -> bytes:
@@ -105,7 +112,15 @@ def half_n_half(salt: bytes) -> Tuple[bytes, bytes]:
 
 
 def blake192(data: bytes, salt: bytes) -> bytes:
+    # todo remove?
     h_obj = BLAKE2b.new(digest_bits=192)
+    a, b = half_n_half(salt)
+    h_obj.update(a + data + b)
+    return h_obj.digest()
+
+
+def blake256(data: bytes, salt: bytes) -> bytes:
+    h_obj = BLAKE2b.new(digest_bits=256)
     a, b = half_n_half(salt)
     h_obj.update(a + data + b)
     return h_obj.digest()

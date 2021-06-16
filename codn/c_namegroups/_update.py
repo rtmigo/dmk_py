@@ -14,15 +14,16 @@ from codn.c_namegroups._namegroup import NameGroup
 
 
 def increased_data_version(namegroup: NameGroup) -> int:
-    MAX_INT64 = 0x7FFFFFFFFFFFFFFF
+    #MAX_INT64 = 0x7FFFFFFFFFFFFFFF
+    MAX_UINT32 = 0xFFFFFFFF
     if len(namegroup.all_content_versions) <= 0:
-        return random.randint(1, 999999)
+        return random.randint(1, 9999)
 
     previously_max = max(namegroup.all_content_versions)
 
     assert previously_max >= 1
-    result = previously_max + random.randint(1, 999)
-    if result > MAX_INT64:
+    result = previously_max + random.randint(1, 10)
+    if result > MAX_UINT32:
         # this will never happen
         raise ValueError(f"new_data_version={result} "
                          f"cannot be saved as INT64")
@@ -125,4 +126,5 @@ def update_namegroup_b(cdk: CodenameKey,
                            target_io=temp_io)
                 temp_io.seek(0, io.SEEK_SET)
                 new_blobs.write_bytes(temp_io.read())
+    new_blobs.write_tail()
     assert me.all_encrypted

@@ -11,14 +11,15 @@ from typing import Optional, NamedTuple, BinaryIO
 from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
-from codn._common import read_or_fail, InsufficientData, MAX_BLOB_SIZE, \
-    MAX_PART_CONTENT_SIZE
+from codn._common import read_or_fail, InsufficientData, \
+    MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE, CLUSTER_META_SIZE
 from codn.a_base._10_kdf import CodenameKey
 from codn.a_utils.dirty_file import WritingToTempFile
 from codn.a_utils.randoms import set_random_last_modified
 from codn.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
     bytes_to_int64, uint32_to_bytes, int64_to_bytes, uint8_to_bytes, \
-    uint24_to_bytes, bytes_to_uint8, bytes_to_uint24
+    uint24_to_bytes, bytes_to_uint8, bytes_to_uint24, uint16_to_bytes, \
+    bytes_to_uint16
 from codn.a_base._20_imprint import Imprint, pk_matches_imprint_bytes
 from codn.b_cryptoblobs._10_padding import IntroPadding
 
@@ -81,7 +82,8 @@ class Cryptographer:
 
 
 class Header(NamedTuple):
-    format_version: int  # todo rename
+    content_crc32: int
+    #format_version: int  # todo rename
     data_version: int  # todo rename
     data_size: int  # todo rename
     parts_len: int
@@ -99,18 +101,22 @@ def get_stream_size(stream: BinaryIO) -> int:
 class Encrypt:
     def __init__(self,
                  cnk: CodenameKey,
+
                  data_version: int = 0,
+                 target_size = CLUSTER_SIZE,
                  # original_size: int = None,
                  part_idx: int = 0,
                  parts_len: int = 1,
                  part_size: int = None):
+
+        self.target_size = target_size
 
         if not 0 <= part_idx <= 0xFF:
             raise ValueError(f"part_idx={part_idx}")
         if not 1 <= parts_len <= 0xFF + 1:
             raise ValueError(f"parts_len={parts_len}")
         if part_size is not None and not (
-                0 <= part_size <= MAX_PART_CONTENT_SIZE):
+                0 <= part_size <= MAX_CLUSTER_CONTENT_SIZE):
             raise ValueError(f"part_size={part_size}")
 
         self.cnk = cnk
@@ -142,32 +148,26 @@ class Encrypt:
         <imprint A/>
         <imprint B/>
         <encrypted>
-            intro padding: bytes (1-64 bytes)
-
             <header>
-                FORMAT_ID     (2 bytes) 'LS': format identifier, two bytes
+                CONTENT_CRC32 (uint32)
 
-                FORMAT_VER    (uint8)   Always 1
+                ITEM_VER      (uint32)  Increases on each write
 
-                ITEM_VER      (int64)   Increases on each write
+                FULL_SIZE     (uint24) Total size of the original data
 
-                FULL_SIZE     (uint32)  Total size of the original data
+                PARTS_LEN     (uint16)  The total number of parts (files)
+                                       into which the original data was split
 
-                PARTS_LEN     (uint8)  The total number of parts (files)
-                                        into which the original data was split
+                PART_IDX      (uint16)  Zero-based part number contained in
+                                       the current block
 
-                PART_IDX      (uint8)   Zero-based part number contained in
-                                        the current file
-
-                PART_SIZE     (uint24)  Size of the part contained in the
-                                        current file. This is the number of
-                                        bytes to read from the source_io
+                PART_SIZE     (uint16) Size of the part contained in the
+                                       current block. This is the number of
+                                       bytes to read from the source_io
             </header>
 
-            HEADER_CRC  (uint32) The CRC-32 checksum of the header
+            CONTENT_DATA: bytes
 
-            body: bytes
-            body crc-32: uint32
         </encrypted>
         <random-padding/>
         ****
@@ -190,43 +190,50 @@ class Encrypt:
 
         # if total_size is None:
 
-        # FORMAT_VER
-        format_ver_bytes = bytes([1])
+        # # FORMAT_VER
+        # format_ver_bytes = bytes([1])  # todo remove
+
 
         # ITEM_VER
-        item_version_bytes = int64_to_bytes(self.data_version)
+        item_version_bytes = uint32_to_bytes(self.data_version)
 
         # FORMAT_ID
-        format_id = 'LS'.encode('ascii')  # little secret
-        assert len(format_id) == 2
+        #format_id = 'LS'.encode('ascii')  # little secret # todo remove
+        #assert len(format_id) == 2
 
         # FULL_SIZE
         full_size = get_stream_size(source)
-        full_size_bytes = uint32_to_bytes(full_size)
+        full_size_bytes = uint24_to_bytes(full_size)
 
         # PART_SIZE
         if self.part_size is None:
             assert self.parts_len == 1 and self.part_idx == 0
             self.part_size = full_size
 
-        parts_len_bytes = uint8_to_bytes(self.parts_len - 1)
-        part_idx_bytes = uint8_to_bytes(self.part_idx)
-        part_size_bytes = uint24_to_bytes(self.part_size)
+        body_bytes = read_or_fail(source, self.part_size)
+        body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
 
-        header_bytes = b''.join((
-            format_id,
-            format_ver_bytes,
+
+        parts_len_bytes = uint16_to_bytes(self.parts_len - 1)
+        part_idx_bytes = uint16_to_bytes(self.part_idx)
+        part_size_bytes = uint16_to_bytes(self.part_size)
+        header_end_marker = b'~'
+
+        header_bytes = b''.join((  # todo no need to join
+            body_crc_bytes,
+            #format_id,
+            #format_ver_bytes,
             item_version_bytes,
             full_size_bytes,
             parts_len_bytes,
             part_idx_bytes,
-            part_size_bytes
+            part_size_bytes,
+            header_end_marker
         ))
 
-        header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
+        #header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
-        body_bytes = read_or_fail(source, self.part_size)
-        body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
+
 
         cryptographer = Cryptographer(fpk=self.cnk,
                                       nonce=None)
@@ -252,25 +259,32 @@ class Encrypt:
         def encrypt_and_write(data: bytes):
             outfile.write(cryptographer.cipher.encrypt(data))
 
-        encrypt_and_write(_intro_padding_64.gen_bytes())
+        #encrypt_and_write(_intro_padding_64.gen_bytes())
         encrypt_and_write(header_bytes)
-        encrypt_and_write(header_crc_bytes)
-        # todo chunked r/w
+
+        assert outfile.tell()==CLUSTER_META_SIZE, f"pos is {outfile.tell()}"
+
+        #encrypt_and_write(header_crc_bytes)
+        # todo chunked r/w?
         encrypt_and_write(body_bytes)
-        encrypt_and_write(body_crc_bytes)
+        #encrypt_and_write(body_crc_bytes)
 
         # adding random data to the end of file.
         # This data is not encrypted, it's from urandom (is it ok?)
-        current_size = outfile.seek(0, os.SEEK_CUR)
-        assert current_size <= MAX_BLOB_SIZE, current_size
-
-        target_size = random.randint(current_size, MAX_BLOB_SIZE)
-
-        padding_size = target_size - current_size
+        current_size = outfile.tell()
+        padding_size = self.target_size - current_size
         assert padding_size >= 0
         outfile.write(get_random_bytes(padding_size))
 
-        assert outfile.seek(0, os.SEEK_CUR) <= MAX_BLOB_SIZE
+        # assert current_size <= MAX_BLOB_SIZE, current_size
+        #
+        # target_size = random.randint(current_size, MAX_BLOB_SIZE)
+        #
+        # padding_size = target_size - current_size
+        # assert padding_size >= 0
+        # outfile.write(get_random_bytes(padding_size))
+        #
+        # assert outfile.seek(0, os.SEEK_CUR) <= MAX_BLOB_SIZE
 
     def io_to_file(self,
                    source_io: BinaryIO,
@@ -381,55 +395,62 @@ class DecryptedIO:
             print("---")
 
         # skipping the padding
-        ip_first = self.__read_and_decrypt(1)[0]
-        ip_len = _intro_padding_64.first_byte_to_len(ip_first)
-        if ip_len > 0:
-            self.__read_and_decrypt(ip_len)
+        # ip_first = self.__read_and_decrypt(1)[0]
+        # ip_len = _intro_padding_64.first_byte_to_len(ip_first)
+        # if ip_len > 0:
+        #     self.__read_and_decrypt(ip_len)
 
-        format_id = self.__read_and_decrypt(2)
-        assert format_id.decode('ascii') == "LS"
+        # format_id = self.__read_and_decrypt(2)
+        # assert format_id.decode('ascii') == "LS"
 
         # FORMAT VERSION is always 1
-        format_version_bytes = self.__read_and_decrypt(VERSION_LEN)
-        format_version = format_version_bytes[0]
-        assert format_version == 1
+        # format_version_bytes = self.__read_and_decrypt(VERSION_LEN)
+        # format_version = format_version_bytes[0]
+        # assert format_version == 1
 
-        data_version_bytes = self.__read_and_decrypt(8)
-        data_version = bytes_to_int64(data_version_bytes)
+        content_crc32 = bytes_to_uint32(self.__read_and_decrypt(4))
+
+        data_version_bytes = self.__read_and_decrypt(4)
+        data_version = bytes_to_uint32(data_version_bytes)
 
         # FULL_SIZE is the size of original file
-        full_size_bytes = self.__read_and_decrypt(4)
-        size = bytes_to_uint32(full_size_bytes)
+        full_size_bytes = self.__read_and_decrypt(3)
+        size = bytes_to_uint24(full_size_bytes)
 
         # PARTS_LEN
-        parts_len_bytes = self.__read_and_decrypt(1)
-        parts_len = bytes_to_uint8(parts_len_bytes) + 1
+        parts_len_bytes = self.__read_and_decrypt(2)
+        parts_len = bytes_to_uint16(parts_len_bytes) + 1
 
         # PART_IDX
-        part_idx_bytes = self.__read_and_decrypt(1)
-        part_idx = bytes_to_uint8(part_idx_bytes)
+        part_idx_bytes = self.__read_and_decrypt(2)
+        part_idx = bytes_to_uint16(part_idx_bytes)
 
         # PART_SIZE
-        part_size_bytes = self.__read_and_decrypt(3)
-        part_size = bytes_to_uint24(part_size_bytes)
+        part_size_bytes = self.__read_and_decrypt(2)
+        part_size = bytes_to_uint16(part_size_bytes)
+
+        header_end_marker = self.__read_and_decrypt(1)
+        if header_end_marker!=b'~':
+            raise RuntimeError("Header end marker not found")
 
         # reading and checking the header checksum
-        header_crc = int.from_bytes(
-            self.__read_and_decrypt(HEADER_CHECKSUM_LEN),
-            byteorder='big',
-            signed=False)
-        header_bytes = b''.join((format_id,
-                                 format_version_bytes,
-                                 data_version_bytes,
-                                 full_size_bytes,
-                                 parts_len_bytes,
-                                 part_idx_bytes,
-                                 part_size_bytes))
-        if zlib.crc32(header_bytes) != header_crc:
-            raise ChecksumMismatch("Header CRC mismatch.")
+        # header_crc = int.from_bytes(
+        #     self.__read_and_decrypt(HEADER_CHECKSUM_LEN),
+        #     byteorder='big',
+        #     signed=False)
+        # header_bytes = b''.join((#format_id,
+        #                          #format_version_bytes,
+        #                          data_version_bytes,
+        #                          full_size_bytes,
+        #                          parts_len_bytes,
+        #                          part_idx_bytes,
+        #                          part_size_bytes))
+        # if zlib.crc32(header_bytes) != header_crc:
+        #     raise ChecksumMismatch("Header CRC mismatch.")
 
-        return Header(data_version=data_version,
-                      format_version=format_version,
+        return Header(content_crc32 = content_crc32,
+            data_version=data_version,
+                      #format_version=format_version,
                       data_size=size,
                       part_size=part_size,
                       parts_len=parts_len,
@@ -441,9 +462,11 @@ class DecryptedIO:
 
         _ = self.header
 
+        assert self._source.tell() == CLUSTER_META_SIZE, f"pos is {self._source.tell()}"
+
         body = self.__read_and_decrypt(self.header.part_size)
-        body_crc = bytes_to_uint32(self.__read_and_decrypt(4))
-        if zlib.crc32(body) != body_crc:
+        #body_crc = bytes_to_uint32(self.__read_and_decrypt(4))
+        if zlib.crc32(body) != self.header.content_crc32:
             raise ChecksumMismatch("Body CRC mismatch.")
 
         self._data_read = True

@@ -37,7 +37,9 @@ class TheFile:
             storage_reader.blobs.close_stream = True
             return storage_reader.blobs
         except FileNotFoundError:
-            return BlobsIndexedReader(None)
+            reader = BlobsIndexedReader(BytesIO())
+            assert len(reader) == 0
+            return reader
 
     @property
     def blobs_len(self) -> int:
@@ -52,8 +54,8 @@ class TheFile:
         with WritingToTempFile(self.path) as wtf:
             with self._old_blobs() as old_blobs:
                 with wtf.dirty.open('wb') as new_file_io:
-                    writer = StorageFileWriter(new_file_io, self.salt)
-                    update_namegroup_b(ck, source, old_blobs, writer.blobs)
+                    with StorageFileWriter(new_file_io, self.salt) as writer:
+                        update_namegroup_b(ck, source, old_blobs, writer.blobs)
             # both files are closed now
             wtf.replace()  # todo securely remove old file
 
