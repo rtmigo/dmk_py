@@ -11,9 +11,10 @@ from Crypto.Random import get_random_bytes
 
 from codn.a_utils.randoms import get_noncrypt_random_bytes
 
-PK_SALT_SIZE = 24
-PK_SIZE = 32
-assert PK_SIZE * 8 == 256
+KEY_SALT_SIZE = 24
+KEY_SIZE = 32
+
+assert KEY_SIZE * 8 == 256
 
 ########################
 

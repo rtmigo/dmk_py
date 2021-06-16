@@ -5,7 +5,7 @@ from typing import BinaryIO, Optional
 
 from Crypto.Random import get_random_bytes
 
-from ._common import PK_SALT_SIZE
+from ._common import KEY_SALT_SIZE
 from .a_base._10_kdf import CodenameKey
 from .a_utils.dirty_file import WritingToTempFile
 from .b_cryptoblobs import decrypt_from_dios
@@ -26,7 +26,7 @@ class TheFile:
                 with self.path.open('rb') as f:
                     self._salt = StorageFileReader(f).salt
             except FileNotFoundError:
-                self._salt = get_random_bytes(PK_SALT_SIZE)
+                self._salt = get_random_bytes(KEY_SALT_SIZE)
         assert self._salt is not None
         return self._salt
 

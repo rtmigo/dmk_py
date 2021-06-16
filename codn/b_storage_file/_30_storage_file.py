@@ -9,7 +9,7 @@ import io
 import random
 from typing import BinaryIO
 
-from codn._common import PK_SALT_SIZE, read_or_fail
+from codn._common import KEY_SALT_SIZE, read_or_fail
 from codn.b_storage_file._20_blobs_list_io import BlobsSequentialWriter, \
     BlobsIndexedReader
 
@@ -54,7 +54,7 @@ class StorageFileWriter:
 
         # WRITING SALT (32 BYTES)
 
-        if len(salt) != PK_SALT_SIZE:
+        if len(salt) != KEY_SALT_SIZE:
             raise ValueError("Unexpected salt size")
         output_io.write(salt)
 
@@ -84,7 +84,7 @@ class StorageFileReader:
 
         # READING SALT
 
-        self.salt = read_or_fail(input_io, PK_SALT_SIZE)
+        self.salt = read_or_fail(input_io, KEY_SALT_SIZE)
 
         assert input_io.tell() == BLOBS_START_POS, input_io.tell()
 
