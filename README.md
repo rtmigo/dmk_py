@@ -168,7 +168,7 @@ contains random rubbish.
    to the given codename.
 
 4) **ChaCha20** encrypts the blob data using the private key (2) and a newly
-   generated 64-bit nonce.
+   generated 96-bit nonce.
 
 5) **CRC-32** checksums (encrypted by ChaCha20) verify the integrity of the
    decoded data.

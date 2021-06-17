@@ -37,7 +37,7 @@ class ItemImprintMismatch(Exception):
 
 _intro_padding_64 = IntroPadding(64)
 
-ENCRYPTION_NONCE_LEN = 8
+ENCRYPTION_NONCE_LEN = 12  # "The TLS ChaCha20 as defined in RFC7539."
 MAC_LEN = 16
 HEADER_CHECKSUM_LEN = 4
 VERSION_LEN = 1
@@ -61,10 +61,14 @@ class Cryptographer:
                  fpk: CodenameKey,
                  nonce: Optional[bytes]):
         self.fpk = fpk
-        if nonce is not None:
-            self.cipher = ChaCha20.new(key=self.fpk.as_bytes, nonce=nonce)
-        else:
-            self.cipher = ChaCha20.new(key=self.fpk.as_bytes)
+        if nonce is None:
+            nonce = get_random_bytes(ENCRYPTION_NONCE_LEN)
+
+        if len(nonce) != ENCRYPTION_NONCE_LEN:
+            raise ValueError("Unexpected nonce length")
+        self.cipher = ChaCha20.new(key=self.fpk.as_bytes, nonce=nonce)
+
+#            self.cipher = ChaCha20.new(key=self.fpk.as_bytes)
 
     @property
     def nonce(self):
