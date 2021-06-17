@@ -150,7 +150,7 @@ the first two bytes. However, even the first two bytes are not constant.
 Similar "version number" can be found literally in every fourth file, even if it
 contains random rubbish.
 
-## Encryption
+## Block encryption
 
 1) **URandom** creates 192-bit **salt** when we initialize the vault file. The
    salt is saved openly in the file. This salt never changes. It is required for
@@ -160,12 +160,13 @@ contains random rubbish.
    salted (1) codename.
 
 3) **ChaCha20** encrypts the block data using the private key (2) and a newly
-   generated 96-bit **nonce**.
+   generated 96-bit **nonce**. We use a new nonce for each block.
 
 
-4) **CRC-32** checksum verify the integrity of the decoded data. This checksum
-   is located inside the encrypted stream. If the data in the blocks is the
-   same, it will not be noticeable from the outside due to different nonce (3)
+4) **CRC-32** checksum verify the integrity of the decrypted block data. This
+   checksum is located inside the encrypted stream. If the data in the blocks is
+   the same, it will not be noticeable from the outside due to different nonce (
+   3)
    values.
 
    This verification occurs when we have already double-checked the correctness
@@ -176,10 +177,11 @@ contains random rubbish.
 5) Еach block receives a 352-bit **fingerprint** consisting of 96-bit nonce (3)
    and 256-bit **Blake2s** **hash**, derived from nonce (3) + private key (2).
 
-   This fingerprint allows us to identify blocks associated with a specific
-   codename. With the private key (2) available, we can recreate the same
-   fingerprint (5) using the known nonce (5). Without the private key, we have
-   no idea what the hash (3) was derived from.
+   This fingerprint is saved openly to the block. Fingerprint allows us to
+   identify blocks associated with a specific codename. With the private key (2)
+   available, we can recreate the same fingerprint (5) using the known nonce (3)
+   . Without the private key, we have no idea what the hash (5) was derived
+   from.
 
 
 
