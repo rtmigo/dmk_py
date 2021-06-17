@@ -16,9 +16,8 @@ Each entry is independent and protected with a unique **codename**. The codename
 serves as a name and password at the same time.
 
 Codename allows access to one entry. It reveals nothing about other entries,
-even whether they exist. The
-vault is cryptographically secure and overly obfuscated. There is no table of
-contents and no master decryption keys.
+even whether they exist. The vault is cryptographically secure and overly
+obfuscated. There is no table of contents and no master decryption keys.
 
 # Install
 
@@ -36,57 +35,72 @@ For example, information about a bitcoin wallet can be stored under codename
 
 # Storage location
 
-Encrypted files are stored in a directory on the file system.
+Entries will be stored in a file.
 
-If the `-d` argument is given, it specifies the directory.
+If the `-s` argument is given, it specifies the file.
 
 ``` bash
-$ codn get -d /path/to/storage -n codename123  
+$ codn get -s /path/to/storage.file -n codename123  
 ```
 
-If `-d` is not specified, the path is read from `$CODN_DIR` environment
+If `-s` is not specified, the path is read from `$CODN_STORAGE_FILE` environment
 variable.
 
 ``` bash
-$ export CODN_DIR=/path/to/storage
+$ export CODN_STORAGE_FILE=/path/to/storage.file
 $ codn get -n codename123  
 ```
 
-Keep in mind that mixing storage files with other files is not desirable.
-Therefore, you should not save other files to the directory. This can lead to
-data not being correctly encrypted or decrypted.
+The following examples assume that the variable `$CODN_STORAGE_FILE` is set and
+therefore the `-s` argument is not required.
 
 # Save and read text
 
-In one line:
-
 ``` 
-$ codn set -n topsecret123 -v "My lover's jokes are not that funny"
+$ codn sett -n topsecret123 -t "My darling's jokes are not so funny"
 ```
 
 ``` 
-$ codn get -n 'topsecret123'
+$ codn gett -n 'topsecret123'
 
-My lover's jokes are not that funny
+My darling's jokes are not so funny
 ```
 
-Interactively:
+The `-n` and `-t` parameters are optional. If they are not specified, their
+values will be prompted for interactive input.
 
 ``` 
-$ codn set
+$ codn sett
 
 Codename: topsecret123
 Repeat: topsecret123 
-Entry value: My lover's jokes are not that funny
+Text: My darling's jokes are not so funny
 ```
 
 ``` 
-$ codn get
+$ codn gett
 
 Codename: topsecret123
  
-My lover's jokes are not that funny
+My darling's jokes are not so funny
 ```
+
+# Save and read file
+
+Read data from a `source.docx` and save it as encrypted entry `SecretName123`
+
+``` 
+$ codn setf -n SecretName123 /my/docs/source.docx
+```
+
+Decrypt the entry `SecretName123` and write the result to `target.docx`
+
+``` 
+$ codn getf -n SecretName123 /my/docs/target.docx
+```
+
+The `-n` parameter is optional. If it is not specified, the value will be
+prompted for interactive input.
 
 # Under the hood
 
@@ -103,8 +117,8 @@ padded to fit into multiple blocks. In the end, they are all just a lot of
 blocks.
 
 A block gives absolutely no information for someone who does not own the
-codename. All non-random data is either hashed or encrypted. The size of 
-padding is unknown.
+codename. All non-random data is either hashed or encrypted. The size of padding
+is unknown.
 
 The number of blocks is no secret. Their contents are secret.
 
@@ -127,8 +141,9 @@ The payload is smaller than the vault size. Only this is known for certain.
 
 The vault file format is virtually **indistinguishable from random data**.
 
-The file has no header, no constant bytes (or even bits), no block boundaries. File size will not give clues: the file is randomly padded with a
-size that is not a multiple of a block.
+The file has no header, no constant bytes (or even bits), no block boundaries.
+File size will not give clues: the file is randomly padded with a size that is
+not a multiple of a block.
 
 The only predictable part of the file is the format version number encoded in
 the first two bytes. However, even the first two bytes are not constant.
@@ -138,8 +153,8 @@ contains random rubbish.
 ## Encryption
 
 1) **URandom** creates 192-bit **salt** when we initialize the vault file. The
-   salt is saved openly in the file. This salt never changes. It is
-   required for any other actions on the vault.
+   salt is saved openly in the file. This salt never changes. It is required for
+   any other actions on the vault.
 
 2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
    salted (1) codename.
@@ -149,7 +164,7 @@ contains random rubbish.
    that contain encrypted entries.
 
    Having the private key (2) and the nonce (3), we can recompute the same
-   hash (3) and check if the block contains it. If yes, then the block belongs 
+   hash (3) and check if the block contains it. If yes, then the block belongs
    to the given codename.
 
 4) **ChaCha20** encrypts the blob data using the private key (2) and a newly

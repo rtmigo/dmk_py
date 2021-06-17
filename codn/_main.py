@@ -41,6 +41,7 @@ class Main:
         with Path(file).open('rb') as  source_io:
             crd.set_from_io(name, source_io)
 
+
     def get_text(self, name: str):
         crd = TheFile(self.file_path)
         decrypted_bytes = crd.get_bytes(name)
