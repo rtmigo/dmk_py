@@ -159,28 +159,38 @@ contains random rubbish.
 2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
    salted (1) codename.
 
-3) **ChaCha20** encrypts the block data using the private key (2) and a newly
-   generated 96-bit **nonce**. We use a new nonce for each block.
-
-
-4) **CRC-32** checksum verify the integrity of the decrypted block data. This
-   checksum is saved inside the encrypted stream. If the data in the blocks is
-   the same, it will not be noticeable from the outside due to different nonce 
-   (3) values.
-
-   This verification occurs when we have already double-checked the correctness
-   of the private key (2). Therefore, it is really only a self-test to see if
-   the data is decoded as expected.
-
-
-5) Еach block receives a 352-bit **fingerprint** consisting of 96-bit nonce (3)
+3) Еach block receives a 352-bit **fingerprint** consisting of 96-bit **nonce**
    and 256-bit **Blake2s** **hash**, derived from nonce (3) + private key (2).
+   We use a new nonce for each block.
 
    This fingerprint is saved openly to the block. Fingerprint allows us to
    identify blocks associated with a specific codename. With the private key (2)
-   available, we can recreate the same fingerprint (5) using the known nonce 
-   (3). Without the private key, we have no idea what the hash (5) was derived
+   available, we can recreate the same fingerprint (3) using the known nonce
+   (3). Without the private key, we have no idea what the hash (3) was derived
    from.
+
+4) **ChaCha20** encrypts the block data using the private key (2) and 96-bit **
+   nonce** (3)
+
+5) The block header is located at the very beginning of the encrypted data. The
+   header is followed by the **header checksum**, which is a 128-bit
+   **Blake2s** hash. This hash (5) helps ensure that the private key is correct
+   without decrypting the rest of the data.
+   
+   Thus, the block's belonging to the code name is checked twice: with 256-bit 
+   (3) and 128-bit (5) hashes. We also made sure that the data decryption 
+   is proceeding correctly.
+
+6) **CRC-32** checksum verifies the entry data decrypted from the block. This
+   checksum is saved inside the encrypted stream. If the data in the blocks is
+   the same, it will not be noticeable from the outside due to different nonce
+   (3) values.
+
+   This verification occurs when we have already double-checked the correctness
+   of the private key (3) (5). Therefore, it is really only a self-test to see if
+   the data is decoded as expected.
+
+
 
 
 
