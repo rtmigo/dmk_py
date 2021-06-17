@@ -165,9 +165,8 @@ contains random rubbish.
 
 4) **CRC-32** checksum verify the integrity of the decrypted block data. This
    checksum is saved inside the encrypted stream. If the data in the blocks is
-   the same, it will not be noticeable from the outside due to different nonce (
-   3)
-   values.
+   the same, it will not be noticeable from the outside due to different nonce 
+   (3) values.
 
    This verification occurs when we have already double-checked the correctness
    of the private key (2). Therefore, it is really only a self-test to see if
