@@ -179,7 +179,7 @@ contains random rubbish.
    This fingerprint allows us to identify blocks associated with a specific
    codename. With the private key (2) available, we can recreate the same
    fingerprint (5) using the known nonce (5). Without the private key, we have
-   no idea what the hash (5) was derived from.
+   no idea what the hash (3) was derived from.
 
 
 
