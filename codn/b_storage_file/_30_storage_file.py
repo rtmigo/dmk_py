@@ -1,17 +1,17 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
-"""The storage file consists of a header and a list of blobs following it.
-Blobs contain encrypted data. We are not trying to interpret this data here.
-We only write them down and read them."""
+"""The storage file consists of a header and a list of blocks following it.
+Blocks contain encrypted data. We are not trying to interpret this data here.
+We only write wrote and read header and the blocks."""
 
 import io
 import random
 from typing import BinaryIO
 
 from codn._common import KEY_SALT_SIZE, read_or_fail
-from codn.b_storage_file._20_blobs_list_io import BlobsSequentialWriter, \
-    BlobsIndexedReader
+from codn.b_storage_file._20_blocks_rw import BlocksSequentialWriter, \
+    BlocksIndexedReader
 
 
 def version_to_bytes(ver: int) -> bytes:
@@ -21,7 +21,7 @@ def version_to_bytes(ver: int) -> bytes:
 
     Although the utility interprets these bytes unambiguously, the bytes
     themselves do not indicate that the file was created by the utility.
-    About a quarter of the files ever created in the world will have
+    About a quarter of random files ever created in the world will have
     the same remainder."""
 
     if not 0 <= ver < 4:
@@ -39,7 +39,7 @@ def bytes_to_version(data: bytes) -> int:
     return sum(data) % 4
 
 
-BLOBS_START_POS = 26
+BLOCKS_START_POS = 26
 
 
 class StorageFileWriter:
@@ -58,10 +58,10 @@ class StorageFileWriter:
             raise ValueError("Unexpected salt size")
         output_io.write(salt)
 
-        assert output_io.tell() == BLOBS_START_POS, output_io.tell()
+        assert output_io.tell() == BLOCKS_START_POS, output_io.tell()
 
         # READY TO WRITE BLOBS
-        self.blobs = BlobsSequentialWriter(output_io)
+        self.blobs = BlocksSequentialWriter(output_io)
 
     def __enter__(self):
         # todo remove
@@ -86,8 +86,8 @@ class StorageFileReader:
 
         self.salt = read_or_fail(input_io, KEY_SALT_SIZE)
 
-        assert input_io.tell() == BLOBS_START_POS, input_io.tell()
+        assert input_io.tell() == BLOCKS_START_POS, input_io.tell()
 
         # READY TO READ BLOBS
 
-        self.blobs = BlobsIndexedReader(input_io)
+        self.blobs = BlocksIndexedReader(input_io)

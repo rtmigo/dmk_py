@@ -17,6 +17,10 @@ testing_salt = bytes(
 def gen_random_content(min_size=0, max_size=1024) -> bytes:
     return get_noncrypt_random_bytes(random.randint(min_size, max_size))
 
+def gen_random_string() -> str:
+    len_bytes = random.randint(0, 20)
+    return b64encode(get_noncrypt_random_bytes(len_bytes)).decode()
+
 
 def gen_random_name() -> str:
     len_bytes = random.randint(0, 20)

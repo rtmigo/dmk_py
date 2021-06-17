@@ -54,7 +54,7 @@ class TestTheFile(unittest.TestCase):
                 for name, data in names_and_datas:
                     the_file = TheFile(file_path)
                     salts.add(the_file.salt)
-                    self.assertEqual(the_file.get(name), None)
+                    self.assertEqual(the_file.get_bytes(name), None)
                     # print("Writing", the_file.salt)
 
                     with BytesIO(data) as input_io:
@@ -72,7 +72,7 @@ class TestTheFile(unittest.TestCase):
                 # reading with same instance
                 for name, data in names_and_datas:
                     #print("Get", name)
-                    self.assertEqual(the_file.get(name), data)
+                    self.assertEqual(the_file.get_bytes(name), data)
 
                 # creating a new CryptoDir instance. This time the salt will
                 # not be randomly generated, but read from file
@@ -81,7 +81,7 @@ class TestTheFile(unittest.TestCase):
 
                 # reading with other instance
                 for name, data in names_and_datas:
-                    self.assertEqual(crypto_dir_b.get(name), data)
+                    self.assertEqual(crypto_dir_b.get_bytes(name), data)
 
     # def test_cryptodir_does_not_create_directories(self):
     #     with TemporaryDirectory() as tds:

@@ -8,7 +8,7 @@ from typing import List, BinaryIO, Set
 
 from codn.a_base import CodenameKey
 from codn.b_cryptoblobs import MultipartEncryptor
-from codn.b_storage_file import BlobsIndexedReader, BlobsSequentialWriter
+from codn.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
 from codn.c_namegroups._fakes import create_fake_bytes
 from codn.c_namegroups._namegroup import NameGroup
 
@@ -46,7 +46,7 @@ def remove_random_items(source: Set[int],
 
     max_to_delete = min(max_to_delete, len(source))
     num_to_delete = random.randint(min_to_delete, max_to_delete)
-    indexes_to_delete = random.sample(source, num_to_delete)
+    indexes_to_delete = random.sample(list(source), num_to_delete)
     result = source - set(indexes_to_delete)
     assert len(result) < len(source) or min_to_delete == 0
     return result
@@ -54,8 +54,8 @@ def remove_random_items(source: Set[int],
 
 def update_namegroup_b(cdk: CodenameKey,
                        new_content_io: BinaryIO,
-                       old_blobs: BlobsIndexedReader,
-                       new_blobs: BlobsSequentialWriter):
+                       old_blobs: BlocksIndexedReader,
+                       new_blobs: BlocksSequentialWriter):
     # we will remove and add some surrogates, and also remove old real file
     # add new real file. We will do this in random order, so as not to give
     # out which files are real and which are surrogates

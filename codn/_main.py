@@ -4,7 +4,6 @@ import subprocess
 from io import BytesIO
 from pathlib import Path
 
-from codn._config import Config
 # from codn.cryptodir import CryptoDir
 from codn._the_file import TheFile
 
@@ -22,28 +21,51 @@ class ItemNotFoundExit(SystemExit):
 
 
 class Main:
-    def __init__(self):
-        self.config = Config()
-        self.file_path = Path("/tmp/stub")  # stub
+    def __init__(self, storage_file: str):
 
-    def set(self, name: str, value: str):
-        # todo test
+        if not storage_file:
+            raise ValueError
+
+        storage_file = os.path.expanduser(storage_file)
+        storage_file = os.path.expandvars(storage_file)
+
+        self.file_path = Path(storage_file)  # stub
+
+    def set_text(self, name: str, value: str):
         crd = TheFile(self.file_path)
         with BytesIO(value.encode('utf-8')) as source_io:
             crd.set_from_io(name, source_io)
 
-    def get(self, name: str):
-        # todo test
+    def set_file(self, name: str, file: str):
         crd = TheFile(self.file_path)
-        decrypted_bytes = crd.get(name)
+        with Path(file).open('rb') as  source_io:
+            crd.set_from_io(name, source_io)
+
+
+    def get_text(self, name: str):
+        crd = TheFile(self.file_path)
+        decrypted_bytes = crd.get_bytes(name)
         if decrypted_bytes is None:
             raise ItemNotFoundExit
         return decrypted_bytes.decode('utf-8')
 
+    def get_file(self, name: str, file: str):
+        crd = TheFile(self.file_path)
+        fpath = Path(file)
+        if fpath.exists():
+            raise FileExistsError  # todo ask
+
+        data = crd.get_bytes(name)  # todo get io, chunks?
+        if data is None:
+            raise Exception("No data!")  # todo
+
+        with Path(file).open('wb') as outio_io:
+            outio_io.write(data)
+
     def eval(self, name: str):
         # todo test
         crd = TheFile(self.file_path)
-        decrypted_bytes = crd.get(name)
+        decrypted_bytes = crd.get_bytes(name)
         if decrypted_bytes is None:
             raise ItemNotFoundExit
         cmd = decrypted_bytes.decode('utf-8')
@@ -96,9 +118,9 @@ class Main:
     #     print(txt)
     #
     #
-    def clear(self):
-        shutil.rmtree(str(self.config.data_dir))
-        self.config.data_dir.mkdir()
-
-    def edit_config(self):
-        subprocess.run(['nano', str(self.config.config_file)])
+    # def clear(self):
+    #     shutil.rmtree(str(self.config.data_dir))
+    #     self.config.data_dir.mkdir()
+    #
+    # def edit_config(self):
+    #     subprocess.run(['nano', str(self.config.config_file)])

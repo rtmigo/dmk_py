@@ -10,7 +10,7 @@ from .a_base._10_kdf import CodenameKey
 from .a_utils.dirty_file import WritingToTempFile
 from .b_cryptoblobs import decrypt_from_dios
 from .b_storage_file import StorageFileReader, StorageFileWriter, \
-    BlobsIndexedReader
+    BlocksIndexedReader
 from .c_namegroups import NameGroup, update_namegroup_b
 
 
@@ -30,14 +30,14 @@ class TheFile:
         assert self._salt is not None
         return self._salt
 
-    def _old_blobs(self) -> BlobsIndexedReader:
+    def _old_blobs(self) -> BlocksIndexedReader:
         try:
             storage_reader = StorageFileReader(self.path.open('rb'))
             assert not storage_reader.blobs.close_stream
             storage_reader.blobs.close_stream = True
             return storage_reader.blobs
         except FileNotFoundError:
-            reader = BlobsIndexedReader(BytesIO())
+            reader = BlocksIndexedReader(BytesIO())
             assert len(reader) == 0
             return reader
 
@@ -59,7 +59,7 @@ class TheFile:
             # both files are closed now
             wtf.replace()  # todo securely remove old file
 
-    def get(self, name: str) -> Optional[bytes]:
+    def get_bytes(self, name: str) -> Optional[bytes]:
         ck = CodenameKey(name, self.salt)
         with self._old_blobs() as old_blobs:
             ng = NameGroup(old_blobs, ck)

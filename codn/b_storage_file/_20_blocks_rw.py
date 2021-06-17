@@ -14,33 +14,7 @@ from codn._common import read_or_fail, CLUSTER_SIZE
 from codn.b_storage_file._10_fragment_io import FragmentIO
 
 
-def _obfuscate_size(size16: int, crc32: int) -> int:
-    if not 0 <= size16 <= 0xFFFF:
-        raise ValueError(f"size: {size16}")
-    if not 0 <= crc32 <= 0xFFFFFFFF:
-        raise ValueError(f"crc32: {crc32}")
-
-    mix_mask = (crc32 >> 16) ^ crc32
-    return (size16 ^ mix_mask) & 0xFFFF
-
-
-class BlobsSequentialWriter:
-    """Writes BLOBs sequentially to a binary stream.
-
-    The format is:
-
-        blob_size: uint16
-        blob_data:  bytes (exactly blob_size bytes)
-        --
-        blob_size: uint16
-        blob_data:  bytes (exactly blob_size bytes)
-        --
-        blob_data:  bytes
-        eof
-
-    So the last blob does NOT have the size header and just ends at the end
-    of file.
-    """
+class BlocksSequentialWriter:
 
     def __init__(self, target_io: BinaryIO):
         self.target_io = target_io
@@ -77,12 +51,7 @@ class BlobsSequentialWriter:
         self._tail_written = True
 
 
-class BlobsIndexedReader:
-    """Scans the complete list of BLOBs in the stream and lets you access
-    them in random order.
-    BLOB data is not read, checksums are not verified.
-    The blobs are just converted to FragmentIO and stored to the list.
-    """
+class BlocksIndexedReader:
 
     def __init__(self, source_io: BinaryIO, close_stream=False):
 

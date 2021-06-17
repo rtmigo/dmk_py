@@ -4,6 +4,7 @@
 
 import io
 import random
+import zlib
 from pathlib import Path
 from typing import BinaryIO, List, Set
 
@@ -68,13 +69,24 @@ class MultipartEncryptor:
                  source_io: BinaryIO,
                  content_version: int):
         self.fpk = fpk
-        self.source_io = source_io
+        #self.source_io = source_io
         self.content_version = content_version
 
+
+
+        #full_source_data = source_io.read()
+
+        self._source_bytesio = source_io
+
+        # todo cache source io in bytes io?
+
         full_size = get_stream_size(source_io)
-        self.part_sizes = split_cluster_sizes(
-            full_size)  # split_random_sizes(full_size)
+        self.part_sizes = split_cluster_sizes(full_size)
         assert sum(self.part_sizes) == full_size
+
+        assert self._source_bytesio.tell() == 0
+        self.source_crc = zlib.crc32(self._source_bytesio.read())
+        self._source_bytesio.seek(0, io.SEEK_SET)
 
         self.encrypted_indices: Set[int] = set()
 
@@ -83,14 +95,14 @@ class MultipartEncryptor:
             raise ValueError(f"The part {part_idx} is already encrypted.")
 
         src_pos = sum(self.part_sizes[:part_idx])
-        self.source_io.seek(src_pos, io.SEEK_SET)
+        self._source_bytesio.seek(src_pos, io.SEEK_SET)
 
         Encrypt(self.fpk,
                 parts_len=len(self.part_sizes),
                 part_idx=part_idx,
                 part_size=self.part_sizes[part_idx],
                 data_version=self.content_version
-                ).io_to_io(self.source_io, target_io)
+                ).io_to_io(self._source_bytesio, target_io)
         assert target_io.seek(0, io.SEEK_END) == CLUSTER_SIZE
 
         self.encrypted_indices.add(part_idx)
@@ -192,17 +204,26 @@ def decrypt_from_dios(files: List[DecryptedIO],
 
     files = files.copy()
 
+    max_part_idx = max(f.header.part_idx for f in files)
+    if max_part_idx != len(files)-1:
+        raise BadFilesetError(f"max_part_idx={max_part_idx}, but len(files)={len(files)}")
+
+    if set(f.header.part_idx for f in files) != set(range(len(files))):
+        raise BadFilesetError(
+            f"Some parts are missing")
+
+
     first = files[0]
     for f in files[1:]:
-        if f.header.parts_len != first.header.parts_len:
-            raise BadFilesetError("parts_len mismatch")
-        if f.header.data_size != first.header.data_size:
-            raise BadFilesetError("data_size mismatch")
+        # if f.header.parts_len != first.header.parts_len:
+        #     raise BadFilesetError("parts_len mismatch")
+        # if f.header.data_size != first.header.data_size:
+        #     raise BadFilesetError("data_size mismatch")
         if f.header.data_version != first.header.data_version:
             raise BadFilesetError("data_version mismatch")
-    if len(files) != first.header.parts_len:
-        raise BadFilesetError(f"Expected {first.header.parts_len} files, "
-                              f"but got {len(files)}.")
+    # if len(files) != first.header.parts_len:
+    #     raise BadFilesetError(f"Expected {first.header.parts_len} files, "
+    #                           f"but got {len(files)}.")
     if len(set(f.header.part_idx for f in files)) != len(files):
         raise BadFilesetError("some part indexes are not unique")
 
@@ -213,7 +234,5 @@ def decrypt_from_dios(files: List[DecryptedIO],
         target_io.write(f.read_data())
 
     pos = target_io.seek(0, io.SEEK_CUR)
-    if pos != first.header.data_size:
-        raise ValueError(f"Unexpected final stream position: {pos}. "
-                         f"Full original data size must be "
-                         f"{first.header.data_size}.")
+    if pos != sum(f.header.part_size for f in files):
+        raise ValueError(f"Unexpected final stream position: {pos}.")

@@ -2,6 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 
-from ._20_blobs_list_io import BlobsIndexedReader, \
-    BlobsSequentialWriter
+from ._20_blocks_rw import BlocksIndexedReader, \
+    BlocksSequentialWriter
 from ._30_storage_file import StorageFileWriter, StorageFileReader
