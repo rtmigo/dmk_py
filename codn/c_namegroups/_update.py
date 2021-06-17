@@ -46,7 +46,7 @@ def remove_random_items(source: Set[int],
 
     max_to_delete = min(max_to_delete, len(source))
     num_to_delete = random.randint(min_to_delete, max_to_delete)
-    indexes_to_delete = random.sample(source, num_to_delete)
+    indexes_to_delete = random.sample(list(source), num_to_delete)
     result = source - set(indexes_to_delete)
     assert len(result) < len(source) or min_to_delete == 0
     return result

@@ -25,14 +25,14 @@ class Test(unittest.TestCase):
 
         result = runner.invoke(
             codn_cli,
-            ['set', 'abc', '-t', 'The Value'])
+            ['sett', 'abc', '-t', 'The Value'])
         self.assertEqual(result.exit_code, 2)
 
     def test_get_fails_without_storage(self):
         runner = CliRunner()
         result = runner.invoke(
             codn_cli,
-            ['get', 'abc'])
+            ['gett', 'abc'])
         self.assertEqual(result.exit_code, 2)
 
     def test_set_get_string(self):
@@ -42,13 +42,13 @@ class Test(unittest.TestCase):
             runner = CliRunner()
             result = runner.invoke(
                 codn_cli,
-                ['sett', '-s', storage, '-n', 'abc', '-t', 'The Value'])
+                ['sett', '-s', storage, '-e', 'abc', '-t', 'The Value'])
             self.assertTrue(os.path.exists(storage))
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, '')
             result = runner.invoke(
                 codn_cli,
-                ['gett', '-s', storage, '-n', 'abc'])
+                ['gett', '-s', storage, '-e', 'abc'])
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, 'The Value\n')
 
@@ -69,7 +69,7 @@ class Test(unittest.TestCase):
                 runner = CliRunner()
                 result = runner.invoke(
                     codn_cli,
-                    ['sett', '-s', storage, '-n', name, '-t', val])
+                    ['sett', '-s', storage, '-e', name, '-t', val])
                 self.assertEqual(result.exit_code, 0)
 
             self.assertTrue(os.path.exists(storage))
@@ -79,7 +79,7 @@ class Test(unittest.TestCase):
                 # self.assertEqual(result.output, '')
                 result = runner.invoke(
                     codn_cli,
-                    ['gett', '-s', storage, '-n', name])
+                    ['gett', '-s', storage, '-e', name])
                 self.assertEqual(result.exit_code, 0)
                 self.assertEqual(result.output, val + '\n')
 
@@ -94,7 +94,7 @@ class Test(unittest.TestCase):
             runner = CliRunner()
             result = runner.invoke(
                 codn_cli,
-                ['setf', '-s', storage, '-n', 'abc', str(src_file)])
+                ['setf', '-s', storage, '-e', 'abc', str(src_file)])
             self.assertTrue(os.path.exists(storage))
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, '')
@@ -104,7 +104,7 @@ class Test(unittest.TestCase):
 
             result = runner.invoke(
                 codn_cli,
-                ['getf', '-s', storage, '-n', 'abc', str(dst_file)])
+                ['getf', '-s', storage, '-e', 'abc', str(dst_file)])
             self.assertEqual(result.exit_code, 0)
             self.assertTrue(dst_file.exists())
             self.assertEqual(

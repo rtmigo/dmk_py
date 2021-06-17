@@ -51,64 +51,71 @@ def bench():
 @click.command(name='sett')
 @click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
               callback=validate_filename)
-@click.option('-n',
-              '--name',
+@click.option('-e',
+              '--entry',
+              'codename',
               prompt='Name',
               hide_input=True,
               confirmation_prompt="Repeat")
 @click.option('-t', '--text', prompt='Text')
-def set_cmd(storage: str, name: str, text: str):
+def set_cmd(storage: str, codename: str, text: str):
     """Sets entry content from text."""
-    Main(storage).set_text(name, text)
+    Main(storage).set_text(codename, text)
 
 
 
 @click.command()
 @click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
               callback=validate_filename)
-@click.option('-n', '--name',
+@click.option('-e',
+              '--entry',
+              'codename',
               prompt='Codename',
               hide_input=True)
-def gett(storage: str, name: str):
+def gett(storage: str, codename: str):
     """Prints entry content."""
-    s = Main(storage).get_text(name)
+    s = Main(storage).get_text(codename)
     print(s)
 
 @click.command(name='setf')
 @click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
               callback=validate_filename)
-@click.option('-n',
-              '--name',
+@click.option('-e',
+              '--entry',
+              'codename',
               prompt='Name',
               hide_input=True,
               confirmation_prompt="Repeat")
 @click.argument('filename')
-def setf_cmd(storage: str, name: str, filename: str):
+def setf_cmd(storage: str, codename: str, filename: str):
     """Sets entry content from data read from binary file."""
-    Main(storage).set_file(name, filename)
+    Main(storage).set_file(codename, filename)
 
 @click.command(name='getf')
 @click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
               callback=validate_filename)
-@click.option('-n',
-              '--name',
+@click.option('-e',
+              '--entry',
+              'codename',
               prompt='Name',
               hide_input=True)
 @click.argument('filename')
-def getf_cmd(storage: str, name: str, filename: str):
+def getf_cmd(storage: str, codename: str, filename: str):
     """Writes entry content to a binary file."""
-    Main(storage).get_file(name, filename)
+    Main(storage).get_file(codename, filename)
 
 
 @click.command()
 @click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
               callback=validate_filename)
-@click.option('-n', '--name',
+@click.option('-e',
+              '--entry',
+              'codename',
               prompt='Codename',
               hide_input=True)
-def eval(storage: str, name: str):
+def eval(storage: str, codename: str):
     """Gets item data as text and executes it as shell command."""
-    Main(storage).eval(name)
+    Main(storage).eval(codename)
 
 
 from ._constants import __version__, __copyright__

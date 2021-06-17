@@ -40,7 +40,7 @@ Entries will be stored in a file.
 If the `-s` argument is given, it specifies the file.
 
 ``` bash
-$ codn get -s /path/to/storage.file -n codename123  
+$ codn gett -s /path/to/storage.file ...  
 ```
 
 If `-s` is not specified, the path is read from `$CODN_STORAGE_FILE` environment
@@ -48,7 +48,7 @@ variable.
 
 ``` bash
 $ export CODN_STORAGE_FILE=/path/to/storage.file
-$ codn get -n codename123  
+$ codn gett ...  
 ```
 
 The following examples assume that the variable `$CODN_STORAGE_FILE` is set and
@@ -57,49 +57,49 @@ therefore the `-s` argument is not required.
 # Save and read text
 
 ``` 
-$ codn sett -n topsecret123 -t "My darling's jokes are not so funny"
+$ codn sett -e secRet007 -t "My darling's jokes are not so funny"
 ```
 
 ``` 
-$ codn gett -n 'topsecret123'
+$ codn gett -e secRet007
 
 My darling's jokes are not so funny
 ```
 
-The `-n` and `-t` parameters are optional. If they are not specified, their
+The `-e` and `-t` parameters are optional. If they are not specified, their
 values will be prompted for interactive input.
 
 ``` 
 $ codn sett
 
-Codename: topsecret123
-Repeat: topsecret123 
+Codename: secRet007
+Repeat: secRet007 
 Text: My darling's jokes are not so funny
 ```
 
 ``` 
 $ codn gett
 
-Codename: topsecret123
+Codename: secRet007
  
 My darling's jokes are not so funny
 ```
 
 # Save and read file
 
-Read data from a `source.docx` and save it as encrypted entry `SecretName123`
+Read data from a `source.docx` and save it as encrypted entry `secRet007`
 
 ``` 
-$ codn setf -n SecretName123 /my/docs/source.docx
+$ codn setf -e secRet007 /my/docs/source.docx
 ```
 
-Decrypt the entry `SecretName123` and write the result to `target.docx`
+Decrypt the entry `secRet007` and write the result to `target.docx`
 
 ``` 
-$ codn getf -n SecretName123 /my/docs/target.docx
+$ codn getf -e secRet007 /my/docs/target.docx
 ```
 
-The `-n` parameter is optional. If it is not specified, the value will be
+The `-e` parameter is optional. If it is not specified, the value will be
 prompted for interactive input.
 
 # Under the hood
