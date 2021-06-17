@@ -167,14 +167,14 @@ contains random rubbish.
    blocks is the same, it will not be noticeable from the outside due to 
    different nonce (3) values
    
-5)  Еach block receives a unique 512-bit **fingerprint** consisting of 256-bit 
-    **nonce** and 256-bit **Blake2b** **hash**, derived from nonce (5) + 
+5)  Еach block receives a unique 352-bit **fingerprint** consisting of 96-bit 
+    **nonce** and 256-bit **Blake2s** **hash**, derived from nonce (5) + 
     private key (2).
     
     This huge fingerprint allows us to identify blocks associated with a 
     specific codename. With the private key (2) available, we can recreate the 
     same fingerprint (5) using the known nonce (5). Without the private key, 
-    we have no idea what the hash was derived from.
+    we have no idea what the hash (5) was derived from.
 
 
 

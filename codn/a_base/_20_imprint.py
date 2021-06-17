@@ -5,7 +5,7 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from codn._common import bytes_to_fn_str, blake256
+from codn._common import bytes_to_fn_str, blake2s_256
 from codn.a_base._10_kdf import CodenameKey
 
 
@@ -48,23 +48,20 @@ class Imprint:
 
     The good news is that an imprint collision will only make us briefly
     think that some block belongs to the current name group, although it isn't.
-    Next, we will read the encrypted block header, which stores the original
-    codename. Only after verifying the header, we will make a final conclusion
-    about what we are dealing with.
+    Next, we will read the encrypted block header, and then verify the header
+    with 128-bit blake2s. Only after verifying the header, we will make a final
+    conclusion that this is "our" block.
 
-    The bad news is that even the header check is not completely deterministic.
-    Since we generate a new (random!) the nonce value before encrypting the
-    block, hypothetically there may be a nonce value, that causes completely
-    random data to be mistakenly decrypted as a header containing the codename.
+    For an error to occur, a collision must occur twice in a row: a 256 bit
+    collision and a 128 bit collision on the same block.
 
-    But if this happens, we are on a spaceship with infinite improbability
-    drive. This is also not a completely deterministic statement.
-
+    If this happens, we are on a spaceship with infinite improbability drive.
+    This is also not a completely deterministic statement.
     """
 
     __slots__ = ['__private_key', '__salt', '__as_bytes', '__as_str']
 
-    NONCE_LEN = 32
+    NONCE_LEN = 12
     DIGEST_LEN = 32
     FULL_LEN = NONCE_LEN + DIGEST_LEN
 
@@ -84,14 +81,14 @@ class Imprint:
     @property
     def nonce(self):
         if self.__salt is None:
-            self.__salt = self.create_unique_nonce()
+            self.__salt = self.create_nonce()
         return self.__salt
 
     @property
     def as_bytes(self) -> bytes:
         if self.__as_bytes is None:
             self.__as_bytes = \
-                blake256(self.private_key.as_bytes, self.nonce) + self.nonce
+                blake2s_256(self.private_key.as_bytes, self.nonce) + self.nonce
             assert len(self.__as_bytes) == Imprint.FULL_LEN, \
                 f"len={len(self.__as_bytes)}"
         return self.__as_bytes
@@ -112,24 +109,18 @@ class Imprint:
         return h[-Imprint.NONCE_LEN:]
 
     @classmethod
-    def create_unique_nonce(cls) -> bytes:
-        while True:
-            result = get_random_bytes(Imprint.NONCE_LEN)
-            if result not in cls._known_nonces:
-                break
+    def create_nonce(cls) -> bytes:
+        return get_random_bytes(Imprint.NONCE_LEN)
 
-        cls._known_nonces.add(result)
-        return result
-
-    @classmethod
-    def add_known_nonce(cls, nonce: bytes):
-
-        # todo how to test it?
-        if len(nonce) != Imprint.NONCE_LEN:
-            raise ValueError
-        cls._known_nonces.add(nonce)
-
-    _known_nonces = set()
+    # @classmethod
+    # def add_known_nonce(cls, nonce: bytes):
+    #
+    #     # todo how to test it?
+    #     if len(nonce) != Imprint.NONCE_LEN:
+    #         raise ValueError
+    #     cls._known_nonces.add(nonce)
+    #
+    # _known_nonces = set()
 
 
 def pk_matches_imprint_bytes(pk: CodenameKey, imprint: bytes) -> bool:

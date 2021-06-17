@@ -54,7 +54,7 @@ class Test(unittest.TestCase):
         imp = Imprint(pk)
 
         self.assertIsInstance(imp.nonce, bytes)
-        self.assertEqual(len(imp.nonce), 32)
+        self.assertEqual(len(imp.nonce), 12)
 
         self.assertEqual(imp.bytes_to_nonce(imp.as_bytes), imp.nonce)
 
