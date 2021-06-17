@@ -37,6 +37,8 @@ class NameGroup:
         self._streams: List[BinaryIO] = []
         self._fresh_content_dios: Optional[List[DecryptedIO]] = None
 
+        # todo in case of header crc mismatch just ignore the block (imprint collision)
+
         self.items: List[NameGroupItem] = []
 
         for idx in range(len(self.blobs)):

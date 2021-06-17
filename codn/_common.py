@@ -6,7 +6,7 @@ from base64 import urlsafe_b64encode, urlsafe_b64decode, b32encode
 from pathlib import Path
 from typing import BinaryIO, Tuple
 
-from Crypto.Hash import BLAKE2b
+from Crypto.Hash import BLAKE2b, BLAKE2s
 from Crypto.Random import get_random_bytes
 
 from codn.a_utils.randoms import get_noncrypt_random_bytes
@@ -23,7 +23,7 @@ CLUSTER_SIZE = 4096
 # all the meta data in cluster: imprints and nonce, header.
 # Some of this is kept open, some is the beginning of encrypted data.
 # It takes a fixed number of bytes anyway
-CLUSTER_META_SIZE = 153
+CLUSTER_META_SIZE = 84
 
 # the maximum amount of data (in bytes) that can be saved in single cluster
 MAX_CLUSTER_CONTENT_SIZE = CLUSTER_SIZE - CLUSTER_META_SIZE
@@ -118,8 +118,8 @@ def blake192(data: bytes, salt: bytes) -> bytes:
     return h_obj.digest()
 
 
-def blake256(data: bytes, salt: bytes) -> bytes:
-    h_obj = BLAKE2b.new(digest_bits=256)
+def blake2s_256(data: bytes, salt: bytes) -> bytes:
+    h_obj = BLAKE2s.new(digest_bits=256)
     a, b = half_n_half(salt)
     h_obj.update(a + data + b)
     return h_obj.digest()

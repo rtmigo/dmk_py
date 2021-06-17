@@ -6,9 +6,11 @@ import io
 import random
 from typing import List, BinaryIO, Set
 
-from codn.a_base import CodenameKey
-from codn.b_cryptoblobs import MultipartEncryptor
+from codn.a_base import CodenameKey, Imprint
+from codn.b_cryptoblobs import MultipartEncryptor, DecryptedIO
+from codn.b_cryptoblobs._20_encdec_part import Encrypt
 from codn.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
+# from codn.c_namegroups._fakes import create_fake_bytes
 from codn.c_namegroups._fakes import create_fake_bytes
 from codn.c_namegroups._namegroup import NameGroup
 
@@ -52,13 +54,22 @@ def remove_random_items(source: Set[int],
     return result
 
 
+# def remember_all_nonces(old_blobs: BlocksIndexedReader):
+#     for block_io in old_blobs:
+#         # This is rather sub-optimal: we have already read many of these
+#         # imprints by scanning the namegroup.
+#
+#         Imprint.add_known_nonce(
+#             Imprint.bytes_to_nonce(DecryptedIO.read_imprint_a_bytes(block_io)))
+#
+#         Imprint.add_known_nonce(
+#             Imprint.bytes_to_nonce(DecryptedIO.read_imprint_b_bytes(block_io)))
+
+
 def update_namegroup_b(cdk: CodenameKey,
                        new_content_io: BinaryIO,
                        old_blobs: BlocksIndexedReader,
                        new_blobs: BlocksSequentialWriter):
-    # we will remove and add some surrogates, and also remove old real file
-    # add new real file. We will do this in random order, so as not to give
-    # out which files are real and which are surrogates
 
     name_group = NameGroup(old_blobs, cdk)
 

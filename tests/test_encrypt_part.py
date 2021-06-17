@@ -10,7 +10,8 @@ from codn._common import MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
 from codn.a_base._10_kdf import FasterKDF, CodenameKey
 from codn.a_utils.randoms import get_noncrypt_random_bytes
 from codn.b_cryptoblobs._20_encdec_part import Encrypt, \
-    DecryptedIO, GroupImprintMismatch, is_content_io, is_fake_io
+    DecryptedIO, GroupImprintMismatch, is_content_io, is_fake_io, \
+    codename_to_bytes, CODENAME_LENGTH, bytes_to_codename
 from tests.common import testing_salt
 
 
@@ -25,6 +26,26 @@ class TestEncryptDecrypt(unittest.TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         cls.faster.end()
+
+    def test_codename_to_bytes(self):
+        result = codename_to_bytes('abc')
+        self.assertTrue(result.startswith(b'abc'))
+        self.assertEqual(len(result), CODENAME_LENGTH)
+
+        NAME = 'abc'
+        self.assertNotEqual(
+            codename_to_bytes(NAME),
+            codename_to_bytes(NAME))
+
+        for _ in range(200):
+            self.assertEqual(bytes_to_codename(codename_to_bytes(NAME)), NAME)
+
+        with self.assertRaises(ValueError):
+            codename_to_bytes('Привет!')
+
+        with self.assertRaises(ValueError):
+            codename_to_bytes('x\0yz')
+
 
     def test_imprint_match(self):
         data = bytes([77, 88, 99])

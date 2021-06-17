@@ -61,16 +61,21 @@ class Test(unittest.TestCase):
 
             # writing and overwriting
             for _ in range(15):
+
                 name = random.choice(('one', 'two', 'three', 'four', 'five'))
 
                 val = gen_random_string()
 
                 reference[name] = val
-                runner = CliRunner()
-                result = runner.invoke(
-                    codn_cli,
-                    ['sett', '-s', storage, '-e', name, '-t', val])
-                self.assertEqual(result.exit_code, 0)
+
+                with self.subTest(f"sett [{name}] [{val}]"):
+                    runner = CliRunner()
+                    result = runner.invoke(
+                        codn_cli,
+                        ['sett', '-s', storage, '-e', name, '-t', val],
+                        catch_exceptions=False)
+                    #print(result.stdout)
+                    self.assertEqual(result.exit_code, 0)
 
             self.assertTrue(os.path.exists(storage))
 
