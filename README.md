@@ -178,8 +178,8 @@ contains random rubbish.
 
    This fingerprint is saved openly to the block. Fingerprint allows us to
    identify blocks associated with a specific codename. With the private key (2)
-   available, we can recreate the same fingerprint (5) using the known nonce (3)
-   . Without the private key, we have no idea what the hash (5) was derived
+   available, we can recreate the same fingerprint (5) using the known nonce 
+   (3). Without the private key, we have no idea what the hash (5) was derived
    from.
 
 
