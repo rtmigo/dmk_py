@@ -158,23 +158,29 @@ contains random rubbish.
 
 2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
    salted (1) codename.
-   
+
 3) **ChaCha20** encrypts the block data using the private key (2) and a newly
    generated 96-bit **nonce**.
 
-4) **CRC-32** checksum verify the integrity of the decoded data.
-   This checksum is located inside the encrypted stream. If the data in the 
-   blocks is the same, it will not be noticeable from the outside due to 
-   different nonce (3) values
-   
-5)  Еach block receives a unique 352-bit **fingerprint** consisting of 96-bit 
-    **nonce** and 256-bit **Blake2s** **hash**, derived from nonce (5) + 
-    private key (2).
-    
-    This huge fingerprint allows us to identify blocks associated with a 
-    specific codename. With the private key (2) available, we can recreate the 
-    same fingerprint (5) using the known nonce (5). Without the private key, 
-    we have no idea what the hash (5) was derived from.
+
+4) **CRC-32** checksum verify the integrity of the decoded data. This checksum
+   is located inside the encrypted stream. If the data in the blocks is the
+   same, it will not be noticeable from the outside due to different nonce (3)
+   values.
+
+   This verification occurs when we have already double-checked the correctness
+   of the private key (2). Therefore, it is really only a self-test to see if
+   the data is decoded as expected.
+
+
+5) Еach block receives a unique 352-bit **fingerprint** consisting of 96-bit
+   **nonce** and 256-bit **Blake2s** **hash**, derived from nonce (5) + private
+   key (2).
+
+   This huge fingerprint allows us to identify blocks associated with a specific
+   codename. With the private key (2) available, we can recreate the same
+   fingerprint (5) using the known nonce (5). Without the private key, we have
+   no idea what the hash (5) was derived from.
 
 
 
