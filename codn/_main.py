@@ -118,9 +118,9 @@ class Main:
     #     print(txt)
     #
     #
-    def clear(self):
-        shutil.rmtree(str(self.config.data_dir))
-        self.config.data_dir.mkdir()
-
-    def edit_config(self):
-        subprocess.run(['nano', str(self.config.config_file)])
+    # def clear(self):
+    #     shutil.rmtree(str(self.config.data_dir))
+    #     self.config.data_dir.mkdir()
+    #
+    # def edit_config(self):
+    #     subprocess.run(['nano', str(self.config.config_file)])
