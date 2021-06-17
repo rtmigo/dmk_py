@@ -164,7 +164,7 @@ contains random rubbish.
 
 
 4) **CRC-32** checksum verify the integrity of the decrypted block data. This
-   checksum is located inside the encrypted stream. If the data in the blocks is
+   checksum is saved inside the encrypted stream. If the data in the blocks is
    the same, it will not be noticeable from the outside due to different nonce (
    3)
    values.
