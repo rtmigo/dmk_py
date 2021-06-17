@@ -339,7 +339,7 @@ class Encrypt:
         # header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
         cryptographer = Cryptographer(fpk=self.cnk,
-                                      nonce=None)
+                                      nonce=imprint_a.nonce)
 
         if _DEBUG_PRINT:
             print("---")
@@ -355,7 +355,7 @@ class Encrypt:
         assert len(cryptographer.nonce) == ENCRYPTION_NONCE_LEN, \
             f"Unexpected nonce length: {len(cryptographer.nonce)}"
 
-        outfile.write(cryptographer.nonce)
+        #outfile.write(cryptographer.nonce)
 
         assert outfile.seek(0, io.SEEK_CUR) <= 1024
 
@@ -443,7 +443,7 @@ class DecryptedIO:
         self._imprint_b_checked = False
 
         self._imprint_a_bytes: Optional[bytes] = None
-        self._imprint_b_bytes: Optional[bytes] = None
+        #self._imprint_b_bytes: Optional[bytes] = None
 
         pos = self._source.tell()
         if pos != 0:
@@ -456,18 +456,26 @@ class DecryptedIO:
             raise InsufficientData
         return self.cfg.cipher.decrypt(encrypted)
 
-    # @property
-    # def imprint_a_bytes(self) -> bytes:
-    #     if self._imprint_a_bytes is None:
-    #         self._imprint_a_bytes = self.read_imprint_a_bytes(self._source)
-    #         # self._expect_position(0)
-    #         # self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
-    #     return self._imprint_a_bytes
+    @property
+    def imprint_a_bytes(self) -> bytes:
+        if self._imprint_a_bytes is None:
+            _expect_position(self._source, 0)
+            self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
 
-    @staticmethod
-    def read_imprint_a_bytes(stream: BinaryIO) -> bytes:
-        _expect_position(stream, 0)
-        return read_or_fail(stream, Imprint.FULL_LEN)
+            #self._imprint_a_bytes = self.read_imprint_a_bytes(self._source)
+            # self._expect_position(0)
+            # self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
+        return self._imprint_a_bytes
+
+    @property
+    def nonce(self) -> bytes:
+        # test nonce is different each time
+        return Imprint.bytes_to_nonce(self.imprint_a_bytes)
+
+    # @staticmethod
+    # def read_imprint_a_bytes(stream: BinaryIO) -> bytes:
+    #     _expect_position(stream, 0)
+    #     return read_or_fail(stream, Imprint.FULL_LEN)
 
     # @staticmethod
     # def read_imprint_b_bytes(stream: BinaryIO) -> bytes:
@@ -504,8 +512,7 @@ class DecryptedIO:
                 # imp = read_or_fail(self._source, Imprint.FULL_LEN)
                 self._belongs_to_namegroup = \
                     pk_matches_imprint_bytes(self.fpk,
-                                             self.read_imprint_a_bytes(
-                                                 self._source))
+                                             self.imprint_a_bytes)
             except InsufficientData:
                 self._belongs_to_namegroup = False
         assert self._belongs_to_namegroup is not None
@@ -544,9 +551,9 @@ class DecryptedIO:
 
     def __read_header(self) -> Header:
 
-        nonce = read_or_fail(self._source, ENCRYPTION_NONCE_LEN)
+        #nonce = read_or_fail(self._source, ENCRYPTION_NONCE_LEN)
 
-        self.cfg = Cryptographer(fpk=self.fpk, nonce=nonce)
+        self.cfg = Cryptographer(fpk=self.fpk, nonce=self.nonce)
 
         if _DEBUG_PRINT:
             print("---")

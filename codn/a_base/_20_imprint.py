@@ -106,7 +106,9 @@ class Imprint:
     def bytes_to_nonce(h: bytes) -> bytes:
         if len(h) != Imprint.FULL_LEN:
             raise ValueError
-        return h[-Imprint.NONCE_LEN:]
+        result = h[-Imprint.NONCE_LEN:]
+        assert len(result) == Imprint.NONCE_LEN
+        return result
 
     @classmethod
     def create_nonce(cls) -> bytes:
