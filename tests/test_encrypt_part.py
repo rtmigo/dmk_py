@@ -141,6 +141,26 @@ class TestEncryptDecrypt(unittest.TestCase):
                                   part_size=part_size,
                                   part_idx=part_idx)
     #
+    def test_nonce_is_different_each_time(self):
+        fpk = CodenameKey('abc', testing_salt)
+
+        nonces = set()
+
+        with BytesIO(b'datadatadata') as original_io:
+
+            for _ in range(3):
+                original_io.seek(0, io.SEEK_SET)
+
+                with BytesIO() as encrypted_io:
+                    Encrypt(fpk).io_to_io(original_io, encrypted_io)
+                    encrypted_io.seek(0, io.SEEK_SET)
+
+                    df = DecryptedIO(fpk, encrypted_io)
+                    nonces.add(df.nonce)
+
+        self.assertGreaterEqual(len(nonces), 2)
+
+
     def _encrypt_decrypt(self,
                          name: str,
                          body: bytes,
