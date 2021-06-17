@@ -174,7 +174,7 @@ contains random rubbish.
 
 
 5) Еach block receives a 352-bit **fingerprint** consisting of 96-bit nonce (3)
-   and 256-bit **Blake2s** **hash**, derived from nonce (5) + private key (2).
+   and 256-bit **Blake2s** **hash**, derived from nonce (3) + private key (2).
 
    This fingerprint allows us to identify blocks associated with a specific
    codename. With the private key (2) available, we can recreate the same
