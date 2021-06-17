@@ -169,8 +169,8 @@ contains random rubbish.
    (3). Without the private key, we have no idea what the hash (3) was derived
    from.
 
-4) **ChaCha20** encrypts the block data using the private key (2) and 96-bit **
-   nonce** (3)
+4) **ChaCha20** encrypts the block data using the private key (2) and 96-bit 
+   nonce (3).
 
 5) The block header is located at the very beginning of the encrypted data. The
    header is followed by the **header checksum**, which is a 128-bit
