@@ -23,7 +23,7 @@ CLUSTER_SIZE = 4096
 # all the meta data in cluster: imprints and nonce, header.
 # Some of this is kept open, some is the beginning of encrypted data.
 # It takes a fixed number of bytes anyway
-CLUSTER_META_SIZE = 153
+CLUSTER_META_SIZE = 168
 
 # the maximum amount of data (in bytes) that can be saved in single cluster
 MAX_CLUSTER_CONTENT_SIZE = CLUSTER_SIZE - CLUSTER_META_SIZE

@@ -12,19 +12,13 @@ from codn._common import KEY_SALT_SIZE
 class CodenameKey:
     """The 256-bit private key.
 
-    Fileset is a set of files related to the same item. One of these
-    files contains encrypted item data, others are fake or contain outdated
-    data.
-
-    The item name is a secret: knowing the name, we can not only find the
-    corresponding files, but also decrypt the data.
-
-    The private key is derived from the item name. Computing a private key
+    The private key is derived from the codename. Computing a private key
     from a name is resource-intensive. We will do this at most once. After
     that, instead of a name, we always use the key or its derivatives.
+
     """
 
-    __slots__ = ["as_bytes"]
+    __slots__ = ["as_bytes", "codename"]
 
     _power = 17  # larger values = slower function, more secure
 
@@ -36,6 +30,7 @@ class CodenameKey:
     def __init__(self, password: str, salt: bytes):
         if len(salt) != KEY_SALT_SIZE:
             raise ValueError("Wrong salt length")
+        self.codename = password
         self.as_bytes = _password_to_key_cached(
             password,
             salt,
