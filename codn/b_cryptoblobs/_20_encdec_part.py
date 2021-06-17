@@ -492,31 +492,31 @@ class DecryptedIO:
         return body
 
 
-class _DecryptedFile:
-    """It is better to always use DecryptedIO instead of this class.
-    The class is kept for temporary compatibility with tests."""
-
-    # todo remove all usages of this class
-    def __init__(self,
-                 source_file: Path,
-                 fpk: CodenameKey,
-                 decrypt_body=True):
-
-        with source_file.open('rb') as f:
-            di = DecryptedIO(fpk, f)
-            self.data_version = di.header.data_version
-            self.size = di.header.data_size
-
-            self.data: Optional[bytes]
-            if decrypt_body:
-                self.data = di.read_data()
-            else:
-                self.data = None
-
-    def write(self, target: Path):
-        if self.data is None:
-            raise RuntimeError("Body is not set.")
-        target.write_bytes(self.data)
+# class _DecryptedFile:
+#     """It is better to always use DecryptedIO instead of this class.
+#     The class is kept for temporary compatibility with tests."""
+#
+#     # todo remove all usages of this class
+#     def __init__(self,
+#                  source_file: Path,
+#                  fpk: CodenameKey,
+#                  decrypt_body=True):
+#
+#         with source_file.open('rb') as f:
+#             di = DecryptedIO(fpk, f)
+#             self.data_version = di.header.data_version
+#             self.size = di.header.data_size
+#
+#             self.data: Optional[bytes]
+#             if decrypt_body:
+#                 self.data = di.read_data()
+#             else:
+#                 self.data = None
+#
+#     def write(self, target: Path):
+#         if self.data is None:
+#             raise RuntimeError("Body is not set.")
+#         target.write_bytes(self.data)
 
 
 def is_content_io(fpk: CodenameKey, stream: BinaryIO) -> bool:
