@@ -7,6 +7,7 @@ from typing import Optional
 from Crypto.Protocol.KDF import scrypt
 
 from dmk._common import KEY_SALT_SIZE
+from dmk.a_base._05_codename import CodenameAscii
 
 
 class CodenameKey:
@@ -32,18 +33,18 @@ class CodenameKey:
             raise ValueError("Wrong salt length")
         self.codename = password
         self.as_bytes = _password_to_key_cached(
-            password,
+            CodenameAscii.to_ascii(password),
             salt,
             size=32,
             pwr=CodenameKey._power)
 
 
 @lru_cache(10000)
-def _password_to_key_cached(password: str, salt: bytes, size: int, pwr: int):
+def _password_to_key_cached(password: bytes, salt: bytes, size: int, pwr: int):
     return _password_to_key_noncached(password, salt, size, pwr)
 
 
-def _password_to_key_noncached(password: str, salt: bytes, size: int, pwr: int):
+def _password_to_key_noncached(password: bytes, salt: bytes, size: int, pwr: int):
     # https://nitratine.net/blog/post/python-gcm-encryption-tutorial/
     # noinspection PyTypeChecker
     return scrypt(password,
