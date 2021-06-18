@@ -7,23 +7,21 @@ draft.**
 
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py)
 
-`dmk` encrypts data entries. Entries can be added, updated, and removed. Entries
-are files or strings.
+`dmk` keeps data entries in a file. Entries can be added, updated, and removed.
+Entries can be binary (files) or text (passwords, etc).
 
-Each entry is independent and protected with a unique **codename**. The codename
+Each entry is independent and protected unique **codename**. The codename
 serves as a name and password at the same time.
 
-Codename allows access to one entry. It reveals nothing about other entries,
-even whether they exist.
+Codename allows access to one entry. It reveals nothing about other
+entries, even whether they exist.
 
-The `dmk` storage file consists only of unidentifiable blocks. Whether these
-blocks contain encrypted information or are they a random set of bytes is
-unknown. There is no table of contents and no master decryption keys.
+The `dmk` storage file does not have master password or table of contents.
 
-The file definitely exists and is sized. But that's literally all that is known.
-It is impossible to find out whether there are entries, how many, what size they
-are. It is not even clear whether the file is in dmk format.
-
+The file consists mostly of unidentifiable data. The data may contain encrypted
+information, or be just random. Codename helps to identify only data fragments
+associated with particular entry and decrypt it. The rest of the data will
+remain dark matter.
 
 # Install
 
