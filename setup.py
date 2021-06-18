@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def load_module_dict(filename: str) -> dict:
@@ -26,7 +26,7 @@ setup(
     author_email="ortemeo@gmail.com",
     # url='https://github.com/rtmigo/vien_py',
 
-    packages=['dmk', 'dmk.a_utils'],
+    packages=find_packages(where='dmk'),
     python_requires='>=3.7',
     install_requires=['pycryptodome', 'click', 'argon2-cffi'],
 
