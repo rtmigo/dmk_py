@@ -93,7 +93,7 @@ My darling's jokes are not so funny
 
 Read data from a `source.docx` and save it as encrypted entry `secRet007`
 
-``` bash 
+```  
 $ dmk set -e secRet007 /my/docs/source.docx
 ```
 
