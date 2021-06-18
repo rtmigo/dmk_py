@@ -41,7 +41,7 @@ For example, information about a bitcoin wallet can be stored under codename
 
 Entries will be stored in a file.
 
-If the `-s` argument is given, it specifies the file.
+If the `-s` parameter is given, it specifies the file.
 
 ``` bash
 $ dmk gett -s /path/to/storagefile ...  
