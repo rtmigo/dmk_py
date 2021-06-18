@@ -69,7 +69,7 @@ def set_cmd(storage: str, codename: str, text: str, file: List[Path]):
             raise click.BadParameter("Exactly one file expected")
         Main(storage).set_file(codename, str(file[0]))  # todo not str
     else:
-        if not text:
+        if text is None:
             text = click.prompt('Text')
         Main(storage).set_text(codename, text)
 
