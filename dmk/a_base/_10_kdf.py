@@ -6,7 +6,10 @@ from typing import Optional
 
 from Crypto.Protocol.KDF import scrypt
 
+#import hashlib
+
 from dmk._common import KEY_SALT_SIZE
+from dmk.a_base._05_codename import CodenameAscii
 
 
 class CodenameKey:
@@ -32,26 +35,35 @@ class CodenameKey:
             raise ValueError("Wrong salt length")
         self.codename = password
         self.as_bytes = _password_to_key_cached(
-            password,
+            CodenameAscii.to_ascii(password),
             salt,
             size=32,
             pwr=CodenameKey._power)
 
 
 @lru_cache(10000)
-def _password_to_key_cached(password: str, salt: bytes, size: int, pwr: int):
+def _password_to_key_cached(password: bytes, salt: bytes, size: int, pwr: int):
     return _password_to_key_noncached(password, salt, size, pwr)
 
 
-def _password_to_key_noncached(password: str, salt: bytes, size: int, pwr: int):
+def _password_to_key_noncached(password: bytes, salt: bytes, size: int, pwr: int):
     # https://nitratine.net/blog/post/python-gcm-encryption-tutorial/
     # noinspection PyTypeChecker
-    return scrypt(password,
+    return scrypt(password, # type: ignore
                   salt,  # type: ignore
                   key_len=size,
                   N=2 ** pwr,
                   r=8, p=1)
 
+# def _password_to_key_noncached(password: bytes, salt: bytes, size: int, pwr: int):
+#     # https://nitratine.net/blog/post/python-gcm-encryption-tutorial/
+#
+#     return hashlib.scrypt(password, salt=salt,
+#                   dklen=size,
+#                   n=2 ** pwr,
+#                           r=16, p=1, #maxmem=1024*1024*32
+#                   #r=8, p=1
+#                           )
 
 class FasterKDF:
     """The slower the key derivation function, the more reliable it is.

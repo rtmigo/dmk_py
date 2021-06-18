@@ -12,8 +12,8 @@ from Crypto.Random import get_random_bytes
 
 from dmk._common import read_or_fail, InsufficientData, \
     MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE, CLUSTER_META_SIZE
+from dmk.a_base._05_codename import CodenameAscii, CODENAME_LENGTH_BYTES
 from dmk.a_base._10_kdf import CodenameKey
-from dmk.a_base._20_imprint import Imprint, pk_matches_imprint_bytes
 from dmk.a_utils.dirty_file import WritingToTempFile
 from dmk.a_utils.randoms import set_random_last_modified
 from dmk.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
@@ -24,7 +24,7 @@ from dmk.b_cryptoblobs._10_padding import IntroPadding
 _DEBUG_PRINT = False
 
 
-class ChecksumMismatch(Exception):
+class VerificationFailure(Exception):
     pass
 
 
@@ -46,6 +46,12 @@ VERSION_LEN = 1
 
 def blake2s_128(data: bytes) -> bytes:
     h_obj = BLAKE2s.new(digest_bits=128)
+    h_obj.update(data)
+    return h_obj.digest()
+
+
+def blake2s_256(data: bytes) -> bytes:
+    h_obj = BLAKE2s.new(digest_bits=256)
     h_obj.update(data)
     return h_obj.digest()
 
@@ -90,6 +96,7 @@ class Cryptographer:
 
 
 class Header(NamedTuple):
+    valid: bool
     content_crc32: int
     is_last_part: int
     # format_version: int  # todo rename
@@ -128,28 +135,6 @@ def set_highest_bit_16(x: int, value: bool) -> int:
 
 def get_lower15bits(x: int) -> int:
     return x & 0x7FFF
-
-
-CODENAME_LENGTH_BYTES = 24
-
-
-def codename_to_bytes(codename: str) -> bytes:
-    if '\0' in codename:
-        raise ValueError("Zero character in codename")
-    result = codename.encode('ascii')
-    length = len(result)
-    if length > CODENAME_LENGTH_BYTES:
-        raise ValueError(f"Too long: {length}>{CODENAME_LENGTH_BYTES}")
-
-    elif length < CODENAME_LENGTH_BYTES:
-        padding = get_random_bytes(CODENAME_LENGTH_BYTES - length - 1)
-        result += b'\0' + padding
-    assert len(result) == CODENAME_LENGTH_BYTES
-    return result
-
-
-def bytes_to_codename(data: bytes) -> str:
-    return data.partition(b'\0')[0].decode('ascii')
 
 
 FAKE_CONTENT_VERSION = 0xFFFFFFFF
@@ -217,37 +202,36 @@ class Encrypt:
         -----------
 
         <imprint>
-            NONCE               (12 bytes)  Random bytes. Used for imprint
-                                            and the encryption.
+            NONCE               (12 bytes)  Random bytes.
 
-            CODENAME_HASH       (32 bytes)  blake2s derived from
-                                            codename mixed with nonce.
-
-                                            It helps to identify blocks
-                                            associated with particular
-                                            codename, but useless without
-                                            the codename
         </imprint>
 
 
         <encrypted>
             <header>
+                CODENAME    (24 bytes)  The codename string in ASCII.
+
+                                        For codenames shorter than 24 chars
+                                        it is prefixed with random bytes
+                                        ending with 0x00.
+
+                                        "...\0codename"
+
+                                        We deliberately place it at the
+                                        beginning of the stream to check for
+                                        a match as quickly as possible (quickly
+                                        discard inappropriate blocks).
+
+                                        And it's good that our decrypted stream
+                                        starts from such a randomish data.
+
                 CONTENT_CRC32 (uint32)  Checksum of the CONTENT_DATA
                                         (the entry data, stored in current
                                         block).
 
-                                        It is the first 4 bytes contained in
-                                        the encrypted stream. And they're
-                                        totally unpredictable.
-
                                         For fake bloks it is not checksum,
                                         but four random bytes.
 
-                CODENAME    (24 bytes)  The codename string in ASCII
-                                        padded with 0x00 and following random
-                                        data.
-
-                                        'codename\0..."
 
                 PART_IDX      (uint16)  Zero-based part index. If we split
                                         the data into three clusters, they
@@ -265,24 +249,17 @@ class Encrypt:
                                         For fake blocks it's 0xFFFFFFFF.
             </header>
 
-            HEADER_CHECKSUM (16 bytes)  Blake2s 128-bit hash of the header.
+            HEADER_CHECKSUM (32 bytes)  Blake2s 256-bit hash of the header.
+
+                                        This is the final stage of verification,
+                                        after which we will definitely decide
+                                        that the block belongs to the codename.
+
+
                                         It is stored inside the encrypted
-                                        stream. Thanks to the nonce, this will
-                                        make the stored bytes of the hash
-                                        different every time - and not give
-                                        out information about identical
-                                        headers.
-
-                                        We have already verified the correctness
-                                        of the codename using the first imprint.
-                                        In case of an incredible collision, this
-                                        is the second stage of verification.
-
-
-
-
-            HEADER_CRC32 (uint32)  Checksum of the header.
-
+                                        stream, so even for identical headers
+                                        the checksum will look different from
+                                        the outside.
 
             CONTENT_DATA: bytes
 
@@ -304,7 +281,9 @@ class Encrypt:
 
         is_fake = source is None
 
-        imprint_a = Imprint(self.cnk)
+        nonce = get_random_bytes(ENCRYPTION_NONCE_LEN)
+
+        # imprint_a = Imprint(self.cnk)
         # imprint_b = Imprint(self.cnk)
         # assert imprint_a.as_bytes != imprint_b.as_bytes
 
@@ -360,12 +339,12 @@ class Encrypt:
         part_size_bytes = uint16_to_bytes(part_is_last_and_size)
         # header_end_marker = b'~'
 
-        codename_data = codename_to_bytes(self.cnk.codename)
+        codename_data = CodenameAscii.to_padded_ascii(self.cnk.codename)
 
         # header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
         cryptographer = Cryptographer(fpk=self.cnk,
-                                      nonce=imprint_a.nonce)
+                                      nonce=nonce)
 
         if _DEBUG_PRINT:
             print("---")
@@ -375,7 +354,7 @@ class Encrypt:
 
         # writing the imprint. It is not encrypted, but it's a hash +
         # random nonce. It's indistinguishable from any random rubbish
-        outfile.write(imprint_a.as_bytes)
+        outfile.write(nonce)
         # outfile.write(imprint_b.as_bytes)
 
         assert len(cryptographer.nonce) == ENCRYPTION_NONCE_LEN, \
@@ -392,15 +371,15 @@ class Encrypt:
         # them at the very beginning of the data to be encrypted.
 
         header_data = b''.join((
-            body_crc_bytes,
             codename_data,
+            body_crc_bytes,
             part_idx_bytes,
             part_size_bytes,
             content_ver_bytes,
         ))
 
         encrypt_and_write(header_data)
-        encrypt_and_write(blake2s_128(header_data))
+        encrypt_and_write(blake2s_256(header_data))
 
         # encrypt_and_write(body_crc_bytes)
         # encrypt_and_write(item_version_bytes)
@@ -460,7 +439,11 @@ class DecryptedIO:
         self.fpk = fpk
         self._source = source
 
+        self._nonce: Optional[bytes] = None
+
         self._header: Optional[Header] = None
+        self._tried_to_read_header = False
+
         self._data_read = False
 
         self._belongs_to_namegroup: Optional[bool] = None
@@ -483,21 +466,24 @@ class DecryptedIO:
             raise InsufficientData
         return self.cfg.cipher.decrypt(encrypted)
 
-    @property
-    def imprint_a_bytes(self) -> bytes:
-        if self._imprint_a_bytes is None:
-            _expect_position(self._source, 0)
-            self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
-
-            # self._imprint_a_bytes = self.read_imprint_a_bytes(self._source)
-            # self._expect_position(0)
-            # self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
-        return self._imprint_a_bytes
+    # @property
+    # def imprint_a_bytes(self) -> bytes:
+    #     if self._imprint_a_bytes is None:
+    #         _expect_position(self._source, 0)
+    #         self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
+    #
+    #         # self._imprint_a_bytes = self.read_imprint_a_bytes(self._source)
+    #         # self._expect_position(0)
+    #         # self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
+    #     return self._imprint_a_bytes
 
     @property
     def nonce(self) -> bytes:
-        # test nonce is different each time
-        return Imprint.bytes_to_nonce(self.imprint_a_bytes)
+        if self._nonce is None:
+            _expect_position(self._source, 0)
+            self._nonce = read_or_fail(self._source, ENCRYPTION_NONCE_LEN)
+        return self._nonce
+        # return Imprint.bytes_to_nonce(self.imprint_a_bytes)
 
     # @staticmethod
     # def read_imprint_a_bytes(stream: BinaryIO) -> bytes:
@@ -530,29 +516,34 @@ class DecryptedIO:
     def belongs_to_namegroup(self) -> bool:
         # reads and interprets IMPRINT_A
 
-        if self._belongs_to_namegroup is None:
-            try:
+        return self.header_opt is not None
 
-                # pos = self._source.tell()
-                # if pos != 0:
-                #     raise ValueError(f"Unexpected stream position {pos}")
-                # imp = read_or_fail(self._source, Imprint.FULL_LEN)
-                self._belongs_to_namegroup = \
-                    pk_matches_imprint_bytes(self.fpk,
-                                             self.imprint_a_bytes)
-            except InsufficientData:
-                self._belongs_to_namegroup = False
-        assert self._belongs_to_namegroup is not None
-        return self._belongs_to_namegroup
+        # if self._belongs_to_namegroup is None:
+        #     try:
+        #
+        #         # pos = self._source.tell()
+        #         # if pos != 0:
+        #         #     raise ValueError(f"Unexpected stream position {pos}")
+        #         # imp = read_or_fail(self._source, Imprint.FULL_LEN)
+        #         self._belongs_to_namegroup = \
+        #             pk_matches_imprint_bytes(self.fpk,
+        #                                      self.imprint_a_bytes)
+        #     except InsufficientData:
+        #         self._belongs_to_namegroup = False
+        # assert self._belongs_to_namegroup is not None
+        # return self._belongs_to_namegroup
 
     @property
     def contains_data(self) -> bool:
         # reads and interprets IMPRINT_B
 
-        if not self.belongs_to_namegroup:
-            return False
+        return self.header_opt is not None \
+               and self.header_opt.data_version != FAKE_CONTENT_VERSION
 
-        return self.header.data_version != FAKE_CONTENT_VERSION
+        # if not self.belongs_to_namegroup:
+        #     return False
+        #
+        # return self.header.data_version != FAKE_CONTENT_VERSION
 
         # if self._contains_data is None:
         #     try:
@@ -567,13 +558,37 @@ class DecryptedIO:
 
     @property
     def header(self) -> Header:
-        if not self.belongs_to_namegroup:
-            raise GroupImprintMismatch
-        # if not self.contains_data:
-        #     raise ItemImprintMismatch
-        if self._header is None:
-            self._header = self.__read_header()
-        assert self._header is not None
+        result = self.header_opt
+        if result is None:
+            raise TypeError
+        else:
+            return result
+        # if not self.belongs_to_namegroup:
+        #     raise GroupImprintMismatch
+        #
+        # if self._tried_to_read_header:
+        #     if self._header is None:
+        #         raise TypeError
+        #     else:
+        #         return self._header
+        #
+        # self._tried_to_read_header = True
+        # self._header = self.__read_header()
+        # assert self._header is not None
+        # return self._header
+
+    @property
+    def header_opt(self) -> Optional[Header]:
+        # if not self.belongs_to_namegroup:
+        #    raise GroupImprintMismatch
+
+        if not self._tried_to_read_header:
+            self._tried_to_read_header = True
+            try:
+                self._header = self.__read_header()
+            except VerificationFailure:
+                self._header = None
+
         return self._header
 
     def __read_header(self) -> Header:
@@ -602,10 +617,14 @@ class DecryptedIO:
         # format_version = format_version_bytes[0]
         # assert format_version == 1
 
+        codename_data = self.__read_and_decrypt(CODENAME_LENGTH_BYTES)
+        if CodenameAscii.unpadded(codename_data) != CodenameAscii.to_ascii(
+                self.fpk.codename):
+            # todo cache codename_to_ascii in fpk
+            raise VerificationFailure("Codename mismatch.")
+
         body_crc32_data = self.__read_and_decrypt(4)
         content_crc32 = bytes_to_uint32(body_crc32_data)
-
-        codename_data = self.__read_and_decrypt(CODENAME_LENGTH_BYTES)
 
         # # FULL_SIZE is the size of original file
         # full_size_bytes = self.__read_and_decrypt(3)
@@ -631,21 +650,58 @@ class DecryptedIO:
         content_version_data = self.__read_and_decrypt(4)
         content_version = bytes_to_uint32(content_version_data)
 
-        header_checksum = self.__read_and_decrypt(16)
+        header_checksum = self.__read_and_decrypt(32)
+
+        # todo read whole header data, then re-read from bytesio?
 
         header_data = b''.join((
-            body_crc32_data,
             codename_data,
+            body_crc32_data,
             part_idx_data,
             part_size_data,
             content_version_data,
         ))
 
-        if blake2s_128(header_data) != header_checksum:
-            raise ChecksumMismatch("Header checksum mismatch.")
+        # we had already made sure that a matching codename was found inside
+        # the decrypted data. This is how we insured ourselves against private
+        # key collisions.
+        #
+        # But it is possible that we "decrypted" the expected codename from
+        # random data. For example, if the code name consists of a single byte,
+        # then each 256th private key combination with a nonce would "decrypt"
+        # the expected byte. And the variety of possible key+nonce combinations
+        # would not have helped in any way. Figuratively speaking, by using
+        # a new nonce every time, we deliberately brute force such a collision.
+        #
+        # The good news is that we are ready for this. Now is the final stage
+        # of verification: we compare the checksum of the decrypted header
+        # with the checksum also read from the encrypted data.
+        #
+        # This is how we verify everything together in combination:
+        #
+        # - the 256-bit checksum can be read correctly from the stream.
+        #   If we decode nonsense with a random key, then the checksum will
+        #   not match the header: either the header or the sum will be read
+        #   incorrectly. The match almost certainly means, the private key
+        #   is correct
+        #
+        # - the codename we decrypted from the header was correct according
+        #   to the checksum. That almost certainly means, that when we matched
+        #   the read codename against the codename provided by user, it proved
+        #   (a) was is the correct codename (b) we are so successful at
+        #   decrypting the data not because of the KDF collision
+        #
+        # So we got perfect match of 256-bit key with a 256-bit checksum and
+        # variable-length codename (up to 24 bytes).
+        #
+        # It's still not deterministic. But even if you brute force it hard, it
+        # will lead to a collision only on a spaceship with infinite
+        # improbability drive. This is also not a completely deterministic
+        # statement.
 
-        if bytes_to_codename(codename_data) != self.fpk.codename:
-            raise ChecksumMismatch("Codename mismatch.")
+
+        if blake2s_256(header_data) != header_checksum:
+            raise VerificationFailure("Header checksum mismatch.")
 
         # header_end_marker = self.__read_and_decrypt(1)
         # if header_end_marker != b'~':
@@ -673,20 +729,24 @@ class DecryptedIO:
                       part_size=part_size,
                       # parts_len=parts_len,
                       part_idx=part_idx,
-                      is_last_part=is_last)
+                      is_last_part=is_last,
+                      valid=True)
 
     def read_data(self) -> bytes:
         if self._data_read:
             raise RuntimeError("Cannot read data more than once")
 
-        _ = self.header
+        if not self.contains_data:
+            raise RuntimeError("contains_data is False")
+
+        # _ = self.header
 
         assert self._source.tell() == CLUSTER_META_SIZE, f"pos is {self._source.tell()}"
 
         body = self.__read_and_decrypt(self.header.part_size)
         # body_crc = bytes_to_uint32(self.__read_and_decrypt(4))
         if zlib.crc32(body) != self.header.content_crc32:
-            raise ChecksumMismatch("Body CRC mismatch.")
+            raise VerificationFailure("Body CRC mismatch.")
 
         self._data_read = True
         return body

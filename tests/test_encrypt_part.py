@@ -10,8 +10,8 @@ from dmk._common import MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
 from dmk.a_base._10_kdf import FasterKDF, CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 from dmk.b_cryptoblobs._20_encdec_part import Encrypt, \
-    DecryptedIO, GroupImprintMismatch, is_content_io, is_fake_io, \
-    codename_to_bytes, CODENAME_LENGTH_BYTES, bytes_to_codename
+    DecryptedIO, GroupImprintMismatch, is_content_io, is_fake_io
+from dmk.a_base._05_codename import CodenameAscii, CODENAME_LENGTH_BYTES
 from tests.common import testing_salt
 
 
@@ -28,39 +28,39 @@ class TestEncryptDecrypt(unittest.TestCase):
         cls.faster.end()
 
     def test_codename_to_bytes(self):
-        result = codename_to_bytes('abc')
-        self.assertTrue(result.startswith(b'abc'))
+        result = CodenameAscii.to_padded_ascii('abc')
+        self.assertTrue(result.endswith(b'abc'))
         self.assertEqual(len(result), CODENAME_LENGTH_BYTES)
 
         NAME = 'abc'
         self.assertNotEqual(
-            codename_to_bytes(NAME),
-            codename_to_bytes(NAME))
+            CodenameAscii.to_padded_ascii(NAME),
+            CodenameAscii.to_padded_ascii(NAME))
 
         for _ in range(200):
-            self.assertEqual(bytes_to_codename(codename_to_bytes(NAME)), NAME)
+            self.assertEqual(CodenameAscii.padded_to_str(CodenameAscii.to_padded_ascii(NAME)), NAME)
 
         with self.assertRaises(ValueError):
-            codename_to_bytes('Привет!')
+            CodenameAscii.to_padded_ascii('Привет!')
 
         with self.assertRaises(ValueError):
-            codename_to_bytes('x\0yz')
+            CodenameAscii.to_padded_ascii('x\0yz')
 
     def test_codename_max_length(self):
 
         long = 'N' * CODENAME_LENGTH_BYTES
-        self.assertEqual(bytes_to_codename(codename_to_bytes(long)),
+        self.assertEqual(CodenameAscii.padded_to_str(CodenameAscii.to_padded_ascii(long)),
                          long)
 
         almost = long[:-1]
         assert len(almost) == CODENAME_LENGTH_BYTES - 1
-        self.assertEqual(bytes_to_codename(codename_to_bytes(almost)),
+        self.assertEqual(CodenameAscii.padded_to_str(CodenameAscii.to_padded_ascii(almost)),
                          almost)
 
         longer = long + 'N'
         assert len(longer) == CODENAME_LENGTH_BYTES + 1
         with self.assertRaises(ValueError):
-            codename_to_bytes(longer)
+            CodenameAscii.to_padded_ascii(longer)
 
     def test_imprint_match(self):
         data = bytes([77, 88, 99])
@@ -222,10 +222,12 @@ class TestEncryptDecrypt(unittest.TestCase):
 
         # checking the we cannot decrypt the data with wrong key
         if check_wrong:
-            with self.assertRaises(GroupImprintMismatch):
-                wrong_key = CodenameKey('WrOnG', testing_salt)
-                with BytesIO(encrypted) as input_io:
-                    DecryptedIO(wrong_key, input_io).read_data()
+            wrong_key = CodenameKey('WrOnG', testing_salt)
+            with BytesIO(encrypted) as input_io:
+                dio = DecryptedIO(wrong_key, input_io)
+                self.assertFalse(dio.contains_data)
+                with self.assertRaises(Exception):
+                    dio.read_data()
 
         # we did not accidentally save the private key to the encrypted data
         self.assertNotIn(fpk.as_bytes, encrypted)
