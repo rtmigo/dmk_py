@@ -25,7 +25,7 @@ will remain dark matter.
 
 # Install
 
-``` bash
+``` 
 $ pip install git+https://github.com/rtmigo/dmk_py#egg=dmk
 ```
 
@@ -43,14 +43,14 @@ Entries will be stored in a file.
 
 You can specify the storage file with `-s` parameter:
 
-``` bash
+``` 
 $ dmk get -s /path/to/storagefile ...  
 ```
 
 Alternatively you can also set `$DMK_STORAGE_FILE` environment variable to make the `-s` 
 optional:
 
-``` bash
+``` 
 $ export DMK_STORAGE_FILE=/path/to/storagefile
 $ dmk get ...  
 ```
@@ -60,11 +60,11 @@ The following examples assume that the variable `$DMK_STORAGE_FILE` is set, so
 
 # Save and read text
 
-``` bash
+``` 
 $ dmk set -e secRet007 -t "My darling's jokes are not so funny"
 ```
 
-``` bash
+``` 
 $ dmk get -e secRet007
 
 My darling's jokes are not so funny
@@ -73,7 +73,7 @@ My darling's jokes are not so funny
 The `-e` and `-t` parameters are optional. If they are not specified, their
 values will be prompted for interactive input.
 
-``` bash
+``` 
 $ dmk set
 
 Codename: secRet007
@@ -81,7 +81,7 @@ Repeat: secRet007
 Text: My darling's jokes are not so funny
 ```
 
-``` bash
+``` 
 $ dmk get
 
 Codename: secRet007
