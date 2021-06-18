@@ -29,7 +29,7 @@ class CodenameKey:
     __slots__ = ["as_bytes", "codename"]
 
     #_power = 17  # larger values = slower function, more secure
-    _time_cost = 25
+    _time_cost = 7
     _mem_cost = 102400
 
     # pow | Intel i7-8700K | AMD A9-9420e
