@@ -41,22 +41,22 @@ For example, information about a bitcoin wallet can be stored under codename
 
 Entries will be stored in a file.
 
-If the `-s` parameter is given, it specifies the file.
+You can specify the storage file with `-s` parameter:
 
 ``` bash
 $ dmk gett -s /path/to/storagefile ...  
 ```
 
-If `-s` is not specified, the path is read from `$DMK_STORAGE_FILE` environment
-variable.
+Alternatively you can also set `$DMK_STORAGE_FILE` environment variable to make the `-s` 
+optional:
 
 ``` bash
 $ export DMK_STORAGE_FILE=/path/to/storagefile
 $ dmk gett ...  
 ```
 
-The following examples assume that the variable `$dmk_STORAGE_FILE` is set and
-therefore the `-s` argument is not required.
+The following examples assume that the variable `$dmk_STORAGE_FILE` is set, so
+`-s` is unnecessary.
 
 # Save and read text
 
