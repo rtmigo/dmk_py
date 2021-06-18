@@ -74,7 +74,7 @@ def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int, time
         salt=salt,
         time_cost=time_cost,
         memory_cost=102400, # default for 2021, ~100MB
-        parallelism=8,
+        parallelism=4,
         type=argon2.low_level.Type.ID,
         version=19,
         hash_len=32
