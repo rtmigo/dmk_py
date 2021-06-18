@@ -12,6 +12,7 @@ from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
 CODN_FILE_ENVNAME = 'DMK_STORAGE_FILE'
+DEFAULT_STORAGE_FILE = "~/storage.dmk"
 
 
 def validate_filename(ctx, param, value):
@@ -51,7 +52,9 @@ def bench():
 
 
 @click.command(name='set')
-@click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
+@click.option('-s', '--storage',
+              envvar=CODN_FILE_ENVNAME,
+              default=DEFAULT_STORAGE_FILE,
               callback=validate_filename)
 @click.option('-e',
               '--entry',
@@ -89,7 +92,9 @@ def set_cmd(storage: str, codename: str, text: str, file: List[Path]):
 
 
 @click.command(name='get')
-@click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
+@click.option('-s', '--storage',
+              envvar=CODN_FILE_ENVNAME,
+              default=DEFAULT_STORAGE_FILE,
               callback=validate_filename)
 @click.option('-e',
               '--entry',
@@ -107,7 +112,8 @@ def getf_cmd(storage: str, codename: str, file: List[Path]):
 
 
 @click.command()
-@click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
+@click.option('-s', '--storage',
+              envvar=CODN_FILE_ENVNAME,
               callback=validate_filename)
 @click.option('-e',
               '--entry',
@@ -129,6 +135,8 @@ def dmk_cli():
     See https://github.com/rtmigo/dmk_py#readme
     """
     pass
+
+# todo file command
 
 
 dmk_cli.add_command(bench)

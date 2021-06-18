@@ -7,21 +7,22 @@ draft.**
 
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py)
 
-`dmk` keeps data entries in a file. Entries can be added, updated, and removed.
+`dmk` keeps encrypted data entries in a file. Entries can be added, updated, and removed.
 Entries can be binary (files) or text (passwords, etc).
 
-Each entry is independent and protected unique **codename**. The codename
+The utility not only encrypts the contents of the entries, but makes uncertain
+the very fact of their existence. The storage file consists of "dark matter":
+unidentifiable data, most of which is just random bytes. There is no master
+password and no way the see the table of contents.
+
+Each entry is independent and encrypted with unique **codename**. The codename
 serves as a name and password at the same time.
 
-Codename allows access to one entry. It reveals nothing about other
-entries, even whether they exist.
+Codename makes possible to identify data
+fragments associated with particular entry and decrypt it. It reveals nothing
+about other entries, even whether they exist. The rest of the data is always a
+dark matter.
 
-The **storage file** does not have master password or table of contents.
-
-The file consists mostly of unidentifiable data. The data may be encrypted
-information, or be just random. Entry codename helps to identify only data
-fragments associated with particular entry and decrypt it. The rest of the data
-will remain dark matter.
 
 # Install
 
@@ -36,27 +37,6 @@ decrypts it. It is a secret. And it must be unique.
 
 For example, information about a bitcoin wallet can be stored under codename
 `"b1TC01n"` or `"bitcoin_secret123"`.
-
-# Storage location
-
-Entries will be stored in a file.
-
-You can specify the storage file with `-s` parameter:
-
-``` 
-$ dmk get -s /path/to/storagefile ...  
-```
-
-Alternatively you can also set `$DMK_STORAGE_FILE` environment variable to make the `-s` 
-optional:
-
-``` 
-$ export DMK_STORAGE_FILE=/path/to/storagefile
-$ dmk get ...  
-```
-
-The following examples assume that the variable `$DMK_STORAGE_FILE` is set, so
-`-s` is unnecessary.
 
 # Save and read text
 
@@ -105,6 +85,25 @@ $ dmk get -e secRet007 /my/docs/target.docx
 
 The `-e` parameter is optional. If it is not specified, the value will be
 prompted for interactive input.
+
+# Storage location
+
+Entries will be stored in a file. By default, the file is named `storage.dmk` and
+placed in the current user's `$HOME` directory.
+
+It can be redefined with `$DMK_STORAGE_FILE` environment variable:
+
+``` 
+$ export DMK_STORAGE_FILE=/path/to/storagefile.data
+$ dmk get ...  
+```
+
+The `-s` parameter overrides both default and environment variable for a 
+single run: 
+
+``` 
+$ dmk get -s /path/to/storagefile.data ...  
+```
 
 # Under the hood
 
