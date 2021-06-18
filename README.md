@@ -110,7 +110,7 @@ prompted for interactive input.
 
 - Entries are encrypted 
 - Number of entries cannot be determined
-- File format in unidentifiable
+- File format is unidentifiable
 
 ## Entries obfuscation
 
