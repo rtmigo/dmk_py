@@ -11,8 +11,8 @@ from dmk._main import Main
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
-CODN_FILE_ENVNAME = 'DMK_STORAGE_FILE'
-DEFAULT_STORAGE_FILE = "~/storage.dmk"
+CODN_FILE_ENVNAME = 'DMK_VAULT_FILE'
+DEFAULT_STORAGE_FILE = "~/vault.dmk"
 
 
 def validate_filename(ctx, param, value):
@@ -52,7 +52,7 @@ def bench():
 
 
 @click.command(name='set')
-@click.option('-s', '--storage',
+@click.option('-v', '--vault',
               envvar=CODN_FILE_ENVNAME,
               default=DEFAULT_STORAGE_FILE,
               callback=validate_filename)
@@ -64,21 +64,21 @@ def bench():
               confirmation_prompt="Repeat")
 @click.option('-t', '--text', default=None)
 @click.argument('file', nargs=-1, type=Path)
-def set_cmd(storage: str, codename: str, text: str, file: List[Path]):
+def set_cmd(vault: str, codename: str, text: str, file: List[Path]):
     """Sets entry content."""
 
     if len(file) >= 1:
         if len(file) >= 2:
             raise click.BadParameter("Exactly one file expected")
-        Main(storage).set_file(codename, str(file[0]))  # todo not str
+        Main(vault).set_file(codename, str(file[0]))  # todo not str
     else:
         if text is None:
             text = click.prompt('Text')
-        Main(storage).set_text(codename, text)
+        Main(vault).set_text(codename, text)
 
 
 # @click.command(name='print')
-# @click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
+# @click.option('-v', '--vault', envvar=CODN_FILE_ENVNAME,
 #               callback=validate_filename)
 # @click.option('-e',
 #               '--entry',
@@ -92,7 +92,7 @@ def set_cmd(storage: str, codename: str, text: str, file: List[Path]):
 
 
 @click.command(name='get')
-@click.option('-s', '--storage',
+@click.option('-v', '--vault',
               envvar=CODN_FILE_ENVNAME,
               default=DEFAULT_STORAGE_FILE,
               callback=validate_filename)
@@ -102,17 +102,17 @@ def set_cmd(storage: str, codename: str, text: str, file: List[Path]):
               prompt='Name',
               hide_input=True)
 @click.argument('file', nargs=-1, type=Path)
-def getf_cmd(storage: str, codename: str, file: List[Path]):
+def getf_cmd(vault: str, codename: str, file: List[Path]):
     """Writes entry content to a binary file."""
     if len(file)>0:
-        Main(storage).get_file(codename, str(file[0]))
+        Main(vault).get_file(codename, str(file[0]))
     else:
-        s = Main(storage).get_text(codename)
+        s = Main(vault).get_text(codename)
         print(s)
 
 
 @click.command()
-@click.option('-s', '--storage',
+@click.option('-v', '--vault',
               envvar=CODN_FILE_ENVNAME,
               callback=validate_filename)
 @click.option('-e',
