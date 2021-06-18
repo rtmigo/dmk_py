@@ -30,7 +30,7 @@ class CodenameKey:
 
     #_power = 17  # larger values = slower function, more secure
     _time_cost = 9
-    _mem_cost = 102400
+    _mem_cost = 131072 # 128MB # 102400
 
     # pow | Intel i7-8700K | AMD A9-9420e
     # ----|----------------|--------------
