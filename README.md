@@ -165,8 +165,8 @@ contains random rubbish.
 
 2) **Argon2id** derives 256-bit **private key** from salted (1) codename.
 
-3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 96-bit
-   nonce (3).
+3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
+   newly generated  96-bit **block nonce**.
 
 4) The encrypted data of the block starts with a header. Among other data the 
    decrypted header contains the secret key in plain text. The header is 
@@ -178,8 +178,6 @@ contains random rubbish.
    expected one.
    
    If everything matches, then the block refers to the given secret name.
-   A coincidence is less likely here than the proximity of two randomly selected 
-   atoms from the visible universe.
 
    We checked the mutual correspondence of a 256-bit key, a 256-bit checksum of
    36-byte header, and a string up to 24 bytes long. Thus, we have reinsured 
