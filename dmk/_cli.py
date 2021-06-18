@@ -9,7 +9,7 @@ from dmk._main import Main
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
-CODN_FILE_ENVNAME = 'CODN_STORAGE_FILE'
+CODN_FILE_ENVNAME = 'DMK_STORAGE_FILE'
 
 
 def validate_filename(ctx, param, value):

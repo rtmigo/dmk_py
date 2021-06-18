@@ -44,14 +44,14 @@ Entries will be stored in a file.
 If the `-s` argument is given, it specifies the file.
 
 ``` bash
-$ dmk gett -s /path/to/storage.file ...  
+$ dmk gett -s /path/to/storagefile ...  
 ```
 
-If `-s` is not specified, the path is read from `$dmk_STORAGE_FILE` environment
+If `-s` is not specified, the path is read from `$DMK_STORAGE_FILE` environment
 variable.
 
 ``` bash
-$ export dmk_STORAGE_FILE=/path/to/storage.file
+$ export DMK_STORAGE_FILE=/path/to/storagefile
 $ dmk gett ...  
 ```
 
@@ -108,13 +108,13 @@ prompted for interactive input.
 
 # Under the hood
 
-- Entries are encrypted really well
+- Entries are encrypted 
 - Number of entries cannot be determined
 - It is impossible to identify the file format without knowing a codename
 
 ## Entries obfuscation
 
-The vault file stores all data within multiple fixed-size blocks.
+The storage file stores all data within multiple fixed-size blocks.
 
 Small entries are padded so they become block-sized. Large entries are split and
 padded to fit into multiple blocks. In the end, they are all just a lot of
@@ -133,17 +133,17 @@ The number of blocks is no secret. Their contents are secret.
   protected. It is impossible to even figure out if the blocks refer to the same
   entry
 
-- Random actions are taken every time the vault is updated: some fake blocks are
+- Random actions are taken every time the storage is updated: some fake blocks are
   added, and some are removed
 
 Thus, **number and size of entries cannot be determined** by the size of the
-vault file or number of blocks.
+storage file or number of blocks.
 
-The payload is smaller than the vault size. Only this is known for certain.
+The payload is smaller than the storage size. Only this is known for certain.
 
 ## File obfuscation
 
-The vault file format is virtually **indistinguishable from random data**.
+The storage file format is virtually **indistinguishable from random data**.
 
 The file has no header, no constant bytes (or even bits), no block boundaries.
 File size will not give clues: the file is randomly padded with a size that is
@@ -156,9 +156,9 @@ contains random rubbish.
 
 ## Block encryption
 
-1) **URandom** creates 192-bit **salt** when we initialize the vault file. The
+1) **URandom** creates 192-bit **salt** when we initialize the storage file. The
    salt is saved openly in the file. This salt never changes. It is required for
-   any other actions on the vault.
+   any other actions on the storage.
 
 2) **Scrypt** (CPU/Memory cost = 2^17) derives 256-bit **private key** from
    salted (1) codename.
