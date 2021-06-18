@@ -28,7 +28,7 @@ setup(
 
     packages=['dmk'],
     python_requires='>=3.7',
-    install_requires=['pycryptodome', 'click'],
+    install_requires=['pycryptodome', 'click', 'argon2-cffi'],
 
     description="Experimental",
 
