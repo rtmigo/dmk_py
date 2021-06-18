@@ -6,7 +6,7 @@ from typing import Optional
 
 from Crypto.Protocol.KDF import scrypt
 
-from codn._common import KEY_SALT_SIZE
+from dmk._common import KEY_SALT_SIZE
 
 
 class CodenameKey:

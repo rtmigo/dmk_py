@@ -12,7 +12,7 @@ def load_module_dict(filename: str) -> dict:
     return module.__dict__
 
 
-name = "codn"
+name = "dmk"
 constants = load_module_dict(f'{name}/_constants.py')
 
 readme = (Path(__file__).parent / 'README.md').read_text(encoding="utf-8")
@@ -26,9 +26,9 @@ setup(
     author_email="ortemeo@gmail.com",
     # url='https://github.com/rtmigo/vien_py',
 
-    packages=['codn'],
+    packages=['dmk'],
     python_requires='>=3.7',
-    install_requires=['pycryptodome', 'click'], # ,
+    install_requires=['pycryptodome', 'click'],
 
     description="Experimental",
 
@@ -39,7 +39,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'codn = codn:codn_cli',
+            'dmk = dmk:dmk_cli',
         ]},
 
     keywords="".split(),

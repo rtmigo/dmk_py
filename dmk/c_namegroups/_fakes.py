@@ -3,9 +3,9 @@
 
 import io
 
-from codn._common import CLUSTER_SIZE
-from codn.a_base import CodenameKey
-from codn.b_cryptoblobs._20_encdec_part import Encrypt
+from dmk._common import CLUSTER_SIZE
+from dmk.a_base import CodenameKey
+from dmk.b_cryptoblobs._20_encdec_part import Encrypt
 
 
 def create_fake_bytes(pk: CodenameKey) -> bytes:

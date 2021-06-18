@@ -2,9 +2,9 @@ import io
 import unittest
 from io import BytesIO
 
-from codn._common import CLUSTER_SIZE
-from codn.a_utils.randoms import get_noncrypt_random_bytes
-from codn.b_storage_file._20_blocks_rw import BlocksSequentialWriter, \
+from dmk._common import CLUSTER_SIZE
+from dmk.a_utils.randoms import get_noncrypt_random_bytes
+from dmk.b_storage_file._20_blocks_rw import BlocksSequentialWriter, \
     BlocksIndexedReader
 
 

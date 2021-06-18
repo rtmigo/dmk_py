@@ -8,10 +8,10 @@ import zlib
 from pathlib import Path
 from typing import BinaryIO, List, Set
 
-from codn._common import unique_filename, MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
-from codn.a_base._10_kdf import CodenameKey
-from codn.a_utils.randoms import set_random_last_modified
-from codn.b_cryptoblobs._20_encdec_part import get_stream_size, \
+from dmk._common import unique_filename, MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
+from dmk.a_base._10_kdf import CodenameKey
+from dmk.a_utils.randoms import set_random_last_modified
+from dmk.b_cryptoblobs._20_encdec_part import get_stream_size, \
     Encrypt, \
     DecryptedIO
 

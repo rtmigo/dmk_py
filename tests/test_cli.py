@@ -7,8 +7,8 @@ from typing import Dict
 
 from click.testing import CliRunner
 
-from codn import codn_cli
-from codn._cli import CODN_FILE_ENVNAME
+from dmk import dmk_cli
+from dmk._cli import CODN_FILE_ENVNAME
 from tests.common import gen_random_string
 
 
@@ -24,14 +24,14 @@ class Test(unittest.TestCase):
         runner = CliRunner()
 
         result = runner.invoke(
-            codn_cli,
+            dmk_cli,
             ['sett', 'abc', '-t', 'The Value'])
         self.assertEqual(result.exit_code, 2)
 
     def test_get_fails_without_storage(self):
         runner = CliRunner()
         result = runner.invoke(
-            codn_cli,
+            dmk_cli,
             ['gett', 'abc'])
         self.assertEqual(result.exit_code, 2)
 
@@ -41,13 +41,13 @@ class Test(unittest.TestCase):
             self.assertFalse(os.path.exists(storage))
             runner = CliRunner()
             result = runner.invoke(
-                codn_cli,
+                dmk_cli,
                 ['sett', '-s', storage, '-e', 'abc', '-t', 'The Value'])
             self.assertTrue(os.path.exists(storage))
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, '')
             result = runner.invoke(
-                codn_cli,
+                dmk_cli,
                 ['gett', '-s', storage, '-e', 'abc'])
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, 'The Value\n')
@@ -71,7 +71,7 @@ class Test(unittest.TestCase):
                 with self.subTest(f"sett [{name}] [{val}]"):
                     runner = CliRunner()
                     result = runner.invoke(
-                        codn_cli,
+                        dmk_cli,
                         ['sett', '-s', storage, '-e', name, '-t', val],
                         catch_exceptions=False)
                     #print(result.stdout)
@@ -83,7 +83,7 @@ class Test(unittest.TestCase):
             for name, val in reference.items():
                 # self.assertEqual(result.output, '')
                 result = runner.invoke(
-                    codn_cli,
+                    dmk_cli,
                     ['gett', '-s', storage, '-e', name])
                 self.assertEqual(result.exit_code, 0)
                 self.assertEqual(result.output, val + '\n')
@@ -98,7 +98,7 @@ class Test(unittest.TestCase):
             self.assertFalse(os.path.exists(storage))
             runner = CliRunner()
             result = runner.invoke(
-                codn_cli,
+                dmk_cli,
                 ['setf', '-s', storage, '-e', 'abc', str(src_file)])
             self.assertTrue(os.path.exists(storage))
             self.assertEqual(result.exit_code, 0)
@@ -108,7 +108,7 @@ class Test(unittest.TestCase):
             self.assertFalse(dst_file.exists())
 
             result = runner.invoke(
-                codn_cli,
+                dmk_cli,
                 ['getf', '-s', storage, '-e', 'abc', str(dst_file)])
             self.assertEqual(result.exit_code, 0)
             self.assertTrue(dst_file.exists())

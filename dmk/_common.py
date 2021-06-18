@@ -9,7 +9,7 @@ from typing import BinaryIO, Tuple
 from Crypto.Hash import BLAKE2b, BLAKE2s
 from Crypto.Random import get_random_bytes
 
-from codn.a_utils.randoms import get_noncrypt_random_bytes
+from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
 KEY_SALT_SIZE = 24
 KEY_SIZE = 32
@@ -23,7 +23,7 @@ CLUSTER_SIZE = 4096
 # all the meta data in cluster: imprints and nonce, header.
 # Some of this is kept open, some is the beginning of encrypted data.
 # It takes a fixed number of bytes anyway
-CLUSTER_META_SIZE = 72
+CLUSTER_META_SIZE = 96
 
 # the maximum amount of data (in bytes) that can be saved in single cluster
 MAX_CLUSTER_CONTENT_SIZE = CLUSTER_SIZE - CLUSTER_META_SIZE

@@ -4,10 +4,10 @@ import time
 
 import click
 
-from codn._common import KEY_SALT_SIZE
-from codn._main import Main
-from codn.a_base._10_kdf import CodenameKey
-from codn.a_utils.randoms import get_noncrypt_random_bytes
+from dmk._common import KEY_SALT_SIZE
+from dmk._main import Main
+from dmk.a_base._10_kdf import CodenameKey
+from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
 CODN_FILE_ENVNAME = 'CODN_STORAGE_FILE'
 
@@ -123,20 +123,20 @@ from ._constants import __version__, __copyright__
 
 @click.group()
 @click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
-def codn_cli():
+def dmk_cli():
     """
-    See https://github.com/rtmigo/ksf_py#readme
+    See https://github.com/rtmigo/dmk_py#readme
     """
     pass
 
 
-codn_cli.add_command(bench)
-codn_cli.add_command(set_cmd)
-codn_cli.add_command(gett)
-codn_cli.add_command(setf_cmd)
-codn_cli.add_command(getf_cmd)
-codn_cli.add_command(eval)
+dmk_cli.add_command(bench)
+dmk_cli.add_command(set_cmd)
+dmk_cli.add_command(gett)
+dmk_cli.add_command(setf_cmd)
+dmk_cli.add_command(getf_cmd)
+dmk_cli.add_command(eval)
 
 if __name__ == '__main__':
     # config = Config()
-    codn_cli()
+    dmk_cli()

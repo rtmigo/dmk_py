@@ -10,8 +10,8 @@ from typing import BinaryIO, Optional, Iterable
 
 from Crypto.Random import get_random_bytes
 
-from codn._common import read_or_fail, CLUSTER_SIZE
-from codn.b_storage_file._10_fragment_io import FragmentIO
+from dmk._common import read_or_fail, CLUSTER_SIZE
+from dmk.b_storage_file._10_fragment_io import FragmentIO
 
 
 class BlocksSequentialWriter:

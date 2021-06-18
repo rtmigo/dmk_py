@@ -10,16 +10,16 @@ from Crypto.Cipher import ChaCha20
 from Crypto.Hash import BLAKE2s
 from Crypto.Random import get_random_bytes
 
-from codn._common import read_or_fail, InsufficientData, \
+from dmk._common import read_or_fail, InsufficientData, \
     MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE, CLUSTER_META_SIZE
-from codn.a_base._10_kdf import CodenameKey
-from codn.a_base._20_imprint import Imprint, pk_matches_imprint_bytes
-from codn.a_utils.dirty_file import WritingToTempFile
-from codn.a_utils.randoms import set_random_last_modified
-from codn.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
+from dmk.a_base._10_kdf import CodenameKey
+from dmk.a_base._20_imprint import Imprint, pk_matches_imprint_bytes
+from dmk.a_utils.dirty_file import WritingToTempFile
+from dmk.a_utils.randoms import set_random_last_modified
+from dmk.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
     uint32_to_bytes, uint16_to_bytes, \
     bytes_to_uint16
-from codn.b_cryptoblobs._10_padding import IntroPadding
+from dmk.b_cryptoblobs._10_padding import IntroPadding
 
 _DEBUG_PRINT = False
 
@@ -130,7 +130,7 @@ def get_lower15bits(x: int) -> int:
     return x & 0x7FFF
 
 
-CODENAME_LENGTH = 24
+CODENAME_LENGTH_BYTES = 24
 
 
 def codename_to_bytes(codename: str) -> bytes:
@@ -138,12 +138,13 @@ def codename_to_bytes(codename: str) -> bytes:
         raise ValueError("Zero character in codename")
     result = codename.encode('ascii')
     length = len(result)
-    if length > CODENAME_LENGTH:
-        raise ValueError("Too long")
-    elif length < CODENAME_LENGTH:
-        padding = get_random_bytes(CODENAME_LENGTH - length - 1)
+    if length > CODENAME_LENGTH_BYTES:
+        raise ValueError(f"Too long: {length}>{CODENAME_LENGTH_BYTES}")
+
+    elif length < CODENAME_LENGTH_BYTES:
+        padding = get_random_bytes(CODENAME_LENGTH_BYTES - length - 1)
         result += b'\0' + padding
-    assert len(result) == CODENAME_LENGTH
+    assert len(result) == CODENAME_LENGTH_BYTES
     return result
 
 
@@ -215,19 +216,38 @@ class Encrypt:
         File format
         -----------
 
-        IMPRINT_A
-        ENCRYPTION_NONCE    (12 bytes)  Random number
+        <imprint>
+            NONCE               (12 bytes)  Random bytes. Used for imprint
+                                            and the encryption.
+
+            CODENAME_HASH       (32 bytes)  blake2s derived from
+                                            codename mixed with nonce.
+
+                                            It helps to identify blocks
+                                            associated with particular
+                                            codename, but useless without
+                                            the codename
+        </imprint>
+
 
         <encrypted>
             <header>
-                CONTENT_CRC32 (uint32)  Checksum of the partial data stored in
-                                        the current cluster.
+                CONTENT_CRC32 (uint32)  Checksum of the CONTENT_DATA
+                                        (the entry data, stored in current
+                                        block).
 
-                                        Random for fakes.
+                                        It is the first 4 bytes contained in
+                                        the encrypted stream. And they're
+                                        totally unpredictable.
 
-                ITEM_VER      (uint32)  Increases on each write.
+                                        For fake bloks it is not checksum,
+                                        but four random bytes.
 
-                                        For fakes it's 0xFFFFFFFF.
+                CODENAME    (24 bytes)  The codename string in ASCII
+                                        padded with 0x00 and following random
+                                        data.
+
+                                        'codename\0..."
 
                 PART_IDX      (uint16)  Zero-based part index. If we split
                                         the data into three clusters, they
@@ -239,6 +259,10 @@ class Encrypt:
 
                                         Highest bit is 1 if this is
                                         the last cluster, 0 if not
+
+                ITEM_VER      (uint32)  Increases on each write.
+
+                                        For fake blocks it's 0xFFFFFFFF.
             </header>
 
             HEADER_CHECKSUM (16 bytes)  Blake2s 128-bit hash of the header.
@@ -281,8 +305,8 @@ class Encrypt:
         is_fake = source is None
 
         imprint_a = Imprint(self.cnk)
-        #imprint_b = Imprint(self.cnk)
-        #assert imprint_a.as_bytes != imprint_b.as_bytes
+        # imprint_b = Imprint(self.cnk)
+        # assert imprint_a.as_bytes != imprint_b.as_bytes
 
         # if total_size is None:
 
@@ -336,6 +360,8 @@ class Encrypt:
         part_size_bytes = uint16_to_bytes(part_is_last_and_size)
         # header_end_marker = b'~'
 
+        codename_data = codename_to_bytes(self.cnk.codename)
+
         # header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
         cryptographer = Cryptographer(fpk=self.cnk,
@@ -350,12 +376,12 @@ class Encrypt:
         # writing the imprint. It is not encrypted, but it's a hash +
         # random nonce. It's indistinguishable from any random rubbish
         outfile.write(imprint_a.as_bytes)
-        #outfile.write(imprint_b.as_bytes)
+        # outfile.write(imprint_b.as_bytes)
 
         assert len(cryptographer.nonce) == ENCRYPTION_NONCE_LEN, \
             f"Unexpected nonce length: {len(cryptographer.nonce)}"
 
-        #outfile.write(cryptographer.nonce)
+        # outfile.write(cryptographer.nonce)
 
         assert outfile.seek(0, io.SEEK_CUR) <= 1024
 
@@ -367,6 +393,7 @@ class Encrypt:
 
         header_data = b''.join((
             body_crc_bytes,
+            codename_data,
             part_idx_bytes,
             part_size_bytes,
             content_ver_bytes,
@@ -443,7 +470,7 @@ class DecryptedIO:
         self._imprint_b_checked = False
 
         self._imprint_a_bytes: Optional[bytes] = None
-        #self._imprint_b_bytes: Optional[bytes] = None
+        # self._imprint_b_bytes: Optional[bytes] = None
 
         pos = self._source.tell()
         if pos != 0:
@@ -462,7 +489,7 @@ class DecryptedIO:
             _expect_position(self._source, 0)
             self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
 
-            #self._imprint_a_bytes = self.read_imprint_a_bytes(self._source)
+            # self._imprint_a_bytes = self.read_imprint_a_bytes(self._source)
             # self._expect_position(0)
             # self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
         return self._imprint_a_bytes
@@ -551,7 +578,7 @@ class DecryptedIO:
 
     def __read_header(self) -> Header:
 
-        #nonce = read_or_fail(self._source, ENCRYPTION_NONCE_LEN)
+        # nonce = read_or_fail(self._source, ENCRYPTION_NONCE_LEN)
 
         self.cfg = Cryptographer(fpk=self.fpk, nonce=self.nonce)
 
@@ -578,6 +605,7 @@ class DecryptedIO:
         body_crc32_data = self.__read_and_decrypt(4)
         content_crc32 = bytes_to_uint32(body_crc32_data)
 
+        codename_data = self.__read_and_decrypt(CODENAME_LENGTH_BYTES)
 
         # # FULL_SIZE is the size of original file
         # full_size_bytes = self.__read_and_decrypt(3)
@@ -603,11 +631,11 @@ class DecryptedIO:
         content_version_data = self.__read_and_decrypt(4)
         content_version = bytes_to_uint32(content_version_data)
 
-
         header_checksum = self.__read_and_decrypt(16)
 
         header_data = b''.join((
             body_crc32_data,
+            codename_data,
             part_idx_data,
             part_size_data,
             content_version_data,
@@ -615,6 +643,9 @@ class DecryptedIO:
 
         if blake2s_128(header_data) != header_checksum:
             raise ChecksumMismatch("Header checksum mismatch.")
+
+        if bytes_to_codename(codename_data) != self.fpk.codename:
+            raise ChecksumMismatch("Codename mismatch.")
 
         # header_end_marker = self.__read_and_decrypt(1)
         # if header_end_marker != b'~':

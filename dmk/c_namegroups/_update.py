@@ -6,13 +6,13 @@ import io
 import random
 from typing import List, BinaryIO, Set
 
-from codn.a_base import CodenameKey, Imprint
-from codn.b_cryptoblobs import MultipartEncryptor, DecryptedIO
-from codn.b_cryptoblobs._20_encdec_part import Encrypt
-from codn.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
+from dmk.a_base import CodenameKey, Imprint
+from dmk.b_cryptoblobs import MultipartEncryptor, DecryptedIO
+from dmk.b_cryptoblobs._20_encdec_part import Encrypt
+from dmk.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
 # from codn.c_namegroups._fakes import create_fake_bytes
-from codn.c_namegroups._fakes import create_fake_bytes
-from codn.c_namegroups._namegroup import NameGroup
+from dmk.c_namegroups._fakes import create_fake_bytes
+from dmk.c_namegroups._namegroup import NameGroup
 
 
 def increased_data_version(namegroup: NameGroup) -> int:

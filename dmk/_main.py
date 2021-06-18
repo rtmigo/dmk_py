@@ -5,7 +5,7 @@ from io import BytesIO
 from pathlib import Path
 
 # from codn.cryptodir import CryptoDir
-from codn._the_file import TheFile
+from dmk._the_file import TheFile
 
 
 def _confirm(txt: str):

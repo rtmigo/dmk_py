@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from codn.a_utils.shred import shred
+from dmk.a_utils.shred import shred
 
 
 class TestShred(unittest.TestCase):

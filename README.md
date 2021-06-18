@@ -5,24 +5,22 @@
 **This is experimental code. It is not ready to use. This description is also a
 draft.**
 
-# [codn](https://github.com/rtmigo/codn_py)
+# [dmk](https://github.com/rtmigo/dmk_py)
 
----
-
-`codn` encrypts data entries. Entries can be added, updated, and removed.
-Entries are files or strings.
+`dmk` encrypts data entries. Entries can be added, updated, and removed. Entries
+are files or strings.
 
 Each entry is independent and protected with a unique **codename**. The codename
 serves as a name and password at the same time.
 
 Codename allows access to one entry. It reveals nothing about other entries,
-even whether they exist. The vault is cryptographically secure and overly
+even whether they exist. The storage file is cryptographically secure and overly
 obfuscated. There is no table of contents and no master decryption keys.
 
 # Install
 
 ``` bash
-$ pip install git+https://github.com/rtmigo/codn_py#egg=codn
+$ pip install git+https://github.com/rtmigo/dmk_py#egg=dmk
 ```
 
 # Codenames
@@ -40,28 +38,28 @@ Entries will be stored in a file.
 If the `-s` argument is given, it specifies the file.
 
 ``` bash
-$ codn gett -s /path/to/storage.file ...  
+$ dmk gett -s /path/to/storage.file ...  
 ```
 
-If `-s` is not specified, the path is read from `$CODN_STORAGE_FILE` environment
+If `-s` is not specified, the path is read from `$dmk_STORAGE_FILE` environment
 variable.
 
 ``` bash
-$ export CODN_STORAGE_FILE=/path/to/storage.file
-$ codn gett ...  
+$ export dmk_STORAGE_FILE=/path/to/storage.file
+$ dmk gett ...  
 ```
 
-The following examples assume that the variable `$CODN_STORAGE_FILE` is set and
+The following examples assume that the variable `$dmk_STORAGE_FILE` is set and
 therefore the `-s` argument is not required.
 
 # Save and read text
 
 ``` 
-$ codn sett -e secRet007 -t "My darling's jokes are not so funny"
+$ dmk sett -e secRet007 -t "My darling's jokes are not so funny"
 ```
 
 ``` 
-$ codn gett -e secRet007
+$ dmk gett -e secRet007
 
 My darling's jokes are not so funny
 ```
@@ -70,7 +68,7 @@ The `-e` and `-t` parameters are optional. If they are not specified, their
 values will be prompted for interactive input.
 
 ``` 
-$ codn sett
+$ dmk sett
 
 Codename: secRet007
 Repeat: secRet007 
@@ -78,7 +76,7 @@ Text: My darling's jokes are not so funny
 ```
 
 ``` 
-$ codn gett
+$ dmk gett
 
 Codename: secRet007
  
@@ -90,13 +88,13 @@ My darling's jokes are not so funny
 Read data from a `source.docx` and save it as encrypted entry `secRet007`
 
 ``` 
-$ codn setf -e secRet007 /my/docs/source.docx
+$ dmk setf -e secRet007 /my/docs/source.docx
 ```
 
 Decrypt the entry `secRet007` and write the result to `target.docx`
 
 ``` 
-$ codn getf -e secRet007 /my/docs/target.docx
+$ dmk getf -e secRet007 /my/docs/target.docx
 ```
 
 The `-e` parameter is optional. If it is not specified, the value will be
@@ -156,7 +154,7 @@ contains random rubbish.
    salt is saved openly in the file. This salt never changes. It is required for
    any other actions on the vault.
 
-2) **Scrypt** (CPU/Memory cost = 2^17) computes 256-bit **private key** from
+2) **Scrypt** (CPU/Memory cost = 2^17) derives 256-bit **private key** from
    salted (1) codename.
 
 3) Еach block receives a 352-bit **fingerprint** consisting of 96-bit **nonce**
@@ -178,8 +176,9 @@ contains random rubbish.
    without decrypting the rest of the data.
 
    Thus, the block's belonging to the code name is checked twice: with 256-bit
-   (3) and 128-bit (5) hashes. We also made sure that the data decryption is
-   proceeding correctly.
+   (3) and 128-bit (5) hashes.
+
+   We also made sure that the data decryption is proceeding correctly.
 
 6) **CRC-32** checksum verifies the entry data decrypted from the block.
 
