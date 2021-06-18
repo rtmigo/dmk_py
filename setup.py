@@ -26,7 +26,7 @@ setup(
     author_email="ortemeo@gmail.com",
     # url='https://github.com/rtmigo/vien_py',
 
-    packages=find_packages(where='dmk'),
+    packages=find_packages(include='dmk/*'),
     python_requires='>=3.7',
     install_requires=['pycryptodome', 'click', 'argon2-cffi'],
 
