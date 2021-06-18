@@ -166,33 +166,34 @@ contains random rubbish.
 2) **Scrypt** (CPU/Memory cost = 2^17) derives 256-bit **private key** from
    salted (1) codename.
 
-3) Еach block receives a 352-bit **fingerprint** consisting of 96-bit **nonce**
-   and 256-bit **Blake2s** **hash**, derived from nonce (3) + private key (2).
-   We use a new nonce for each block.
-
-   This fingerprint is saved openly to the block. Fingerprint allows us to
-   identify blocks associated with a specific codename. With the private key (2)
-   available, we can recreate the same fingerprint (3) using the known nonce
-   (3). Without the private key, we have no idea what the hash (3) was derived
-   from.
-
-4) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 96-bit
+3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 96-bit
    nonce (3).
 
-5) The block header is located at the very beginning of the encrypted data. The
-   header is followed by the **header checksum**, which is a 128-bit
-   **Blake2s** hash. This hash (5) helps ensure that the private key is correct
-   without decrypting the rest of the data.
+4) The encrypted data of the block starts with a header. Among other data the 
+   decrypted header contains the secret key in plain text. The header is 
+   followed by the **header checksum**, which is a 256-bit **Blake2s** hash. 
+   The checksum itself is also in the encrypted stream.
+   
+   To find out if a block refers to a secret name, we compare the decrypted 
+   secret name value with the original one, and the checksum value to the 
+   expected one.
+   
+   If everything matches, then the block refers to the given secret name.
+   A coincidence is less likely here than the proximity of two randomly selected 
+   atoms from the visible universe.
 
-   Thus, the block's belonging to the code name is checked twice: with 256-bit
-   (3) and 128-bit (5) hashes.
+   We checked the mutual correspondence of a 256-bit key, a 256-bit checksum of
+   36-byte header, and a string up to 24 bytes long. Thus, we have reinsured 
+   against private key collisions and checksum collisions. The process of 
+   successfully decrypting the 32 bytes of the checksum was itself part of the 
+   verification.
 
    We also made sure that the data decryption is proceeding correctly.
 
-6) **CRC-32** checksum verifies the entry data decrypted from the block.
+5) **CRC-32** checksum verifies the entry data decrypted from the block.
 
-   This verification occurs when we have already double-checked the correctness
-   of the private key (3) (5). Therefore, it is really only a self-test to see
+   This verification occurs when we have already checked (4) the correctness
+   of the private key (2). Therefore, it is really only a self-test to see
    if the data is decoded as expected.
 
    This checksum is saved inside the encrypted stream. If the data in the blocks

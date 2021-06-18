@@ -81,8 +81,6 @@ class Cryptographer:
             raise ValueError("Unexpected nonce length")
         self.cipher = ChaCha20.new(key=self.fpk.as_bytes, nonce=nonce)
 
-    #            self.cipher = ChaCha20.new(key=self.fpk.as_bytes)
-
     @property
     def nonce(self):
         return self.cipher.nonce
@@ -151,15 +149,6 @@ class Encrypt:
                  part_idx: int = 0,
                  parts_len: int = 1,
                  part_size: int = None):
-
-        # self.is_fake = is_fake
-
-        # if self.is_fake:
-        #     self.data_version = FAKE_DATA_VERSION
-        # else:
-        #     if data_version == FAKE_DATA_VERSION:
-        #         raise ValueError(
-        #             f"Data version {data_version} is for fakes only")
 
         self.target_size = target_size
 
@@ -283,21 +272,11 @@ class Encrypt:
 
         nonce = get_random_bytes(ENCRYPTION_NONCE_LEN)
 
-        # imprint_a = Imprint(self.cnk)
-        # imprint_b = Imprint(self.cnk)
-        # assert imprint_a.as_bytes != imprint_b.as_bytes
-
-        # if total_size is None:
-
         # ITEM_VER
         if is_fake:
             content_ver_bytes = uint32_to_bytes(FAKE_CONTENT_VERSION)
         else:
             content_ver_bytes = uint32_to_bytes(self.data_version)
-
-        # # FULL_SIZE
-        # full_size = get_stream_size(source)
-        # full_size_bytes = uint24_to_bytes(full_size)
 
         # PART_SIZE
         if self.part_size is None:
@@ -379,15 +358,8 @@ class Encrypt:
         ))
 
         encrypt_and_write(header_data)
+
         encrypt_and_write(blake2s_256(header_data))
-
-        # encrypt_and_write(body_crc_bytes)
-        # encrypt_and_write(item_version_bytes)
-        # encrypt_and_write(part_idx_bytes)
-        # encrypt_and_write(part_size_bytes)
-        # encrypt_and_write(header_end_marker)
-
-        # encrypt_and_write(header_bytes)
 
         assert outfile.tell() == CLUSTER_META_SIZE, f"pos is {outfile.tell()}"
 
@@ -466,95 +438,21 @@ class DecryptedIO:
             raise InsufficientData
         return self.cfg.cipher.decrypt(encrypted)
 
-    # @property
-    # def imprint_a_bytes(self) -> bytes:
-    #     if self._imprint_a_bytes is None:
-    #         _expect_position(self._source, 0)
-    #         self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
-    #
-    #         # self._imprint_a_bytes = self.read_imprint_a_bytes(self._source)
-    #         # self._expect_position(0)
-    #         # self._imprint_a_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
-    #     return self._imprint_a_bytes
-
     @property
     def nonce(self) -> bytes:
         if self._nonce is None:
             _expect_position(self._source, 0)
             self._nonce = read_or_fail(self._source, ENCRYPTION_NONCE_LEN)
         return self._nonce
-        # return Imprint.bytes_to_nonce(self.imprint_a_bytes)
-
-    # @staticmethod
-    # def read_imprint_a_bytes(stream: BinaryIO) -> bytes:
-    #     _expect_position(stream, 0)
-    #     return read_or_fail(stream, Imprint.FULL_LEN)
-
-    # @staticmethod
-    # def read_imprint_b_bytes(stream: BinaryIO) -> bytes:
-    #     _expect_position(stream, Imprint.FULL_LEN)
-    #     return read_or_fail(stream, Imprint.FULL_LEN)
-
-    # @property
-    # def imprint_b_bytes(self) -> bytes:
-    #     _ = self.imprint_a_bytes
-    #     if self._imprint_b_bytes is None:
-    #         _expect_position(self._source,  Imprint.FULL_LEN)
-    #         self._imprint_b_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
-    #     return self._imprint_b_bytes
-
-    # @property
-    # def imprint_b_bytes(self) -> bytes:
-    #     if self._imprint_b_bytes is None:
-    #         pos = self._source.tell()
-    #         if pos != 0:
-    #             raise ValueError(f"Unexpected stream position {pos}")
-    #         self._imprint_b_bytes = read_or_fail(self._source, Imprint.FULL_LEN)
-    #     return self._imprint_b_bytes
 
     @property
     def belongs_to_namegroup(self) -> bool:
-        # reads and interprets IMPRINT_A
-
         return self.header_opt is not None
-
-        # if self._belongs_to_namegroup is None:
-        #     try:
-        #
-        #         # pos = self._source.tell()
-        #         # if pos != 0:
-        #         #     raise ValueError(f"Unexpected stream position {pos}")
-        #         # imp = read_or_fail(self._source, Imprint.FULL_LEN)
-        #         self._belongs_to_namegroup = \
-        #             pk_matches_imprint_bytes(self.fpk,
-        #                                      self.imprint_a_bytes)
-        #     except InsufficientData:
-        #         self._belongs_to_namegroup = False
-        # assert self._belongs_to_namegroup is not None
-        # return self._belongs_to_namegroup
 
     @property
     def contains_data(self) -> bool:
-        # reads and interprets IMPRINT_B
-
         return self.header_opt is not None \
                and self.header_opt.data_version != FAKE_CONTENT_VERSION
-
-        # if not self.belongs_to_namegroup:
-        #     return False
-        #
-        # return self.header.data_version != FAKE_CONTENT_VERSION
-
-        # if self._contains_data is None:
-        #     try:
-        #         # imp = read_or_fail(self._source, Imprint.FULL_LEN)
-        #         self._contains_data = pk_matches_imprint_bytes(
-        #             self.fpk, self.read_imprint_b_bytes(self._source))
-        #     except InsufficientData:
-        #         self._contains_data = False
-        #
-        # assert self._contains_data is not None
-        # return self._contains_data
 
     @property
     def header(self) -> Header:
@@ -563,25 +461,9 @@ class DecryptedIO:
             raise TypeError
         else:
             return result
-        # if not self.belongs_to_namegroup:
-        #     raise GroupImprintMismatch
-        #
-        # if self._tried_to_read_header:
-        #     if self._header is None:
-        #         raise TypeError
-        #     else:
-        #         return self._header
-        #
-        # self._tried_to_read_header = True
-        # self._header = self.__read_header()
-        # assert self._header is not None
-        # return self._header
 
     @property
     def header_opt(self) -> Optional[Header]:
-        # if not self.belongs_to_namegroup:
-        #    raise GroupImprintMismatch
-
         if not self._tried_to_read_header:
             self._tried_to_read_header = True
             try:
@@ -592,9 +474,6 @@ class DecryptedIO:
         return self._header
 
     def __read_header(self) -> Header:
-
-        # nonce = read_or_fail(self._source, ENCRYPTION_NONCE_LEN)
-
         self.cfg = Cryptographer(fpk=self.fpk, nonce=self.nonce)
 
         if _DEBUG_PRINT:
@@ -602,20 +481,6 @@ class DecryptedIO:
             print("DECRYPTION:")
             print(self.cfg)
             print("---")
-
-        # skipping the padding
-        # ip_first = self.__read_and_decrypt(1)[0]
-        # ip_len = _intro_padding_64.first_byte_to_len(ip_first)
-        # if ip_len > 0:
-        #     self.__read_and_decrypt(ip_len)
-
-        # format_id = self.__read_and_decrypt(2)
-        # assert format_id.decode('ascii') == "LS"
-
-        # FORMAT VERSION is always 1
-        # format_version_bytes = self.__read_and_decrypt(VERSION_LEN)
-        # format_version = format_version_bytes[0]
-        # assert format_version == 1
 
         codename_data = self.__read_and_decrypt(CODENAME_LENGTH_BYTES)
         if CodenameAscii.unpadded(codename_data) != CodenameAscii.to_ascii(
@@ -626,14 +491,6 @@ class DecryptedIO:
         body_crc32_data = self.__read_and_decrypt(4)
         content_crc32 = bytes_to_uint32(body_crc32_data)
 
-        # # FULL_SIZE is the size of original file
-        # full_size_bytes = self.__read_and_decrypt(3)
-        # size = bytes_to_uint24(full_size_bytes)
-
-        # # PARTS_LEN
-        # parts_len_bytes = self.__read_and_decrypt(2)
-        # parts_len = bytes_to_uint16(parts_len_bytes) + 1
-
         # PART_IDX
         part_idx_data = self.__read_and_decrypt(2)
         part_idx = bytes_to_uint16(part_idx_data)
@@ -643,8 +500,6 @@ class DecryptedIO:
         last_and_size = bytes_to_uint16(part_size_data)
         part_size = get_lower15bits(last_and_size)
         is_last = get_highest_bit_16(last_and_size)
-        # part_size_bytes = self.__read_and_decrypt(2)
-        # part_size = bytes_to_uint16(part_size_bytes)
 
         # CONTENT_VER
         content_version_data = self.__read_and_decrypt(4)
@@ -699,28 +554,8 @@ class DecryptedIO:
         # improbability drive. This is also not a completely deterministic
         # statement.
 
-
         if blake2s_256(header_data) != header_checksum:
             raise VerificationFailure("Header checksum mismatch.")
-
-        # header_end_marker = self.__read_and_decrypt(1)
-        # if header_end_marker != b'~':
-        #     raise RuntimeError("Header end marker not found")
-
-        # reading and checking the header checksum
-        # header_crc = int.from_bytes(
-        #     self.__read_and_decrypt(HEADER_CHECKSUM_LEN),
-        #     byteorder='big',
-        #     signed=False)
-        # header_bytes = b''.join((#format_id,
-        #                          #format_version_bytes,
-        #                          data_version_bytes,
-        #                          full_size_bytes,
-        #                          parts_len_bytes,
-        #                          part_idx_bytes,
-        #                          part_size_bytes))
-        # if zlib.crc32(header_bytes) != header_crc:
-        #     raise ChecksumMismatch("Header CRC mismatch.")
 
         return Header(content_crc32=content_crc32,
                       data_version=content_version,
@@ -739,44 +574,14 @@ class DecryptedIO:
         if not self.contains_data:
             raise RuntimeError("contains_data is False")
 
-        # _ = self.header
-
         assert self._source.tell() == CLUSTER_META_SIZE, f"pos is {self._source.tell()}"
 
         body = self.__read_and_decrypt(self.header.part_size)
-        # body_crc = bytes_to_uint32(self.__read_and_decrypt(4))
         if zlib.crc32(body) != self.header.content_crc32:
             raise VerificationFailure("Body CRC mismatch.")
 
         self._data_read = True
         return body
-
-
-# class _DecryptedFile:
-#     """It is better to always use DecryptedIO instead of this class.
-#     The class is kept for temporary compatibility with tests."""
-#
-#     # todo remove all usages of this class
-#     def __init__(self,
-#                  source_file: Path,
-#                  fpk: CodenameKey,
-#                  decrypt_body=True):
-#
-#         with source_file.open('rb') as f:
-#             di = DecryptedIO(fpk, f)
-#             self.data_version = di.header.data_version
-#             self.size = di.header.data_size
-#
-#             self.data: Optional[bytes]
-#             if decrypt_body:
-#                 self.data = di.read_data()
-#             else:
-#                 self.data = None
-#
-#     def write(self, target: Path):
-#         if self.data is None:
-#             raise RuntimeError("Body is not set.")
-#         target.write_bytes(self.data)
 
 
 def is_content_io(fpk: CodenameKey, stream: BinaryIO) -> bool:
