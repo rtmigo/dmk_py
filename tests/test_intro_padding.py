@@ -5,7 +5,7 @@ import random
 import unittest
 from io import BytesIO
 
-from codn.b_cryptoblobs._10_padding import IntroPadding, \
+from dmk.b_cryptoblobs._10_padding import IntroPadding, \
     _set_highest_bit, _is_highest_bit_set, _random_first_byte, \
     _first_byte_to_len
 

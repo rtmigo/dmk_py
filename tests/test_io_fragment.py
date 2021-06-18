@@ -2,7 +2,7 @@ import io
 import unittest
 from io import BytesIO
 
-from codn.b_storage_file._10_fragment_io import FragmentIO
+from dmk.b_storage_file._10_fragment_io import FragmentIO
 
 
 class Test(unittest.TestCase):

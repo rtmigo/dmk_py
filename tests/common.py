@@ -4,8 +4,8 @@ from base64 import b64encode
 from pathlib import Path
 from typing import List, Set
 
-from codn._common import KEY_SALT_SIZE
-from codn.a_utils.randoms import get_noncrypt_random_bytes
+from dmk._common import KEY_SALT_SIZE
+from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
 testing_salt = bytes(
     [164, 129, 237, 201, 39, 162, 66, 120, 255, 9, 227, 253, 208,
@@ -24,7 +24,9 @@ def gen_random_string() -> str:
 
 def gen_random_name() -> str:
     len_bytes = random.randint(0, 20)
-    return b64encode(get_noncrypt_random_bytes(len_bytes)).decode()
+    s = b64encode(get_noncrypt_random_bytes(len_bytes)).decode()
+    s = s[:20]
+    return s
 
 
 def gen_random_names(n: int) -> List[str]:

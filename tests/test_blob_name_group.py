@@ -9,12 +9,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Iterable
 
-from codn.a_base._10_kdf import FasterKDF, CodenameKey
-from codn.a_utils.randoms import get_noncrypt_random_bytes
-from codn.b_cryptoblobs._30_encdec_multipart import MultipartEncryptor
-from codn.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
-from codn.c_namegroups._fakes import create_fake_bytes
-from codn.c_namegroups._namegroup import NameGroup
+from dmk.a_base._10_kdf import FasterKDF, CodenameKey
+from dmk.a_utils.randoms import get_noncrypt_random_bytes
+from dmk.b_cryptoblobs._30_encdec_multipart import MultipartEncryptor
+from dmk.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
+from dmk.c_namegroups._fakes import create_fake_bytes
+from dmk.c_namegroups._namegroup import NameGroup
 #from codn.c_namegroups._fakes import create_fake_bytes
 from tests.common import testing_salt
 

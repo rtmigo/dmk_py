@@ -4,9 +4,9 @@
 
 from typing import List, BinaryIO, Optional
 
-from codn.a_base import CodenameKey
-from codn.b_cryptoblobs import DecryptedIO
-from codn.b_storage_file import BlocksIndexedReader
+from dmk.a_base import CodenameKey
+from dmk.b_cryptoblobs import DecryptedIO
+from dmk.b_storage_file import BlocksIndexedReader
 
 
 class NameGroupItem:

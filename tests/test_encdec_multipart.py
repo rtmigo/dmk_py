@@ -6,11 +6,11 @@ import unittest
 from io import BytesIO
 from typing import List, Optional
 
-from codn._common import MAX_CLUSTER_CONTENT_SIZE
-from codn.a_base._10_kdf import FasterKDF, CodenameKey
-from codn.a_utils.randoms import get_noncrypt_random_bytes
-from codn.b_cryptoblobs import DecryptedIO
-from codn.b_cryptoblobs._30_encdec_multipart import decrypt_from_dios, \
+from dmk._common import MAX_CLUSTER_CONTENT_SIZE
+from dmk.a_base._10_kdf import FasterKDF, CodenameKey
+from dmk.a_utils.randoms import get_noncrypt_random_bytes
+from dmk.b_cryptoblobs import DecryptedIO
+from dmk.b_cryptoblobs._30_encdec_multipart import decrypt_from_dios, \
     split_random_sizes, MultipartEncryptor, split_cluster_sizes
 from tests.common import testing_salt
 

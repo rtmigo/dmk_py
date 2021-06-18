@@ -9,8 +9,8 @@ import io
 import random
 from typing import BinaryIO
 
-from codn._common import KEY_SALT_SIZE, read_or_fail
-from codn.b_storage_file._20_blocks_rw import BlocksSequentialWriter, \
+from dmk._common import KEY_SALT_SIZE, read_or_fail
+from dmk.b_storage_file._20_blocks_rw import BlocksSequentialWriter, \
     BlocksIndexedReader
 
 

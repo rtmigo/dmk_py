@@ -5,8 +5,8 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from codn._common import bytes_to_fn_str, blake2s_256
-from codn.a_base._10_kdf import CodenameKey
+from dmk._common import bytes_to_fn_str, blake2s_256
+from dmk.a_base._10_kdf import CodenameKey
 
 
 class Imprint:
@@ -26,15 +26,18 @@ class Imprint:
 
     False imprint matches are possible in the following cases:
 
-    1. KDF failure: KDF produces two identical keys from different codenames,
-       so both codenames consider blocks as their own
+    1. KDF failure: KDF produces two identical keys from different codenames.
+       For each of the codenames, we get both correct blocks and blocks
+       associated with the different codename
 
-    2. URandom failure: Two identical nonces are used for the same private
+    2. Blake2 failure: With the same nonce, but different private keys,
+       the blake2 produced the same hash. Among the correct blocks
+       there will be one block, in fact, associated with another code name
+
+    3. URandom failure: Two identical nonces are used for the same private
        key (same codename), so we got totally identical imprints for two
-       different blocks
-
-    3. Blake2 failure: With the same nonce, but different private keys,
-       the function produced the same hash
+       different blocks. Both blocks will be assigned to the correct name
+       group, as we expected, so this is not a huge problem
 
     4. Some of these problems happened at the same time.
 
@@ -46,17 +49,28 @@ class Imprint:
     It is important that the utility does not corrupt the data due to
     a collision.
 
+    (1) and (2) potentially problems. We can assign the block to the wrong name
+    group and delete the block by mistake.
+
     The good news is that an imprint collision will only make us briefly
-    think that some block belongs to the current name group, although it isn't.
-    Next, we will read the encrypted block header, and then verify the header
-    with 128-bit blake2s. Only after verifying the header, we will make a final
-    conclusion that this is "our" block.
+    think that some block belongs to the current name group (when it isn't).
+    Next, we will read the encrypted block header, and then:
 
-    For an error to occur, a collision must occur twice in a row: a 256 bit
-    collision and a 128 bit collision on the same block.
+    * verify the header with 128-bit blake2s. This proves that the block does
+      indeed match the private key. This was not a collision of 256-bit blake2
+      hashes (2)
 
-    If this happens, we are on a spaceship with infinite improbability drive.
-    This is also not a completely deterministic statement.
+    * read the codename from the header and compare to the codename provided
+      by user. This proves that the block does indeed refer to the codename
+      and there was no KDF collision (1)
+
+    Both measures complement each other: we see that the private key is
+    suitable, that the code name is decrypted correctly, that the codename
+    matches the expected.
+
+    This is still not deterministic. But even if you brute force it hard, it
+    will lead to a collision only on a spaceship with infinite improbability
+    drive. This is also not a completely deterministic statement.
     """
 
     __slots__ = ['__private_key', '__salt', '__as_bytes', '__as_str']
@@ -88,7 +102,7 @@ class Imprint:
     def as_bytes(self) -> bytes:
         if self.__as_bytes is None:
             self.__as_bytes = \
-                blake2s_256(self.private_key.as_bytes, self.nonce) + self.nonce
+                self.nonce + blake2s_256(self.private_key.as_bytes, self.nonce)
             assert len(self.__as_bytes) == Imprint.FULL_LEN, \
                 f"len={len(self.__as_bytes)}"
         return self.__as_bytes
@@ -106,7 +120,7 @@ class Imprint:
     def bytes_to_nonce(h: bytes) -> bytes:
         if len(h) != Imprint.FULL_LEN:
             raise ValueError
-        result = h[-Imprint.NONCE_LEN:]
+        result = h[:Imprint.NONCE_LEN]
         assert len(result) == Imprint.NONCE_LEN
         return result
 

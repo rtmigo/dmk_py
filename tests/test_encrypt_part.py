@@ -6,12 +6,12 @@ import random
 import unittest
 from io import BytesIO
 
-from codn._common import MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
-from codn.a_base._10_kdf import FasterKDF, CodenameKey
-from codn.a_utils.randoms import get_noncrypt_random_bytes
-from codn.b_cryptoblobs._20_encdec_part import Encrypt, \
+from dmk._common import MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
+from dmk.a_base._10_kdf import FasterKDF, CodenameKey
+from dmk.a_utils.randoms import get_noncrypt_random_bytes
+from dmk.b_cryptoblobs._20_encdec_part import Encrypt, \
     DecryptedIO, GroupImprintMismatch, is_content_io, is_fake_io, \
-    codename_to_bytes, CODENAME_LENGTH, bytes_to_codename
+    codename_to_bytes, CODENAME_LENGTH_BYTES, bytes_to_codename
 from tests.common import testing_salt
 
 
@@ -30,7 +30,7 @@ class TestEncryptDecrypt(unittest.TestCase):
     def test_codename_to_bytes(self):
         result = codename_to_bytes('abc')
         self.assertTrue(result.startswith(b'abc'))
-        self.assertEqual(len(result), CODENAME_LENGTH)
+        self.assertEqual(len(result), CODENAME_LENGTH_BYTES)
 
         NAME = 'abc'
         self.assertNotEqual(
@@ -46,6 +46,21 @@ class TestEncryptDecrypt(unittest.TestCase):
         with self.assertRaises(ValueError):
             codename_to_bytes('x\0yz')
 
+    def test_codename_max_length(self):
+
+        long = 'N' * CODENAME_LENGTH_BYTES
+        self.assertEqual(bytes_to_codename(codename_to_bytes(long)),
+                         long)
+
+        almost = long[:-1]
+        assert len(almost) == CODENAME_LENGTH_BYTES - 1
+        self.assertEqual(bytes_to_codename(codename_to_bytes(almost)),
+                         almost)
+
+        longer = long + 'N'
+        assert len(longer) == CODENAME_LENGTH_BYTES + 1
+        with self.assertRaises(ValueError):
+            codename_to_bytes(longer)
 
     def test_imprint_match(self):
         data = bytes([77, 88, 99])
@@ -85,6 +100,7 @@ class TestEncryptDecrypt(unittest.TestCase):
 
     def test_encdec_empty_data(self):
         self._encrypt_decrypt('empty', b'')
+
     #
     def test_encdec_part(self):
         dec = self._encrypt_decrypt('name', b'0123abc000',
@@ -93,6 +109,7 @@ class TestEncryptDecrypt(unittest.TestCase):
                                     part_size=3,
                                     part_idx=2)
         self.assertEqual(dec, b'abc')
+
     #
     def test_encdec_part_sized_0(self):
         dec = self._encrypt_decrypt('name', b'0123abc000',
@@ -101,6 +118,7 @@ class TestEncryptDecrypt(unittest.TestCase):
                                     part_size=0,
                                     part_idx=2)
         self.assertEqual(dec, b'')
+
     #
     def test_encdec_part_sized_max(self):
         buf = b'0' * (MAX_CLUSTER_CONTENT_SIZE * 2)
@@ -111,6 +129,7 @@ class TestEncryptDecrypt(unittest.TestCase):
                                   parts_len=5,
                                   part_size=MAX_CLUSTER_CONTENT_SIZE,
                                   part_idx=2)
+
     #
     # @unittest.skip('temp')
     def test_encdec_part_random(self):
@@ -140,6 +159,7 @@ class TestEncryptDecrypt(unittest.TestCase):
                                   parts_len=parts_len,
                                   part_size=part_size,
                                   part_idx=part_idx)
+
     #
     def test_nonce_is_different_each_time(self):
         fpk = CodenameKey('abc', testing_salt)
@@ -147,7 +167,6 @@ class TestEncryptDecrypt(unittest.TestCase):
         nonces = set()
 
         with BytesIO(b'datadatadata') as original_io:
-
             for _ in range(3):
                 original_io.seek(0, io.SEEK_SET)
 
@@ -159,7 +178,6 @@ class TestEncryptDecrypt(unittest.TestCase):
                     nonces.add(df.nonce)
 
         self.assertGreaterEqual(len(nonces), 2)
-
 
     def _encrypt_decrypt(self,
                          name: str,
@@ -212,12 +230,11 @@ class TestEncryptDecrypt(unittest.TestCase):
         # we did not accidentally save the private key to the encrypted data
         self.assertNotIn(fpk.as_bytes, encrypted)
 
-
         with BytesIO(encrypted) as input_io:
             df = DecryptedIO(fpk, input_io)
-            #self.assertEqual(df.header.data_size, len(body))
+            # self.assertEqual(df.header.data_size, len(body))
             self.assertEqual(df.header.part_idx, part_idx)
-            #self.assertEqual(df.header.parts_len, parts_len)
+            # self.assertEqual(df.header.parts_len, parts_len)
             if part_size is not None:
                 self.assertEqual(df.header.part_size, part_size)
             else:

@@ -4,9 +4,9 @@
 import unittest
 from difflib import SequenceMatcher
 
-from codn._common import bytes_to_fn_str, fnstr_to_bytes
-from codn.a_base._10_kdf import FasterKDF, CodenameKey
-from codn.a_base._20_imprint import Imprint, \
+from dmk._common import bytes_to_fn_str, fnstr_to_bytes
+from dmk.a_base._10_kdf import FasterKDF, CodenameKey
+from dmk.a_base._20_imprint import Imprint, \
     pk_matches_imprint_bytes
 from tests.common import testing_salt
 

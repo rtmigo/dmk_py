@@ -2,9 +2,9 @@ import io
 import unittest
 from io import BytesIO
 
-from codn._common import KEY_SALT_SIZE, CLUSTER_SIZE
-from codn.a_utils.randoms import get_noncrypt_random_bytes
-from codn.b_storage_file._30_storage_file import StorageFileWriter, \
+from dmk._common import KEY_SALT_SIZE, CLUSTER_SIZE
+from dmk.a_utils.randoms import get_noncrypt_random_bytes
+from dmk.b_storage_file._30_storage_file import StorageFileWriter, \
     StorageFileReader, version_to_bytes, bytes_to_version
 
 

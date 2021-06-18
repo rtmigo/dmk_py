@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-from codn.a_utils.randoms import get_noncrypt_random_bytes
+from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
 
 def shred(file: Path, cycles=2):
