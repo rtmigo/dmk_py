@@ -55,7 +55,7 @@ $ export DMK_STORAGE_FILE=/path/to/storagefile
 $ dmk get ...  
 ```
 
-The following examples assume that the variable `$dmk_STORAGE_FILE` is set, so
+The following examples assume that the variable `$DMK_STORAGE_FILE` is set, so
 `-s` is unnecessary.
 
 # Save and read text
