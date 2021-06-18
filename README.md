@@ -5,7 +5,7 @@
 **This is experimental code. It is not ready to use. This description is also a
 draft.**
 
-# [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py)
+# [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py#readme)
 
 `dmk` keeps encrypted data entries in a file. Entries can be added, updated, and removed.
 Entries can be binary (files) or text (passwords, etc).
