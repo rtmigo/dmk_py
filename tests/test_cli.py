@@ -20,20 +20,20 @@ class Test(unittest.TestCase):
         except KeyError:
             pass
 
-    def test_set_fails_without_storage(self):
-        runner = CliRunner()
-
-        result = runner.invoke(
-            dmk_cli,
-            ['set', 'abc', '-t', 'The Value'])
-        self.assertEqual(result.exit_code, 2)
-
-    def test_get_fails_without_storage(self):
-        runner = CliRunner()
-        result = runner.invoke(
-            dmk_cli,
-            ['get', 'abc'])
-        self.assertEqual(result.exit_code, 2)
+    # def test_set_fails_without_storage(self):
+    #     runner = CliRunner()
+    #
+    #     result = runner.invoke(
+    #         dmk_cli,
+    #         ['set', 'abc', '-t', 'The Value'])
+    #     self.assertEqual(result.exit_code, 2)
+    #
+    # def test_get_fails_without_storage(self):
+    #     runner = CliRunner()
+    #     result = runner.invoke(
+    #         dmk_cli,
+    #         ['get', 'abc'])
+    #     self.assertEqual(result.exit_code, 2)
 
     def test_set_get_string(self):
         with TemporaryDirectory() as tempdir:
@@ -42,13 +42,13 @@ class Test(unittest.TestCase):
             runner = CliRunner()
             result = runner.invoke(
                 dmk_cli,
-                ['set', '-s', storage, '-e', 'abc', '-t', 'The Value'])
+                ['set', '-v', storage, '-e', 'abc', '-t', 'The Value'])
             self.assertTrue(os.path.exists(storage))
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, '')
             result = runner.invoke(
                 dmk_cli,
-                ['get', '-s', storage, '-e', 'abc'])
+                ['get', '-v', storage, '-e', 'abc'])
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, 'The Value\n')
 
@@ -72,7 +72,7 @@ class Test(unittest.TestCase):
                     runner = CliRunner()
                     result = runner.invoke(
                         dmk_cli,
-                        ['set', '-s', storage, '-e', name, '-t', val],
+                        ['set', '-v', storage, '-e', name, '-t', val],
                         catch_exceptions=False)
                     #print(result.stdout)
                     self.assertEqual(result.exit_code, 0)
@@ -84,7 +84,7 @@ class Test(unittest.TestCase):
                 # self.assertEqual(result.output, '')
                 result = runner.invoke(
                     dmk_cli,
-                    ['get', '-s', storage, '-e', name])
+                    ['get', '-v', storage, '-e', name])
                 self.assertEqual(result.exit_code, 0)
                 self.assertEqual(result.output, val + '\n')
 
@@ -99,7 +99,7 @@ class Test(unittest.TestCase):
     #         runner = CliRunner()
     #         result = runner.invoke(
     #             dmk_cli,
-    #             ['setf', '-s', storage, '-e', 'abc', str(src_file)])
+    #             ['setf', '-v', storage, '-e', 'abc', str(src_file)])
     #         self.assertTrue(os.path.exists(storage))
     #         self.assertEqual(result.exit_code, 0)
     #         self.assertEqual(result.output, '')
@@ -109,7 +109,7 @@ class Test(unittest.TestCase):
     #
     #         result = runner.invoke(
     #             dmk_cli,
-    #             ['getf', '-s', storage, '-e', 'abc', str(dst_file)])
+    #             ['getf', '-v', storage, '-e', 'abc', str(dst_file)])
     #         self.assertEqual(result.exit_code, 0)
     #         self.assertTrue(dst_file.exists())
     #         self.assertEqual(
@@ -127,7 +127,7 @@ class Test(unittest.TestCase):
             runner = CliRunner()
             result = runner.invoke(
                 dmk_cli,
-                ['set', '-s', storage, '-e', 'abc', str(src_file)],
+                ['set', '-v', storage, '-e', 'abc', str(src_file)],
                 catch_exceptions=False)
 
             self.assertEqual(result.exit_code, 0)
@@ -139,7 +139,7 @@ class Test(unittest.TestCase):
 
             result = runner.invoke(
                 dmk_cli,
-                ['get', '-s', storage, '-e', 'abc', str(dst_file)])
+                ['get', '-v', storage, '-e', 'abc', str(dst_file)])
             self.assertEqual(result.exit_code, 0)
             self.assertTrue(dst_file.exists())
             self.assertEqual(

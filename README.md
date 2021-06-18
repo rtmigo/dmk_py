@@ -7,21 +7,22 @@ draft.**
 
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py)
 
-`dmk` keeps data entries in a file. Entries can be added, updated, and removed.
+`dmk` keeps encrypted data entries in a file. Entries can be added, updated, and removed.
 Entries can be binary (files) or text (passwords, etc).
 
-Each entry is independent and protected unique **codename**. The codename
-serves as a name and password at the same time.
+Besides encrypting entries `dmk` makes uncertain the very fact of their
+existence. The vault file consists of "dark matter":
+unidentifiable data, most of which is just random bytes. There is no master
+password and no way the see the table of contents.
 
-Codename allows access to one entry. It reveals nothing about other
-entries, even whether they exist.
+Each entry is independent and encrypted with unique **secret name**. The secret 
+name serves as a name and password at the same time.
 
-The **storage file** does not have master password or table of contents.
+Secret name makes possible to identify data
+fragments associated with particular entry and decrypt it. It reveals nothing
+about other entries, even whether they exist. The rest of the data is always a
+dark matter.
 
-The file consists mostly of unidentifiable data. The data may be encrypted
-information, or be just random. Entry codename helps to identify only data
-fragments associated with particular entry and decrypt it. The rest of the data
-will remain dark matter.
 
 # Install
 
@@ -29,36 +30,36 @@ will remain dark matter.
 $ pip install git+https://github.com/rtmigo/dmk_py#egg=dmk
 ```
 
-# Codenames
+# Secret names
 
-The codename serves as both the identifier of the entry and the password that
+The secret name serves as both the identifier of the entry and the password that
 decrypts it. It is a secret. And it must be unique.
 
-For example, information about a bitcoin wallet can be stored under codename
+For example, information about a bitcoin wallet can be stored under name
 `"b1TC01n"` or `"bitcoin_secret123"`.
 
-# Storage location
-
-Entries will be stored in a file.
-
-You can specify the storage file with `-s` parameter:
-
-``` 
-$ dmk get -s /path/to/storagefile ...  
-```
-
-Alternatively you can also set `$DMK_STORAGE_FILE` environment variable to make the `-s` 
-optional:
-
-``` 
-$ export DMK_STORAGE_FILE=/path/to/storagefile
-$ dmk get ...  
-```
-
-The following examples assume that the variable `$DMK_STORAGE_FILE` is set, so
-`-s` is unnecessary.
-
 # Save and read text
+
+When called without parameters, the `get` and `set` commands query for all 
+values interactively:
+
+``` 
+$ dmk set
+
+Secret name: secRet007
+Repeat secret name: secRet007 
+Text: My darling's jokes are not so funny
+```
+
+``` 
+$ dmk get
+
+Secret name: secRet007
+ 
+My darling's jokes are not so funny
+```
+
+Interactive input is optional. You can get by with one line:
 
 ``` 
 $ dmk set -e secRet007 -t "My darling's jokes are not so funny"
@@ -70,24 +71,7 @@ $ dmk get -e secRet007
 My darling's jokes are not so funny
 ```
 
-The `-e` and `-t` parameters are optional. If they are not specified, their
-values will be prompted for interactive input.
 
-``` 
-$ dmk set
-
-Codename: secRet007
-Repeat: secRet007 
-Text: My darling's jokes are not so funny
-```
-
-``` 
-$ dmk get
-
-Codename: secRet007
- 
-My darling's jokes are not so funny
-```
 
 # Save and read file
 
@@ -106,6 +90,25 @@ $ dmk get -e secRet007 /my/docs/target.docx
 The `-e` parameter is optional. If it is not specified, the value will be
 prompted for interactive input.
 
+# Vault location
+
+Entries will be stored in a file. By default, the file is named `vault.dmk` and
+placed in the current user's `$HOME` directory.
+
+It can be redefined with `$DMK_VAULT_FILE` environment variable:
+
+``` 
+$ export DMK_VAULT_FILE=/path/to/vaultfile.data
+$ dmk get ...  
+```
+
+The `-s` parameter overrides both default and environment variable for a 
+single run: 
+
+``` 
+$ dmk get -v /path/to/vaultfile.data ...  
+```
+
 # Under the hood
 
 - Entries are encrypted 
@@ -114,7 +117,7 @@ prompted for interactive input.
 
 ## Entries obfuscation
 
-The storage file stores all data within multiple fixed-size blocks.
+The vault file stores all data within multiple fixed-size blocks.
 
 Small entries are padded so they become block-sized. Large entries are split and
 padded to fit into multiple blocks. In the end, they are all just a lot of
@@ -133,17 +136,17 @@ The number of blocks is no secret. Their contents are secret.
   protected. It is impossible to even figure out if the blocks refer to the same
   entry
 
-- Random actions are taken every time the storage is updated: some fake blocks are
+- Random actions are taken every time the vault is updated: some fake blocks are
   added, and some are removed
 
 Thus, **number and size of entries cannot be determined** by the size of the
-storage file or number of blocks.
+vault file or number of blocks.
 
-The payload is smaller than the storage size. Only this is known for certain.
+The payload is smaller than the vault size. Only this is known for certain.
 
 ## File obfuscation
 
-The storage file format is virtually **indistinguishable from random data**.
+The vault file format is virtually **indistinguishable from random data**.
 
 The file has no header, no constant bytes (or even bits), no block boundaries.
 File size will not give clues: the file is randomly padded with a size that is
@@ -156,9 +159,9 @@ contains random rubbish.
 
 ## Block encryption
 
-1) **URandom** creates 192-bit **salt** when we initialize the storage file. The
+1) **URandom** creates 192-bit **salt** when we initialize the vault file. The
    salt is saved openly in the file. This salt never changes. It is required for
-   any other actions on the storage.
+   any other actions on the vault.
 
 2) **Scrypt** (CPU/Memory cost = 2^17) derives 256-bit **private key** from
    salted (1) codename.
