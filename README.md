@@ -10,8 +10,8 @@ draft.**
 `dmk` keeps encrypted data entries in a file. Entries can be added, updated, and removed.
 Entries can be binary (files) or text (passwords, etc).
 
-The utility not only encrypts the contents of the entries, but makes uncertain
-the very fact of their existence. The storage file consists of "dark matter":
+Besides encrypting entries `dmk` makes uncertain the very fact of their
+existence. The storage file consists of "dark matter":
 unidentifiable data, most of which is just random bytes. There is no master
 password and no way the see the table of contents.
 
