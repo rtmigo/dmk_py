@@ -5,7 +5,9 @@
 **This is experimental code. It is not ready to use. This description is also a
 draft.**
 
-# [dmk](https://github.com/rtmigo/dmk_py)
+
+
+# [dmk](https://github.com/rtmigo/dmk_py): dark matter keeper
 
 `dmk` encrypts data entries. Entries can be added, updated, and removed. Entries
 are files or strings.
@@ -14,8 +16,17 @@ Each entry is independent and protected with a unique **codename**. The codename
 serves as a name and password at the same time.
 
 Codename allows access to one entry. It reveals nothing about other entries,
-even whether they exist. The storage file is cryptographically secure and overly
-obfuscated. There is no table of contents and no master decryption keys.
+even whether they exist.
+
+The `dmk` storage file consists only of unidentifiable blocks. Whether these
+blocks contain encrypted information or are they a random set of bytes is
+unknown. There is no table of contents and no master decryption keys.
+
+The file definitely exists and is sized. But that's literally all that is known.
+It is impossible to find out whether there are entries, how many, what size they
+are. It is not even clear whether the file is in dmk format.
+
+`dmk` is short for "**dark matter keeper**".
 
 # Install
 
