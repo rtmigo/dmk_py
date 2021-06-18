@@ -25,14 +25,14 @@ class Test(unittest.TestCase):
 
         result = runner.invoke(
             dmk_cli,
-            ['sett', 'abc', '-t', 'The Value'])
+            ['set', 'abc', '-t', 'The Value'])
         self.assertEqual(result.exit_code, 2)
 
     def test_get_fails_without_storage(self):
         runner = CliRunner()
         result = runner.invoke(
             dmk_cli,
-            ['gett', 'abc'])
+            ['get', 'abc'])
         self.assertEqual(result.exit_code, 2)
 
     def test_set_get_string(self):
@@ -42,13 +42,13 @@ class Test(unittest.TestCase):
             runner = CliRunner()
             result = runner.invoke(
                 dmk_cli,
-                ['sett', '-s', storage, '-e', 'abc', '-t', 'The Value'])
+                ['set', '-s', storage, '-e', 'abc', '-t', 'The Value'])
             self.assertTrue(os.path.exists(storage))
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, '')
             result = runner.invoke(
                 dmk_cli,
-                ['gett', '-s', storage, '-e', 'abc'])
+                ['get', '-s', storage, '-e', 'abc'])
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, 'The Value\n')
 
@@ -68,11 +68,11 @@ class Test(unittest.TestCase):
 
                 reference[name] = val
 
-                with self.subTest(f"sett [{name}] [{val}]"):
+                with self.subTest(f"set {repr(name)} {repr(val)}"):
                     runner = CliRunner()
                     result = runner.invoke(
                         dmk_cli,
-                        ['sett', '-s', storage, '-e', name, '-t', val],
+                        ['set', '-s', storage, '-e', name, '-t', val],
                         catch_exceptions=False)
                     #print(result.stdout)
                     self.assertEqual(result.exit_code, 0)
@@ -84,11 +84,39 @@ class Test(unittest.TestCase):
                 # self.assertEqual(result.output, '')
                 result = runner.invoke(
                     dmk_cli,
-                    ['gett', '-s', storage, '-e', name])
+                    ['get', '-s', storage, '-e', name])
                 self.assertEqual(result.exit_code, 0)
                 self.assertEqual(result.output, val + '\n')
 
-    def test_set_get_file(self):
+    # def test_set_get_file(self):
+    #     with TemporaryDirectory() as tempdir:
+    #         storage = os.path.join(tempdir, "storage.dat")
+    #
+    #         src_file = Path(tempdir) / "src.txt"
+    #         src_file.write_text('sample', encoding='utf-8')
+    #
+    #         self.assertFalse(os.path.exists(storage))
+    #         runner = CliRunner()
+    #         result = runner.invoke(
+    #             dmk_cli,
+    #             ['setf', '-s', storage, '-e', 'abc', str(src_file)])
+    #         self.assertTrue(os.path.exists(storage))
+    #         self.assertEqual(result.exit_code, 0)
+    #         self.assertEqual(result.output, '')
+    #
+    #         dst_file = Path(tempdir) / "dst.txt"
+    #         self.assertFalse(dst_file.exists())
+    #
+    #         result = runner.invoke(
+    #             dmk_cli,
+    #             ['getf', '-s', storage, '-e', 'abc', str(dst_file)])
+    #         self.assertEqual(result.exit_code, 0)
+    #         self.assertTrue(dst_file.exists())
+    #         self.assertEqual(
+    #             dst_file.read_text(encoding='utf-8'),
+    #             'sample')
+
+    def test_set_get_file_2(self):
         with TemporaryDirectory() as tempdir:
             storage = os.path.join(tempdir, "storage.dat")
 
@@ -99,17 +127,19 @@ class Test(unittest.TestCase):
             runner = CliRunner()
             result = runner.invoke(
                 dmk_cli,
-                ['setf', '-s', storage, '-e', 'abc', str(src_file)])
-            self.assertTrue(os.path.exists(storage))
+                ['set', '-s', storage, '-e', 'abc', str(src_file)],
+                catch_exceptions=False)
+
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.output, '')
+            self.assertTrue(os.path.exists(storage))
 
             dst_file = Path(tempdir) / "dst.txt"
             self.assertFalse(dst_file.exists())
 
             result = runner.invoke(
                 dmk_cli,
-                ['getf', '-s', storage, '-e', 'abc', str(dst_file)])
+                ['get', '-s', storage, '-e', 'abc', str(dst_file)])
             self.assertEqual(result.exit_code, 0)
             self.assertTrue(dst_file.exists())
             self.assertEqual(

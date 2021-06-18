@@ -24,7 +24,9 @@ def gen_random_string() -> str:
 
 def gen_random_name() -> str:
     len_bytes = random.randint(0, 20)
-    return b64encode(get_noncrypt_random_bytes(len_bytes)).decode()
+    s = b64encode(get_noncrypt_random_bytes(len_bytes)).decode()
+    s = s[:20]
+    return s
 
 
 def gen_random_names(n: int) -> List[str]:

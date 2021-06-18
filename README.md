@@ -16,12 +16,12 @@ serves as a name and password at the same time.
 Codename allows access to one entry. It reveals nothing about other
 entries, even whether they exist.
 
-The `dmk` storage file does not have master password or table of contents.
+The **storage file** does not have master password or table of contents.
 
-The file consists mostly of unidentifiable data. The data may contain encrypted
-information, or be just random. Entry codename helps to identify only data fragments
-associated with particular entry and decrypt it. The rest of the data will
-remain dark matter.
+The file consists mostly of unidentifiable data. The data may be encrypted
+information, or be just random. Entry codename helps to identify only data
+fragments associated with particular entry and decrypt it. The rest of the data
+will remain dark matter.
 
 # Install
 
@@ -44,7 +44,7 @@ Entries will be stored in a file.
 You can specify the storage file with `-s` parameter:
 
 ``` bash
-$ dmk gett -s /path/to/storagefile ...  
+$ dmk get -s /path/to/storagefile ...  
 ```
 
 Alternatively you can also set `$DMK_STORAGE_FILE` environment variable to make the `-s` 
@@ -52,7 +52,7 @@ optional:
 
 ``` bash
 $ export DMK_STORAGE_FILE=/path/to/storagefile
-$ dmk gett ...  
+$ dmk get ...  
 ```
 
 The following examples assume that the variable `$dmk_STORAGE_FILE` is set, so
@@ -60,12 +60,12 @@ The following examples assume that the variable `$dmk_STORAGE_FILE` is set, so
 
 # Save and read text
 
-``` 
-$ dmk sett -e secRet007 -t "My darling's jokes are not so funny"
+``` bash
+$ dmk set -e secRet007 -t "My darling's jokes are not so funny"
 ```
 
-``` 
-$ dmk gett -e secRet007
+``` bash
+$ dmk get -e secRet007
 
 My darling's jokes are not so funny
 ```
@@ -73,16 +73,16 @@ My darling's jokes are not so funny
 The `-e` and `-t` parameters are optional. If they are not specified, their
 values will be prompted for interactive input.
 
-``` 
-$ dmk sett
+``` bash
+$ dmk set
 
 Codename: secRet007
 Repeat: secRet007 
 Text: My darling's jokes are not so funny
 ```
 
-``` 
-$ dmk gett
+``` bash
+$ dmk get
 
 Codename: secRet007
  
@@ -93,14 +93,14 @@ My darling's jokes are not so funny
 
 Read data from a `source.docx` and save it as encrypted entry `secRet007`
 
-``` 
-$ dmk setf -e secRet007 /my/docs/source.docx
+``` bash 
+$ dmk set -e secRet007 /my/docs/source.docx
 ```
 
 Decrypt the entry `secRet007` and write the result to `target.docx`
 
-``` 
-$ dmk getf -e secRet007 /my/docs/target.docx
+``` bash
+$ dmk get -e secRet007 /my/docs/target.docx
 ```
 
 The `-e` parameter is optional. If it is not specified, the value will be

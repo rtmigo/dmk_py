@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 import time
+from pathlib import Path
+from typing import List
 
 import click
 
@@ -48,50 +50,45 @@ def bench():
     print(f'Mean {sum(a) / len(a):.3f} sec')
 
 
-@click.command(name='sett')
+@click.command(name='set')
 @click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
               callback=validate_filename)
 @click.option('-e',
               '--entry',
               'codename',
-              prompt='Name',
+              prompt='Entry secret name',
               hide_input=True,
               confirmation_prompt="Repeat")
-@click.option('-t', '--text', prompt='Text')
-def set_cmd(storage: str, codename: str, text: str):
-    """Sets entry content from text."""
-    Main(storage).set_text(codename, text)
+@click.option('-t', '--text', default=None)
+@click.argument('file', nargs=-1, type=Path)
+def set_cmd(storage: str, codename: str, text: str, file: List[Path]):
+    """Sets entry content."""
+
+    if len(file) >= 1:
+        if len(file) >= 2:
+            raise click.BadParameter("Exactly one file expected")
+        Main(storage).set_file(codename, str(file[0]))  # todo not str
+    else:
+        if not text:
+            text = click.prompt('Text')
+        Main(storage).set_text(codename, text)
 
 
+# @click.command(name='print')
+# @click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
+#               callback=validate_filename)
+# @click.option('-e',
+#               '--entry',
+#               'codename',
+#               prompt='Codename',
+#               hide_input=True)
+# def print_cmd(storage: str, codename: str):
+#     """Prints entry content to stdout."""
+#     s = Main(storage).get_text(codename)
+#     print(s)
 
-@click.command()
-@click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
-              callback=validate_filename)
-@click.option('-e',
-              '--entry',
-              'codename',
-              prompt='Codename',
-              hide_input=True)
-def gett(storage: str, codename: str):
-    """Prints entry content."""
-    s = Main(storage).get_text(codename)
-    print(s)
 
-@click.command(name='setf')
-@click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
-              callback=validate_filename)
-@click.option('-e',
-              '--entry',
-              'codename',
-              prompt='Name',
-              hide_input=True,
-              confirmation_prompt="Repeat")
-@click.argument('filename')
-def setf_cmd(storage: str, codename: str, filename: str):
-    """Sets entry content from data read from binary file."""
-    Main(storage).set_file(codename, filename)
-
-@click.command(name='getf')
+@click.command(name='get')
 @click.option('-s', '--storage', envvar=CODN_FILE_ENVNAME,
               callback=validate_filename)
 @click.option('-e',
@@ -99,10 +96,14 @@ def setf_cmd(storage: str, codename: str, filename: str):
               'codename',
               prompt='Name',
               hide_input=True)
-@click.argument('filename')
-def getf_cmd(storage: str, codename: str, filename: str):
+@click.argument('file', nargs=-1, type=Path)
+def getf_cmd(storage: str, codename: str, file: List[Path]):
     """Writes entry content to a binary file."""
-    Main(storage).get_file(codename, filename)
+    if len(file)>0:
+        Main(storage).get_file(codename, str(file[0]))
+    else:
+        s = Main(storage).get_text(codename)
+        print(s)
 
 
 @click.command()
@@ -131,11 +132,12 @@ def dmk_cli():
 
 
 dmk_cli.add_command(bench)
-dmk_cli.add_command(set_cmd)
-dmk_cli.add_command(gett)
-dmk_cli.add_command(setf_cmd)
+
+#dmk_cli.add_command(print_cmd)
+
 dmk_cli.add_command(getf_cmd)
 dmk_cli.add_command(eval)
+dmk_cli.add_command(set_cmd)
 
 if __name__ == '__main__':
     # config = Config()
