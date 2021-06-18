@@ -163,8 +163,7 @@ contains random rubbish.
    salt is saved openly in the file. This salt never changes. It is required for
    any other actions on the vault.
 
-2) **Scrypt** (CPU/Memory cost = 2^17) derives 256-bit **private key** from
-   salted (1) codename.
+2) **Argon2id** derives 256-bit **private key** from salted (1) codename.
 
 3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 96-bit
    nonce (3).
