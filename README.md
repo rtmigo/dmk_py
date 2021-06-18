@@ -177,13 +177,13 @@ contains random rubbish.
    secret name value with the original one, and the checksum value to the 
    expected one.
    
+   So we checked the mutual correspondence of a 256-bit key, a 256-bit checksum 
+   of 36-byte header, and a string up to 24 bytes long. The process of 
+   decrypting the correct 32 bytes of the checksum was itself part of the
+   verification. We also have reinsured against private key collisions and 
+   checksum collisions.
+   
    If everything matches, then the block refers to the given secret name.
-
-   We checked the mutual correspondence of a 256-bit key, a 256-bit checksum of
-   36-byte header, and a string up to 24 bytes long. Thus, we have reinsured 
-   against private key collisions and checksum collisions. The process of 
-   successfully decrypting the 32 bytes of the checksum was itself part of the 
-   verification.
 
    We also made sure that the data decryption is proceeding correctly.
 
