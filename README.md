@@ -19,7 +19,7 @@ entries, even whether they exist.
 The `dmk` storage file does not have master password or table of contents.
 
 The file consists mostly of unidentifiable data. The data may contain encrypted
-information, or be just random. Codename helps to identify only data fragments
+information, or be just random. Entry codename helps to identify only data fragments
 associated with particular entry and decrypt it. The rest of the data will
 remain dark matter.
 
