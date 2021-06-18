@@ -11,7 +11,25 @@ class TestKdf(unittest.TestCase):
 
     def test_constant(self):
         assert CodenameKey._power >= 16
-        # self.assertEqual(FilesetPrivateKey('password'))
+
+        KEY_FROM_PASSWORD = (
+            77, 211, 167, 190, 41, 215, 200, 151, 35, 154, 236, 128, 175, 118,
+            233, 121, 102, 165, 30, 27, 187, 135, 49, 152, 147, 18, 156, 178,
+            253, 63, 130, 156)
+
+        KEY_FROM_OTHER = (
+            197, 53, 245, 111, 187, 176, 135, 69, 5, 205, 158, 125, 245, 147,
+            90, 147, 20, 145, 15, 59, 158, 193, 250, 102, 168, 129, 146, 147,
+            229, 126, 72, 90)
+
+        #print(list(CodenameKey('password', testing_salt).as_bytes))
+        #print(list(CodenameKey('other', testing_salt).as_bytes))
+        self.assertEqual(CodenameKey('password', testing_salt).as_bytes,
+                         bytes(KEY_FROM_PASSWORD))
+
+        self.assertEqual(CodenameKey('other', testing_salt).as_bytes,
+                         bytes(KEY_FROM_OTHER))
+
         # self.assertEqual(len(FilesetPrivateKey.salt), 32)
 
     # def test_salt_len(self):

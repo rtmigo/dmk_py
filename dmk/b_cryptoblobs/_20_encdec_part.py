@@ -217,6 +217,14 @@ class Encrypt:
 
                                         "...\0codename"
 
+                                        We deliberately place it at the
+                                        beginning of the stream to check for
+                                        a match as quickly as possible (quickly
+                                        discard inappropriate blocks).
+
+                                        And it's good that our decrypted stream
+                                        starts from such a randomish data.
+
                 CONTENT_CRC32 (uint32)  Checksum of the CONTENT_DATA
                                         (the entry data, stored in current
                                         block).
@@ -612,7 +620,7 @@ class DecryptedIO:
         codename_data = self.__read_and_decrypt(CODENAME_LENGTH_BYTES)
         if CodenameAscii.unpadded(codename_data) != CodenameAscii.to_ascii(
                 self.fpk.codename):
-            # todo cache codename_to_bytes in fpk
+            # todo cache codename_to_ascii in fpk
             raise VerificationFailure("Codename mismatch.")
 
         body_crc32_data = self.__read_and_decrypt(4)
