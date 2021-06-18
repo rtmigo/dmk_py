@@ -15,10 +15,10 @@ the very fact of their existence. The storage file consists of "dark matter":
 unidentifiable data, most of which is just random bytes. There is no master
 password and no way the see the table of contents.
 
-Each entry is independent and encrypted with unique **codename**. The codename
-serves as a name and password at the same time.
+Each entry is independent and encrypted with unique **secret name**. The secret 
+name serves as a name and password at the same time.
 
-Codename makes possible to identify data
+Secret name makes possible to identify data
 fragments associated with particular entry and decrypt it. It reveals nothing
 about other entries, even whether they exist. The rest of the data is always a
 dark matter.
@@ -30,15 +30,36 @@ dark matter.
 $ pip install git+https://github.com/rtmigo/dmk_py#egg=dmk
 ```
 
-# Codenames
+# Secret names
 
-The codename serves as both the identifier of the entry and the password that
+The secret name serves as both the identifier of the entry and the password that
 decrypts it. It is a secret. And it must be unique.
 
-For example, information about a bitcoin wallet can be stored under codename
+For example, information about a bitcoin wallet can be stored under name
 `"b1TC01n"` or `"bitcoin_secret123"`.
 
 # Save and read text
+
+When called without parameters, the `get` and `set` commands query for all 
+values interactively:
+
+``` 
+$ dmk set
+
+Secret name: secRet007
+Repeat secret name: secRet007 
+Text: My darling's jokes are not so funny
+```
+
+``` 
+$ dmk get
+
+Secret name: secRet007
+ 
+My darling's jokes are not so funny
+```
+
+Interactive input is optional. You can get by with one line:
 
 ``` 
 $ dmk set -e secRet007 -t "My darling's jokes are not so funny"
@@ -50,24 +71,7 @@ $ dmk get -e secRet007
 My darling's jokes are not so funny
 ```
 
-The `-e` and `-t` parameters are optional. If they are not specified, their
-values will be prompted for interactive input.
 
-``` 
-$ dmk set
-
-Codename: secRet007
-Repeat: secRet007 
-Text: My darling's jokes are not so funny
-```
-
-``` 
-$ dmk get
-
-Codename: secRet007
- 
-My darling's jokes are not so funny
-```
 
 # Save and read file
 
