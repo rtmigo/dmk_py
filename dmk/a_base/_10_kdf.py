@@ -138,8 +138,9 @@ class FasterKDF:
 #     #print(tuple(get_random_bytes(32)))
 
 if __name__ == "__main__":
-    salt = get_random_bytes(24)
-    for _ in range(10):
-        t = time.monotonic()
-        _password_to_key_noncached(b'12345678', salt, CodenameKey._time_cost)
-        print(time.monotonic()-t)
+    pass
+    # salt = get_random_bytes(24)
+    # for _ in range(10):
+    #     t = time.monotonic()
+    #     _password_to_key_noncached(b'12345678', salt, CodenameKey._time_cost)
+    #     print(time.monotonic()-t)
