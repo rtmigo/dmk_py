@@ -1,17 +1,17 @@
 # 0.4.0
 
-- Replaced KDF from Scrypt to Argon2
+- Replaced KDF from Scrypt to **Argon2**
 - To identify the block, we now try to decrypt and verify its header.
   Previously, two hashes were used for this. It was more difficult to implement,
   less efficient and less reliable
-- Random padding is no longer added to the beginning of the block  
+- Random padding is no longer added to the beginning of the block
+- Fixed `setup.py` issue with subpackages
 
 
 # 0.3.0
 
-Replaced random sized blobs with fixed sized blocks. This greatly simplifies
-the storage file format and makes it unidentifiable. Now it is impossible to
-tell for sure whether the file was created by the utility
+- Replaced random sized blobs with fixed sized blocks
+- The vault file is now indistinguishable from random data  
 
 # 0.2.0
 
