@@ -36,8 +36,8 @@ class CodenameKey:
 
     # TC | Intel i7-8700K | AMD A9-9420e
     # ---|----------------|--------------
-    #  6 | 0.12 sec       | 0.83
-    #  4 | 0.09 sec       | 0.83
+    #  6 | 0.12 sec       | 0.83 sec
+    #  4 | 0.09 sec       | 0.58 sec
 
     # Argon2id 128 MiB, parallelism 4
 
