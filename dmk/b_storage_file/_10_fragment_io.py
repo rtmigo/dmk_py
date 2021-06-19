@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
+
 import io
 from types import TracebackType
 from typing import BinaryIO, Optional, Type, Iterator, AnyStr, Iterable, List
@@ -53,16 +54,9 @@ class FragmentIO(BinaryIO):
         if whence == io.SEEK_SET:
             if offset < 0:
                 raise ValueError(f"negative seek value {offset}")
-            # self._seek_from_start(offset)
             self.__pos = self._bounded_pos(offset)
             return self.__pos
 
-            # # unlik
-            #
-            # # it's strange, but even if offset is set past the end
-            # # of the stream, BytesIO returns the offset, not the truncated
-            # # position inside the stream
-            # return offset
         elif whence == io.SEEK_END:
             self.__pos = self._bounded_pos(max(0, self.length + offset))
             # todo max unnecessary?

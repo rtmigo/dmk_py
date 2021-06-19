@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 import io
 import unittest
 from io import BytesIO
@@ -71,27 +75,6 @@ class Test(unittest.TestCase):
         self.assertEqual(a, b, "a!=b")
         self.assertEqual(a, c, "a!=c")
 
-    # def test_random(self):
-    #     large_bytes = b'0123456789'
-    #     part_bytes = b'345678'
-    #     self.assertTrue(part_bytes in large_bytes)
-    #
-    #     with BytesIO(large_bytes) as large_io:
-    #         with FragmentIO(large_io, 3, 6) as partial:
-    #             partial.seek(0, io.SEEK_SET)
-    #             with BytesIO(part_bytes) as reference:
-    #
-    #                 with self.subTest("seek set"):
-    #                     for _ in range(100):
-    #                         pos = random.randint(0, 20)
-    #                         self.assertEqual(
-    #                             partial.seek(pos, io.SEEK_SET),
-    #                             reference.seek(pos, io.SEEK_SET))
-    #                         self.assertEqual(reference.tell(), partial.tell())
-    #                         self.assertEqual(reference.read(), partial.read())
-    #                         self.assertEqual(reference.tell(), partial.tell())
-
-    #
     def test_compare_ref(self):
         large_bytes = b'0123456789'
         part_bytes = b'345678'

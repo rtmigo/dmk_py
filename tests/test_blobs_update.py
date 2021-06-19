@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
+
+
 import io
 import unittest
 from io import BytesIO
 from typing import BinaryIO
 
 from dmk.a_base._10_kdf import FasterKDF, CodenameKey
-# from codn.cryptodir.namegroup.navigator_old import NewNameGroup, update_namegroup
 from dmk.b_cryptoblobs._20_encdec_part import is_content_io, \
     is_fake_io
 from dmk.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
@@ -14,19 +15,10 @@ from dmk.c_namegroups._update import update_namegroup_b
 from tests.common import testing_salt
 
 
-# def name_group_to_content_files(ng: NameGroup) -> List[Path]:
-#     return [gf.path for gf in ng.files if gf.is_fresh_data]
-
-
-# def unique_strings(items: List) -> Set[str]:
-#     return set(str(x) for x in items)
-
-# def gen_empty_reader() -> BlobsIndexedReader:
-# = BlobsIndexedReader(BytesIO())
-
 def full_stream_to_bytes(stream: BinaryIO) -> bytes:
     stream.seek(0, io.SEEK_SET)
     return stream.read()
+
 
 class TestUpdate(unittest.TestCase):
     faster: FasterKDF
@@ -48,13 +40,13 @@ class TestUpdate(unittest.TestCase):
         content_sizes = set()
 
         for _ in range(20):
-
             empty_reader = BlocksIndexedReader(BytesIO())
 
             new_storage_io = BytesIO()
             with BlocksSequentialWriter(new_storage_io) as writer:
-                original_content_io = BytesIO(b'0'*(1024*128))
-                update_namegroup_b(pk, original_content_io, empty_reader, writer)
+                original_content_io = BytesIO(b'0' * (1024 * 128))
+                update_namegroup_b(pk, original_content_io, empty_reader,
+                                   writer)
 
             new_storage_io.seek(0, io.SEEK_SET)
             new_reader = BlocksIndexedReader(new_storage_io)
@@ -76,8 +68,6 @@ class TestUpdate(unittest.TestCase):
 
         with self.subTest("Number of fakes is random"):
             self.assertGreaterEqual(len(fake_nums), 3)
-
-
 
 
 if __name__ == "__main__":

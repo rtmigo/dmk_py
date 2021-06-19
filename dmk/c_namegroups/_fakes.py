@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
+
 import io
 
 from dmk._common import CLUSTER_SIZE
@@ -15,8 +16,5 @@ def create_fake_bytes(pk: CodenameKey) -> bytes:
             temp_io)
         temp_io.seek(0, io.SEEK_SET)
         result = temp_io.read()
-        #
-        # result = Imprint(fpk).as_bytes + get_random_bytes(
-        #     CLUSTER_SIZE - Imprint.FULL_LEN)
         assert len(result) == CLUSTER_SIZE
         return result

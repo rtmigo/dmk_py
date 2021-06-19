@@ -37,8 +37,6 @@ class NameGroup:
         self._streams: List[BinaryIO] = []
         self._fresh_content_dios: Optional[List[DecryptedIO]] = None
 
-        # todo in case of header crc mismatch just ignore the block (imprint collision)
-
         self.items: List[NameGroupItem] = []
 
         for idx in range(len(self.blobs)):
@@ -93,7 +91,7 @@ class NameGroup:
             if last_part_idx is None:
                 continue
 
-            if last_part_idx == len(files_by_ver)-1:
+            if last_part_idx == len(files_by_ver) - 1:
                 # okay, this is the fresh content with all parts
                 for gf in files_by_ver:
                     gf.is_fresh_data = True

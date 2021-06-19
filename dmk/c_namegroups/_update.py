@@ -6,11 +6,9 @@ import io
 import random
 from typing import List, BinaryIO, Set
 
-from dmk.a_base import CodenameKey, Imprint
-from dmk.b_cryptoblobs import MultipartEncryptor, DecryptedIO
-from dmk.b_cryptoblobs._20_encdec_part import Encrypt
+from dmk.a_base import CodenameKey
+from dmk.b_cryptoblobs import MultipartEncryptor
 from dmk.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
-# from codn.c_namegroups._fakes import create_fake_bytes
 from dmk.c_namegroups._fakes import create_fake_bytes
 from dmk.c_namegroups._namegroup import NameGroup
 
@@ -70,7 +68,6 @@ def update_namegroup_b(cdk: CodenameKey,
                        new_content_io: BinaryIO,
                        old_blobs: BlocksIndexedReader,
                        new_blobs: BlocksSequentialWriter):
-
     name_group = NameGroup(old_blobs, cdk)
 
     all_blob_indexes = set(range(len(old_blobs)))

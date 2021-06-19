@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 import io
 from io import BytesIO
 from pathlib import Path
@@ -6,7 +10,7 @@ from typing import BinaryIO, Optional
 from Crypto.Random import get_random_bytes
 
 from ._common import KEY_SALT_SIZE
-from .a_base._10_kdf import CodenameKey
+from .a_base import CodenameKey
 from .a_utils.dirty_file import WritingToTempFile
 from .b_cryptoblobs import decrypt_from_dios
 from .b_storage_file import StorageFileReader, StorageFileWriter, \
@@ -61,7 +65,7 @@ class TheFile:
 
     def get_bytes(self, name: str) -> Optional[bytes]:
         ck = CodenameKey(name, self.salt)
-        #print("pk", ck.as_bytes)
+        # print("pk", ck.as_bytes)
         with self._old_blobs() as old_blobs:
             ng = NameGroup(old_blobs, ck)
 

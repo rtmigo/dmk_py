@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
+
+
 import time
 from pathlib import Path
 from typing import List
@@ -10,6 +12,7 @@ from dmk._common import KEY_SALT_SIZE
 from dmk._main import Main
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
+from ._constants import __version__, __copyright__
 
 CODN_FILE_ENVNAME = 'DMK_VAULT_FILE'
 DEFAULT_STORAGE_FILE = "~/vault.dmk"
@@ -18,23 +21,7 @@ DEFAULT_STORAGE_FILE = "~/vault.dmk"
 def validate_filename(ctx, param, value):
     if value is None or not value.strip():
         raise click.BadParameter("Storage filename must be specified")
-
-    # value = os.path.expandvars(value)
-    # value = os.path.expanduser(value)
-
     return value
-    # if isinstance(value, tuple):
-    #     return value
-    #
-    # try:
-    #     rolls, _, dice = value.partition("d")
-    #     return int(dice), int(rolls)
-    # except ValueError:
-    #     raise click.BadParameter("format must be 'NdM'")
-
-
-# def env_get_file() -> str:
-#    return os.environ.get('CODN_STORAGE_FILE')
 
 
 @click.command(hidden=True)
@@ -77,20 +64,6 @@ def set_cmd(vault: str, codename: str, text: str, file: List[Path]):
         Main(vault).set_text(codename, text)
 
 
-# @click.command(name='print')
-# @click.option('-v', '--vault', envvar=CODN_FILE_ENVNAME,
-#               callback=validate_filename)
-# @click.option('-e',
-#               '--entry',
-#               'codename',
-#               prompt='Codename',
-#               hide_input=True)
-# def print_cmd(storage: str, codename: str):
-#     """Prints entry content to stdout."""
-#     s = Main(storage).get_text(codename)
-#     print(s)
-
-
 @click.command(name='get')
 @click.option('-v', '--vault',
               envvar=CODN_FILE_ENVNAME,
@@ -103,8 +76,9 @@ def set_cmd(vault: str, codename: str, text: str, file: List[Path]):
               hide_input=True)
 @click.argument('file', nargs=-1, type=Path)
 def getf_cmd(vault: str, codename: str, file: List[Path]):
-    """Decrypts an entry and prints as text, or writes the descypted content to a file."""
-    if len(file)>0:
+    """Decrypts an entry and prints as text, or writes the descypted
+    content to a file."""
+    if len(file) > 0:
         Main(vault).get_file(codename, str(file[0]))
     else:
         s = Main(vault).get_text(codename)
@@ -125,28 +99,21 @@ def eval(storage: str, codename: str):
     Main(storage).eval(codename)
 
 
-from ._constants import __version__, __copyright__
-
-
 @click.group()
 @click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
 def dmk_cli():
     """
     See https://github.com/rtmigo/dmk_py#readme
     """
-    pass
 
-# todo file command
+    # todo fix windows --version problem
+    pass
 
 
 dmk_cli.add_command(bench)
-
-#dmk_cli.add_command(print_cmd)
-
 dmk_cli.add_command(getf_cmd)
 dmk_cli.add_command(eval)
 dmk_cli.add_command(set_cmd)
 
 if __name__ == '__main__':
-    # config = Config()
     dmk_cli()

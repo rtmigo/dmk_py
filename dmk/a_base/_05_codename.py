@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 from Crypto.Random import get_random_bytes
 
 
@@ -6,13 +10,9 @@ class CodenameAscii:
     @classmethod
     def to_padded_ascii(cls, codename: str) -> bytes:
         result = cls.to_ascii(codename)
-        # if '\0' in codename:
-        #     raise ValueError("Zero character in codename")
-        # result = codename.encode('ascii')
         length = len(result)
         if length > CODENAME_LENGTH_BYTES:
             raise ValueError(f"Too long: {length}>{CODENAME_LENGTH_BYTES}")
-
         elif length < CODENAME_LENGTH_BYTES:
             padding = get_random_bytes(CODENAME_LENGTH_BYTES - length - 1)
             result = padding + b'\0' + result
@@ -31,7 +31,6 @@ class CodenameAscii:
         if len(result) > CODENAME_LENGTH_BYTES:
             raise ValueError(f"Too long: {len(result)}>{CODENAME_LENGTH_BYTES}")
         return result
-
 
     @classmethod
     def padded_to_str(cls, data: bytes) -> str:

@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
-"""The storage file consists of a header and a list of blocks following it.
+
+"""The vault file consists of a header and a list of blocks following it.
 Blocks contain encrypted data. We are not trying to interpret this data here.
 We only write wrote and read header and the blocks."""
 
@@ -69,7 +70,7 @@ class StorageFileWriter:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-        #self.blobs.close()
+        # self.blobs.close()
 
 
 class StorageFileReader:

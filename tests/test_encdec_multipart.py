@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
+
+
 import io
 import random
 import unittest
@@ -11,7 +13,7 @@ from dmk.a_base._10_kdf import FasterKDF, CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 from dmk.b_cryptoblobs import DecryptedIO
 from dmk.b_cryptoblobs._30_encdec_multipart import decrypt_from_dios, \
-    split_random_sizes, MultipartEncryptor, split_cluster_sizes
+    MultipartEncryptor, split_cluster_sizes
 from tests.common import testing_salt
 
 
@@ -42,7 +44,7 @@ class TestEncryptDecryptFiles(unittest.TestCase):
                  MAX_CLUSTER_CONTENT_SIZE,
                  MAX_CLUSTER_CONTENT_SIZE + 1]
         for _ in range(1000):
-            sizes.append(random.randint(1, 1024*1024))
+            sizes.append(random.randint(1, 1024 * 1024))
 
         for s in sizes:
             with self.subTest(f"Size {s}"):
@@ -61,18 +63,6 @@ class TestEncryptDecryptFiles(unittest.TestCase):
                 # if zero, it is the only element
                 if 0 in parts:
                     self.assertEqual(len(parts), 1)
-
-
-    def test_split_random_sizes(self):
-        # todo remove
-        N = 999999
-        a = split_random_sizes(N)
-        b = split_random_sizes(N)
-        self.assertEqual(a, a.copy())
-        self.assertNotEqual(a, b)
-
-    def test_split_random_sizes_zero(self):
-        self.assertEqual(split_random_sizes(0), [0])
 
     def test_encdec_empty(self):
         self._encrypt_decrypt('name', b'')
