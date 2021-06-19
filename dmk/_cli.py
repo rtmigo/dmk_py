@@ -12,7 +12,7 @@ from dmk._common import KEY_SALT_SIZE
 from dmk._main import Main
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
-from ._constants import __version__, __copyright__
+from ._constants import __version__
 
 CODN_FILE_ENVNAME = 'DMK_VAULT_FILE'
 DEFAULT_STORAGE_FILE = "~/vault.dmk"
@@ -101,45 +101,28 @@ def eval(storage: str, codename: str):
 @click.group(
     invoke_without_command=True,
 
-    #callback = lambda: print('zzz'),
+    # callback = lambda: print('zzz'),
 
-
-    )
-#@click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
+)
+# @click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
 @click.pass_context
 def dmk_cli(ctx):
     if not ctx.invoked_subcommand:
         click.echo(f"DMK: Dark Matter Keeper v{__version__}")
-        print('(c) 2021 Artёm IG <ortemeo@gmail.com>')
+        print('(c) 2021 Artem IG <ortemeo@gmail.com>')
         click.echo()
         click.echo("See https://github.com/rtmigo/dmk_py#readme")
         click.echo()
         click.echo(ctx.get_help())
         ctx.exit(2)
-        #click.e
-        #print('main stuff')
-#    print("haha")
- #   exit()
 
-
-    # todo fix windows --version problem
     pass
 
-# @click.command()
-# @click.option('--option')
-# @click.pass_context
-#
-# def run(ctx, option):
-#     if not option:
-#         print("zzz")
-#         click.echo(ctx.get_help())
-#         ctx.exit()
 
 dmk_cli.add_command(bench)
 dmk_cli.add_command(getf_cmd)
 dmk_cli.add_command(eval)
 dmk_cli.add_command(set_cmd)
-#dmk_cli.add_command(run)
 
 if __name__ == '__main__':
     dmk_cli(None)
