@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 import unittest
 from base64 import b64decode
+from functools import lru_cache
 from typing import Optional, Tuple, NamedTuple
 
 import argon2.low_level
@@ -34,6 +35,10 @@ class CodenameKey:
     __mem_cost = 131072  # 128MB # 102400
 
     @classmethod
+    def is_standard_params(cls) -> bool:
+        return cls.__time_cost == 4 and cls.__mem_cost == 131072
+
+    @classmethod
     def get_params(cls) -> ArgonParams:
         return ArgonParams(cls.__time_cost, cls.__mem_cost)
 
@@ -43,14 +48,12 @@ class CodenameKey:
         cls.__mem_cost = mem_cost
 
     # Argon2id 128 MiB, parallelism 8
-
     # TC | Intel i7-8700K | AMD A9-9420e
     # ---|----------------|--------------
     #  6 | 0.12 sec       | 0.83 sec
     #  4 | 0.09 sec       | 0.58 sec
 
     # Argon2id 128 MiB, parallelism 4
-
     # TC | Intel i7-8700K | AMD A9-9420e
     # ---|----------------|--------------
     #  9 | 0.19 sec       | 1.2 sec
@@ -73,7 +76,7 @@ class CodenameKey:
             time_cost=CodenameKey.__time_cost)
 
 
-# @lru_cache(10000)
+@lru_cache(10000)
 def _password_to_key_cached(password: bytes, salt: bytes, mem_cost: int,
                             time_cost: int):
     return _password_to_key_noncached(password, salt, mem_cost, time_cost)

@@ -8,6 +8,7 @@ from Crypto.Random import get_random_bytes
 from dmk._common import bytes_to_fn_str, blake2s_256
 from dmk.a_base._10_kdf import CodenameKey
 
+# todo remove this module
 
 class Imprint:
     """Each codename key (CK) has a conventionally infinite number of imprints.

@@ -7,6 +7,7 @@ from typing import BinaryIO
 from dmk._common import read_or_fail
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
+# todo remove this module
 
 def _is_power_of_two(n: int) -> bool:
     return n > 0 and (n & (n - 1)) == 0
