@@ -37,5 +37,3 @@ class CodenameAscii:
     @classmethod
     def padded_to_str(cls, data: bytes) -> str:
         return cls.unpadded(data).decode('ascii')
-
-

@@ -12,7 +12,7 @@ from dmk._common import KEY_SALT_SIZE
 from dmk._main import Main
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
-from ._constants import __version__, __copyright__
+from ._constants import __version__
 
 CODN_FILE_ENVNAME = 'DMK_VAULT_FILE'
 DEFAULT_STORAGE_FILE = "~/vault.dmk"
@@ -76,8 +76,7 @@ def set_cmd(vault: str, codename: str, text: str, file: List[Path]):
               hide_input=True)
 @click.argument('file', nargs=-1, type=Path)
 def getf_cmd(vault: str, codename: str, file: List[Path]):
-    """Decrypts an entry and prints as text, or writes the descypted
-    content to a file."""
+    """Decrypts an entry and prints as text, or writes to file."""
     if len(file) > 0:
         Main(vault).get_file(codename, str(file[0]))
     else:
@@ -99,14 +98,24 @@ def eval(storage: str, codename: str):
     Main(storage).eval(codename)
 
 
-@click.group()
-@click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
-def dmk_cli():
-    """
-    See https://github.com/rtmigo/dmk_py#readme
-    """
+@click.group(
+    invoke_without_command=True,
 
-    # todo fix windows --version problem
+    # callback = lambda: print('zzz'),
+
+)
+# @click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
+@click.pass_context
+def dmk_cli(ctx):
+    if not ctx.invoked_subcommand:
+        click.echo(f"DMK: Dark Matter Keeper v{__version__}")
+        print('(c) 2021 Artem IG <ortemeo@gmail.com>')
+        click.echo()
+        click.echo("See https://github.com/rtmigo/dmk_py#readme")
+        click.echo()
+        click.echo(ctx.get_help())
+        ctx.exit(2)
+
     pass
 
 
@@ -116,4 +125,4 @@ dmk_cli.add_command(eval)
 dmk_cli.add_command(set_cmd)
 
 if __name__ == '__main__':
-    dmk_cli()
+    dmk_cli(None)
