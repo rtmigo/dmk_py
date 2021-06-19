@@ -181,10 +181,10 @@ contains random rubbish.
    - decrypted secret name up to 28 bytes long
    - the secret name provided by user
    
-   If everything matches everything, it is a more than 53 bytes match.
-   We also verified that this is not a private key collision or a checksum 
-   collision. Still not deterministic, but more likely than any conceivable 
-   coincidence. This is indeed a block related to the given secret name.
+   If everything matches everything, it is at least a 53 bytes match. We also 
+   verified that this is not a private key collision or a checksum collision. 
+   Still not deterministic, but more likely than any conceivable coincidence. 
+   This is indeed a block related to the given secret name.
    
    We also made sure that the data decryption is proceeding correctly.
 
