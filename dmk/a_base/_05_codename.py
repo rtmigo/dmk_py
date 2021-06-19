@@ -4,6 +4,8 @@
 
 from Crypto.Random import get_random_bytes
 
+from dmk._common import CODENAME_LENGTH_BYTES
+
 
 class CodenameAscii:
 
@@ -37,4 +39,3 @@ class CodenameAscii:
         return cls.unpadded(data).decode('ascii')
 
 
-CODENAME_LENGTH_BYTES = 24

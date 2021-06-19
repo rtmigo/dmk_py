@@ -62,8 +62,8 @@ class CodenameKey:
             raise ValueError("Wrong salt length")
         self.codename = password
         self.as_bytes = _password_to_key_cached(
-            CodenameAscii.to_ascii(password),
-            salt,
+            password=CodenameAscii.to_ascii(password),
+            salt=salt,
             mem_cost=CodenameKey.__mem_cost,
             time_cost=CodenameKey.__time_cost)
 
@@ -71,7 +71,7 @@ class CodenameKey:
 @lru_cache(10000)
 def _password_to_key_cached(password: bytes, salt: bytes, mem_cost: int,
                             time_cost: int):
-    return _password_to_key_noncached(password, salt, mem_cost, time_cost)
+    return _password_to_key_noncached(password=password, salt=salt, mem_cost=mem_cost, time_cost=time_cost)
 
 
 def _argon_str_to_digest_bytes(argon_str: bytes) -> bytes:
@@ -97,7 +97,7 @@ def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int,
 
     HASH_LEN = 32
 
-    argon_str = argon2.low_level.hash_secret(
+    result = argon2.low_level.hash_secret_raw(
         secret=password,
         salt=salt,
         time_cost=time_cost,
@@ -108,11 +108,9 @@ def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int,
         hash_len=HASH_LEN
     )
 
-    # $argon2i$v=19$m=512,t=3,p=2$c29tZXNhbHQ$SqlVijFGiPG+935vDSGEsA
-    assert _argon_str_to_salt_bytes(argon_str) == salt
+    #print(argon_raw)
 
-    result = _argon_str_to_digest_bytes(argon_str)
-    assert len(result) == 32
+    assert len(result) == HASH_LEN
     return result
 
 

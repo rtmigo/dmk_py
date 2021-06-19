@@ -7,8 +7,9 @@ import random
 import unittest
 from io import BytesIO
 
-from dmk._common import MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
-from dmk.a_base._05_codename import CodenameAscii, CODENAME_LENGTH_BYTES
+from dmk._common import MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE, \
+    CODENAME_LENGTH_BYTES
+from dmk.a_base._05_codename import CodenameAscii
 from dmk.a_base._10_kdf import FasterKDF, CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 from dmk.b_cryptoblobs._20_encdec_part import Encrypt, \

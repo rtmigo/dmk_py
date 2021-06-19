@@ -12,19 +12,24 @@ from Crypto.Random import get_random_bytes
 
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
-KEY_SALT_SIZE = 24
 KEY_SIZE = 32
-
 assert KEY_SIZE * 8 == 256
+
+# we use salt size value different than the key size, so that we can easily
+# distinguish the array with the key from the array with salt when checking
+# arguments. In any case, a 30-byte salt supplemented with at least 3 ASCII
+# characters will give more entropy than a 256-bit key can store
+KEY_SALT_SIZE = 30
+
+CODENAME_LENGTH_BYTES = 28
+HEADER_SIZE = 40
 
 ########################
 
 CLUSTER_SIZE = 4096
 
-# all the meta data in cluster: imprints and nonce, header.
-# Some of this is kept open, some is the beginning of encrypted data.
-# It takes a fixed number of bytes anyway
-CLUSTER_META_SIZE = 80
+# all the meta data in block: nonce, header, header checksum.
+CLUSTER_META_SIZE = 72
 
 # the maximum amount of data (in bytes) that can be saved in single cluster
 MAX_CLUSTER_CONTENT_SIZE = CLUSTER_SIZE - CLUSTER_META_SIZE

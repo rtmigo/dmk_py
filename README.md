@@ -159,35 +159,33 @@ contains random rubbish.
 
 ## Block encryption
 
-1) **URandom** creates 192-bit **salt** when we initialize the vault file. The
+1) **URandom** creates 240-bit **salt** when we initialize the vault file. The
    salt is saved openly in the file. This salt never changes. It is required for
    any other actions on the vault.
 
-
-
-2) **Argon2id** (mem 128 MiB, iterations 4, parallelism 8) derives 
+2) **Argon2id** (memory 128 MiB, iterations 4, parallelism 8) derives 
    256-bit **private key** from salted (1) codename.
 
 3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
    newly generated  96-bit **block nonce**.
 
-4) The encrypted data of the block starts with a header. Among other data the 
-   decrypted header contains the secret key in plain text. The header is 
-   followed by the **header checksum**, which is a 256-bit **Blake2s** hash. 
-   The checksum itself is also in the encrypted stream.
+4) The encrypted data of the block starts with a 40-byte header. This header
+   contains the secret key in plain text, and some other information.
+   The header is followed by the **header checksum**, which is a 160-bit 
+   **Blake2s** hash. The checksum itself is also in the encrypted stream.
    
-   To find out if a block refers to a secret name, we compare the decrypted 
-   secret name value with the original one, and the checksum value to the 
-   expected one.
+   When decrypting, we are directly or indirectly checking that all components 
+   match each other:
+   - 32-byte private key (256-bit key that decrypts the data)
+   - 20-byte header checksum (160-bit hash)
+   - decrypted secret name up to 28 bytes long
+   - the secret name provided by user
    
-   So we checked the mutual correspondence of a 256-bit key, a 256-bit checksum 
-   of 36-byte header, and a string up to 24 bytes long. The process of 
-   decrypting the correct 32 bytes of the checksum was itself part of the
-   verification. We also have reinsured against private key collisions and 
-   checksum collisions.
+   If everything matches everything, it is a more than 53 bytes match.
+   We also verified that this is not a private key collision or a checksum 
+   collision. Still not deterministic, but more likely than any conceivable 
+   coincidence. This is indeed a block related to the given secret name.
    
-   If everything matches, then the block refers to the given secret name.
-
    We also made sure that the data decryption is proceeding correctly.
 
 5) **CRC-32** checksum verifies the entry data decrypted from the block.
@@ -196,9 +194,9 @@ contains random rubbish.
    of the private key (2). Therefore, it is really only a self-test to see
    if the data is decoded as expected.
 
-   This checksum is saved inside the encrypted stream. If the data in the blocks
-   is the same, it will not be noticeable from the outside due to different
-   nonce (3) values.
+   This checksum is saved inside the encrypted stream. If the data in the 
+   blocks is the same, it will not be noticeable from the outside due to 
+   different nonce (3) values.
 
 
 

@@ -12,8 +12,9 @@ from Crypto.Hash import BLAKE2s
 from Crypto.Random import get_random_bytes
 
 from dmk._common import read_or_fail, InsufficientData, \
-    MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE, CLUSTER_META_SIZE
-from dmk.a_base._05_codename import CodenameAscii, CODENAME_LENGTH_BYTES
+    MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE, CLUSTER_META_SIZE, \
+    CODENAME_LENGTH_BYTES, HEADER_SIZE
+from dmk.a_base._05_codename import CodenameAscii
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.dirty_file import WritingToTempFile
 from dmk.a_utils.randoms import set_random_last_modified
@@ -50,6 +51,11 @@ def blake2s_128(data: bytes) -> bytes:
 
 def blake2s_256(data: bytes) -> bytes:
     h_obj = BLAKE2s.new(digest_bits=256)
+    h_obj.update(data)
+    return h_obj.digest()
+
+def blake2s_160(data: bytes) -> bytes:
+    h_obj = BLAKE2s.new(digest_bits=160)
     h_obj.update(data)
     return h_obj.digest()
 
@@ -355,9 +361,11 @@ class Encrypt:
             content_ver_bytes,
         ))
 
+        assert len(header_data) == HEADER_SIZE, len(header_data)
+
         encrypt_and_write(header_data)
 
-        encrypt_and_write(blake2s_256(header_data))
+        encrypt_and_write(blake2s_160(header_data))
 
         assert outfile.tell() == CLUSTER_META_SIZE, f"pos is {outfile.tell()}"
 
@@ -415,15 +423,6 @@ class DecryptedIO:
         self._tried_to_read_header = False
 
         self._data_read = False
-
-        self._belongs_to_namegroup: Optional[bool] = None
-        self._contains_data: Optional[bool] = None
-
-        self._imprint_a_checked = False
-        self._imprint_b_checked = False
-
-        self._imprint_a_bytes: Optional[bytes] = None
-        # self._imprint_b_bytes: Optional[bytes] = None
 
         pos = self._source.tell()
         if pos != 0:
@@ -503,7 +502,7 @@ class DecryptedIO:
         content_version_data = self.__read_and_decrypt(4)
         content_version = bytes_to_uint32(content_version_data)
 
-        header_checksum = self.__read_and_decrypt(32)
+        header_checksum = self.__read_and_decrypt(20)
 
         # todo read whole header data, then re-read from bytesio?
 
@@ -514,6 +513,8 @@ class DecryptedIO:
             part_size_data,
             content_version_data,
         ))
+
+        assert len(header_data) == HEADER_SIZE, len(header_data)
 
         # we had already made sure that a matching codename was found inside
         # the decrypted data. This is how we insured ourselves against private
@@ -532,7 +533,7 @@ class DecryptedIO:
         #
         # This is how we verify everything together in combination:
         #
-        # - the 256-bit checksum can be read correctly from the stream.
+        # - the 160-bit checksum can be read correctly from the stream.
         #   If we decode nonsense with a random key, then the checksum will
         #   not match the header: either the header or the sum will be read
         #   incorrectly. The match almost certainly means, the private key
@@ -544,15 +545,15 @@ class DecryptedIO:
         #   (a) was is the correct codename (b) we are so successful at
         #   decrypting the data not because of the KDF collision
         #
-        # So we got perfect match of 256-bit key with a 256-bit checksum and
-        # variable-length codename (up to 24 bytes).
+        # So we got perfect match of 256-bit key with a 160-bit checksum and
+        # variable-length codename (up to 28 bytes).
         #
         # It's still not deterministic. But even if you brute force it hard, it
         # will lead to a collision only on a spaceship with infinite
         # improbability drive. This is also not a completely deterministic
         # statement.
 
-        if blake2s_256(header_data) != header_checksum:
+        if blake2s_160(header_data) != header_checksum:
             raise VerificationFailure("Header checksum mismatch.")
 
         return Header(content_crc32=content_crc32,

@@ -37,7 +37,7 @@ def generate_references():
             d.set_from_io(name, input_io)
         print(f"Written in {time.monotonic() - t}")
 
-
+#@unittest.skip('tmp')
 class TestRefs(unittest.TestCase):
     def test(self):
         assert CodenameKey.is_standard_params()
