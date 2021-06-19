@@ -9,22 +9,22 @@ from tests.common import testing_salt
 
 class TestKdf(unittest.TestCase):
 
-    #@unittest.skip('tmp')
+    # @unittest.skip('tmp')
     def test_constant(self):
-        assert CodenameKey._time_cost >= 3
+        assert CodenameKey.get_params().time >= 4
 
         KEY_FROM_PASSWORD = (
-            135, 185, 64, 145, 53, 127, 53, 240, 132, 7, 190, 164, 41, 21, 140,
-            235, 111, 141, 89, 100, 68, 75, 59, 72, 230, 58, 252, 209, 87, 75,
-            244, 252)
+            192, 116, 209, 12, 247, 121, 244, 135, 101, 77, 121, 138, 253, 37,
+            11, 214, 50, 183, 175, 9, 218, 230, 218, 219, 132, 110, 175, 225,
+            253, 184, 84, 173)
 
         KEY_FROM_OTHER = (
-            208, 147, 48, 82, 118, 126, 16, 33, 255, 71, 226, 74, 120, 172,
-            196, 34, 3, 30, 19, 32, 19, 62, 70, 156, 63, 75, 7, 133, 183, 246,
-            23, 67)
+            19, 79, 133, 222, 232, 108, 200, 196, 196, 200, 180, 151, 82, 38,
+            176, 0, 108, 252, 219, 253, 86, 115, 228, 184, 37, 187, 19, 111,
+            205, 200, 174, 246)
 
-        #print(list(CodenameKey('password', testing_salt).as_bytes))
-        #print(list(CodenameKey('other', testing_salt).as_bytes))
+        # print(list(CodenameKey('password', testing_salt).as_bytes))
+        # print(list(CodenameKey('other', testing_salt).as_bytes))
         self.assertEqual(CodenameKey('password', testing_salt).as_bytes,
                          bytes(KEY_FROM_PASSWORD))
 
@@ -52,7 +52,8 @@ class TestKdf(unittest.TestCase):
         seen = set()
 
         PWD = "password"
-        POWER = CodenameKey._time_cost
+        old_params = CodenameKey.get_params()
+        # POWER = CodenameKey._time_cost
         p = CodenameKey(PWD, testing_salt)
         self.assertNotIn(p.as_bytes, seen)
         seen.add(p.as_bytes)
@@ -63,19 +64,31 @@ class TestKdf(unittest.TestCase):
         self.assertNotIn(p.as_bytes, seen)
         seen.add(p.as_bytes)
 
-        # different power
-        try:
-            CodenameKey._time_cost -= 1
+        with self.subTest("Different time cost"):
+            try:
+                CodenameKey.set_params(time_cost=old_params.time - 1,
+                                       mem_cost=old_params.mem)  # -= 1
+                p = CodenameKey(PWD, testing_salt)
+                self.assertNotIn(p.as_bytes, seen)
+                seen.add(p.as_bytes)
 
-            # different power
-            p = CodenameKey(PWD, testing_salt)
-            self.assertNotIn(p.as_bytes, seen)
-            seen.add(p.as_bytes)
+            finally:
+                CodenameKey.set_params(time_cost=old_params.time,
+                                       mem_cost=old_params.mem)
 
-        finally:
-            CodenameKey._power = POWER
+        with self.subTest("Different mem cost"):
+            try:
+                CodenameKey.set_params(time_cost=old_params.time,
+                                       mem_cost=old_params.mem*2)  # -= 1
+                p = CodenameKey(PWD, testing_salt)
+                self.assertNotIn(p.as_bytes, seen)
+                seen.add(p.as_bytes)
 
-        self.assertEqual(len(seen), 3)
+            finally:
+                CodenameKey.set_params(time_cost=old_params.time,
+                                       mem_cost=old_params.mem)
+
+        self.assertEqual(len(seen), 4)
 
 
 if __name__ == "__main__":
