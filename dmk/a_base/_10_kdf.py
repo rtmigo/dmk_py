@@ -32,12 +32,18 @@ class CodenameKey:
     _time_cost = 6
     _mem_cost = 131072 # 128MB # 102400
 
-    # Argon2id 128 MiB
+    # Argon2id 128 MiB, parallelism 8
+
+    # TC | Intel i7-8700K | AMD A9-9420e
+    # ---|----------------|--------------
+    #  6 | 0.12 sec       | ?
+
+    # Argon2id 128 MiB, parallelism 4
 
     # TC | Intel i7-8700K | AMD A9-9420e
     # ---|----------------|--------------
     #  9 | 0.19 sec       | 1.2 sec
-    #  6 | 0.13 sec       | 1.2 sec
+    #  6 | 0.13 sec       | ?
 
     # scrypt
     # pow | Intel i7-8700K | AMD A9-9420e
@@ -82,7 +88,7 @@ def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int, time
         salt=salt,
         time_cost=time_cost,
         memory_cost=mem_cost, # default for 2021 is 102400, ~100MB
-        parallelism=4,
+        parallelism=8,
         type=argon2.low_level.Type.ID,
         version=19,
         hash_len=32
