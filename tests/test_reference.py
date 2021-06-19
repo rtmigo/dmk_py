@@ -21,7 +21,7 @@ refs_file = Path(__file__).parent / "data" / "ref_vault.dmk"
 
 
 def generate_references():
-    assert CodenameKey.get_params().time >= 4
+    assert CodenameKey.is_standard_params()
 
     if not input(f"Really replace {refs_file} (y/N)? ").lower().startswith('y'):
         print("Canceled")
@@ -50,7 +50,8 @@ def generate_references():
 #@unittest.skip('temp')
 class TestRefs(unittest.TestCase):
     def test(self):
-        assert CodenameKey.get_params().time >= 4
+        assert CodenameKey.is_standard_params()
+        #assert CodenameKey.get_params().time >= 4
         d = TheFile(refs_file)
         print("References salt", tuple(d.salt))
         for name, data in ref_content:
@@ -58,8 +59,8 @@ class TestRefs(unittest.TestCase):
 #
 #
 if __name__ == "__main__":
-     unittest.main()
+     #unittest.main()
 
-     # generate_references()
-     # TestRefs().test()
-     # print("OK")
+     generate_references()
+     TestRefs().test()
+     print("OK")

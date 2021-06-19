@@ -11,7 +11,8 @@ class TestKdf(unittest.TestCase):
 
     # @unittest.skip('tmp')
     def test_constant(self):
-        assert CodenameKey.get_params().time >= 4
+        assert CodenameKey.is_standard_params()
+        #assert CodenameKey.get_params().time >= 4
 
         KEY_FROM_PASSWORD = (
             192, 116, 209, 12, 247, 121, 244, 135, 101, 77, 121, 138, 253, 37,
