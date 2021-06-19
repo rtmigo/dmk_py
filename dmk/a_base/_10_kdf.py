@@ -29,14 +29,15 @@ class CodenameKey:
     __slots__ = ["as_bytes", "codename"]
 
     #_power = 17  # larger values = slower function, more secure
-    _time_cost = 6
+    _time_cost = 4
     _mem_cost = 131072 # 128MB # 102400
 
     # Argon2id 128 MiB, parallelism 8
 
     # TC | Intel i7-8700K | AMD A9-9420e
     # ---|----------------|--------------
-    #  6 | 0.12 sec       | ?
+    #  6 | 0.12 sec       | 0.83
+    #  4 | 0.09 sec       | 0.83
 
     # Argon2id 128 MiB, parallelism 4
 
