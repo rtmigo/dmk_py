@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
+
 import unittest
 from base64 import b64decode
 from functools import lru_cache
@@ -30,9 +31,8 @@ class CodenameKey:
 
     __slots__ = ["as_bytes", "codename"]
 
-    # _power = 17  # larger values = slower function, more secure
     __time_cost = 4
-    __mem_cost = 131072  # 128MB # 102400
+    __mem_cost = 131072  # 128 MiB
 
     @classmethod
     def is_standard_params(cls) -> bool:
@@ -91,14 +91,12 @@ def _password_to_key_cached(password: bytes, salt: bytes, mem_cost: int,
 
 def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int,
                                time_cost: int):
-    # https://nitratine.net/blog/post/python-gcm-encryption-tutorial/
-
-    # 2021:
-    # DEFAULT_RANDOM_SALT_LENGTH = 16
-    # DEFAULT_HASH_LENGTH = 16
-    # DEFAULT_TIME_COST = 2
-    # DEFAULT_MEMORY_COST = 102400
-    # DEFAULT_PARALLELISM = 8
+    # in 2021 constants in argon2-cffi are following:
+    #   DEFAULT_RANDOM_SALT_LENGTH = 16
+    #   DEFAULT_HASH_LENGTH = 16
+    #   DEFAULT_TIME_COST = 2
+    #   DEFAULT_MEMORY_COST = 102400      # 102400 KiB = 100 MiB
+    #   DEFAULT_PARALLELISM = 8
 
     # print(argon2.low_level.ARGON2_VERSION)
 
