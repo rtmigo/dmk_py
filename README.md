@@ -165,7 +165,7 @@ contains random rubbish.
 
 
 
-2) **Argon2id** (mem 128 MiB, iterations 4, parallelism 8) derives 
+2) **Argon2id** (memory 128 MiB, iterations 4, parallelism 8) derives 
    256-bit **private key** from salted (1) codename.
 
 3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
