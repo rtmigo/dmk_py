@@ -1,20 +1,21 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-import time
+import unittest
 from base64 import b64decode
-from functools import lru_cache
-from typing import Optional
-
-from Crypto.Protocol.KDF import scrypt
+from typing import Optional, Tuple, NamedTuple
 
 import argon2.low_level
-#from argon2 import PasswordHasher
-
-#import hashlib
-from Crypto.Random import get_random_bytes
 
 from dmk._common import KEY_SALT_SIZE
 from dmk.a_base._05_codename import CodenameAscii
+
+
+# from argon2 import PasswordHasher
+# import hashlib
+
+class ArgonParams(NamedTuple):
+    time: int
+    mem: int
 
 
 class CodenameKey:
@@ -28,9 +29,18 @@ class CodenameKey:
 
     __slots__ = ["as_bytes", "codename"]
 
-    #_power = 17  # larger values = slower function, more secure
-    _time_cost = 4
-    _mem_cost = 131072 # 128MB # 102400
+    # _power = 17  # larger values = slower function, more secure
+    __time_cost = 4
+    __mem_cost = 131072  # 128MB # 102400
+
+    @classmethod
+    def get_params(cls) -> ArgonParams:
+        return ArgonParams(cls.__time_cost, cls.__mem_cost)
+
+    @classmethod
+    def set_params(cls, time_cost: int, mem_cost: int) -> None:
+        cls.__time_cost = time_cost
+        cls.__mem_cost = mem_cost
 
     # Argon2id 128 MiB, parallelism 8
 
@@ -59,20 +69,25 @@ class CodenameKey:
         self.as_bytes = _password_to_key_cached(
             CodenameAscii.to_ascii(password),
             salt,
-            mem_cost=CodenameKey._mem_cost,
-            time_cost=CodenameKey._time_cost
-            #size=32,
-            #pwr=CodenameKey._power
-
-        )
+            mem_cost=CodenameKey.__mem_cost,
+            time_cost=CodenameKey.__time_cost)
 
 
-@lru_cache(10000)
-def _password_to_key_cached(password: bytes, salt: bytes, mem_cost: int, time_cost: int):
+# @lru_cache(10000)
+def _password_to_key_cached(password: bytes, salt: bytes, mem_cost: int,
+                            time_cost: int):
     return _password_to_key_noncached(password, salt, mem_cost, time_cost)
 
 
-def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int, time_cost: int):
+# References salt (88, 34, 3, 68, 37, 216, 7, 202, 134, 57, 99, 183, 8, 181, 155, 116, 118, 20, 254, 93, 111, 198, 85, 132)
+# argon str b'$argon2id$v=19$m=131072,t=4,p=8$WCIDRCXYB8qGOWO3CLWbdHYU/l1vxlWE$/B9WWGjpyvrY3lBzjSAfWwjIaNnTHa/xXlePfVSftIQ'
+
+# References salt (88, 34, 3, 68, 37, 216, 7, 202, 134, 57, 99, 183, 8, 181, 155, 116, 118, 20, 254, 93, 111, 198, 85, 132)
+# argon str b'$argon2id$v=19$m=131072,t=3,p=8$WCIDRCXYB8qGOWO3CLWbdHYU/l1vxlWE$Bndl/hSde014akF697iVthg3epJbw7e6IJOfKSOczZM'
+
+
+def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int,
+                               time_cost: int):
     # https://nitratine.net/blog/post/python-gcm-encryption-tutorial/
 
     # 2021:
@@ -82,27 +97,31 @@ def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int, time
     # DEFAULT_MEMORY_COST = 102400
     # DEFAULT_PARALLELISM = 8
 
-    #print(argon2.low_level.ARGON2_VERSION)
+    # print(argon2.low_level.ARGON2_VERSION)
+
+    # assert time_cost != 3
 
     argon_str = argon2.low_level.hash_secret(
         secret=password,
         salt=salt,
         time_cost=time_cost,
-        memory_cost=mem_cost, # default for 2021 is 102400, ~100MB
+        memory_cost=mem_cost,  # default for 2021 is 102400, ~100MB
         parallelism=8,
         type=argon2.low_level.Type.ID,
         version=19,
         hash_len=32
     )
 
+    # print("argon str", argon_str)
+
     # $argon2i$v=19$m=512,t=3,p=2$c29tZXNhbHQ$SqlVijFGiPG+935vDSGEsA
     assert b64decode(argon_str.split(b'$')[-2]) == salt
 
     digest = argon_str.rpartition(b'$')[-1]
-    #print(digest)
-    return b64decode(digest+b'==')
+    # print(digest)
+    return b64decode(digest + b'==')
 
-    #ph = PasswordHasher()
+    # ph = PasswordHasher()
 
     # # noinspection PyTypeChecker
     # return scrypt(password, # type: ignore
@@ -110,6 +129,7 @@ def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int, time
     #               key_len=size,
     #               N=2 ** pwr,
     #               r=8, p=1)
+
 
 # def _password_to_key_noncached(password: bytes, salt: bytes, size: int, pwr: int):
 #     # https://nitratine.net/blog/post/python-gcm-encryption-tutorial/
@@ -132,14 +152,21 @@ class FasterKDF:
         self.time_original: Optional[int] = None
 
     def start(self):
-        self.time_original = CodenameKey._time_cost
-        self.mem_original = CodenameKey._mem_cost
-        CodenameKey._time_cost = 1
-        CodenameKey._mem_cost = 1024
+        # pass
+
+        self.time_original, self.mem_original = CodenameKey.get_params()
+
+        # self.time_original = CodenameKey._time_cost
+        # self.mem_original = CodenameKey._mem_cost
+        CodenameKey.set_params(1, 1024)
+        # CodenameKey._time_cost = 1
+        # CodenameKey._mem_cost = 1024
 
     def end(self):
-        CodenameKey._time_cost = self.time_original
-        CodenameKey._mem_cost = self.mem_original
+        CodenameKey.set_params(self.time_original, self.mem_original)
+        # pass
+        # CodenameKey._time_cost = self.time_original
+        # CodenameKey._mem_cost = self.mem_original
 
     def __enter__(self):
         self.start()
@@ -147,12 +174,14 @@ class FasterKDF:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.end()
 
+
 # if __name__ == "__main__":
 #     from Crypto.Random import get_random_bytes
 #
 #     #print(tuple(get_random_bytes(32)))
 
 if __name__ == "__main__":
+    unittest.main()
     pass
     # salt = get_random_bytes(24)
     # for _ in range(10):

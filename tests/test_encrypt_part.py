@@ -14,7 +14,7 @@ from dmk.b_cryptoblobs._20_encdec_part import Encrypt, \
 from dmk.a_base._05_codename import CodenameAscii, CODENAME_LENGTH_BYTES
 from tests.common import testing_salt
 
-
+#@unittest.skip("tmp")
 class TestEncryptDecrypt(unittest.TestCase):
     faster: FasterKDF
 

@@ -61,6 +61,7 @@ class TheFile:
 
     def get_bytes(self, name: str) -> Optional[bytes]:
         ck = CodenameKey(name, self.salt)
+        #print("pk", ck.as_bytes)
         with self._old_blobs() as old_blobs:
             ng = NameGroup(old_blobs, ck)
 
