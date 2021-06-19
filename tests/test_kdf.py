@@ -9,7 +9,7 @@ from tests.common import testing_salt
 
 class TestKdf(unittest.TestCase):
 
-    #@unittest.skip('tmp')
+    @unittest.skip('tmp')
     def test_constant(self):
         assert CodenameKey._time_cost >= 3
 
