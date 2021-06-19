@@ -1,15 +1,17 @@
-"""In this module, I test a not entirely obvious statement.
+"""Testing a not entirely obvious statement.
 
 Two ways to do the same thing:
 
 1) Store a string constant inside an encrypted stream (without verification).
-   Decrypt it and compare it with the original constant - make sure that
-   it is the same
+   Decrypt it and compare it with the original constant - make sure
+   constants equal
 
 2) Compare hashes to make sure the original constants are identical
 
 The first method can easily lead to an error: we are decrypting the
 constant incorrectly, but we will take it as correct.
+
+The second one much more reliable.
 """
 
 from Crypto.Cipher import ChaCha20
