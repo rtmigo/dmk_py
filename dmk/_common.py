@@ -17,9 +17,8 @@ assert KEY_SIZE * 8 == 256
 
 # we use salt size value different than the key size, so that we can easily
 # distinguish the array with the key from the array with salt when checking
-# arguments. In any case, a 30-byte salt supplemented with at least 3 ASCII
-# characters will give more entropy than a 256-bit key can store
-KEY_SALT_SIZE = 30
+# arguments
+KEY_SALT_SIZE = 38
 
 CODENAME_LENGTH_BYTES = 28
 HEADER_SIZE = 40

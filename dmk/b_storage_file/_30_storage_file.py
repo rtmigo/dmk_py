@@ -40,7 +40,7 @@ def bytes_to_version(data: bytes) -> int:
     return sum(data) % 4
 
 
-BLOCKS_START_POS = 32
+BLOCKS_START_POS = 40
 
 
 class StorageFileWriter:

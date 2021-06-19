@@ -202,9 +202,9 @@ class Encrypt:
 
         <encrypted>
             <header>
-                CODENAME    (24 bytes)  The codename string in ASCII.
+                CODENAME    (28 bytes)  The codename string in ASCII.
 
-                                        For codenames shorter than 24 chars
+                                        For codenames shorter than 28 chars
                                         it is prefixed with random bytes
                                         ending with 0x00.
 
@@ -212,8 +212,9 @@ class Encrypt:
 
                                         We deliberately place it at the
                                         beginning of the stream to check for
-                                        a match as quickly as possible (quickly
-                                        discard inappropriate blocks).
+                                        a match as quickly as possible (to
+                                        discard inappropriate blocks without
+                                        decrypting the rest of the header).
 
                                         And it's good that our decrypted stream
                                         starts from such a randomish data.

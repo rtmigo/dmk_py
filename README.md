@@ -159,15 +159,15 @@ contains random rubbish.
 
 ## Block encryption
 
-1) **URandom** creates 240-bit **salt** when we initialize the vault file. The
+1) **URandom** creates 38-bytes **salt** when we initialize the vault file. The
    salt is saved openly in the file. This salt never changes. It is required for
    any other actions on the vault.
 
 2) **Argon2id** (memory 128 MiB, iterations 4, parallelism 8) derives 
-   256-bit **private key** from salted (1) codename.
+   256-bit **private key** from salted (1) secret name.
 
 3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
-   newly generated  96-bit **block nonce**.
+   newly generated 96-bit urandom **block nonce**.
 
 4) The encrypted data of the block starts with a 40-byte header. This header
    contains the secret key in plain text, and some other information.
@@ -176,9 +176,9 @@ contains random rubbish.
    
    When decrypting, we are directly or indirectly checking that all components 
    match each other:
-   - 32-byte private key (256-bit key that decrypts the data)
-   - 20-byte header checksum (160-bit hash)
-   - decrypted secret name up to 28 bytes long
+   - 32-byte (256-bit) private key (1) - it decrypts the data
+   - 20-byte (160-bit) header checksum (4)
+   - decrypted secret name (4) up to 28 bytes long
    - the secret name provided by user
    
    If everything matches everything, it is at least a 53 bytes match. We also 

@@ -11,23 +11,20 @@ from tests.common import testing_salt
 class TestKdf(unittest.TestCase):
 
     # @unittest.skip('tmp')
-    def test_constant(self):
+    def test_constant_1(self):
         assert CodenameKey.is_standard_params()
-        # assert CodenameKey.get_params().time >= 4
 
         KEY_FROM_PASSWORD = (
-            177, 226, 27, 41, 236, 37, 217, 101, 245, 101, 204, 244, 254, 205,
-            254, 208, 135, 173, 69, 212, 61, 168, 35, 53, 131, 68, 55, 91, 16,
-            66, 69, 210)
+            183, 187, 207, 11, 154, 216, 190, 216, 237, 63, 1, 105, 206, 179, 193, 126, 205, 104, 128, 203, 218, 134, 191, 182, 184, 206, 119, 255, 23, 97, 60, 57)
 
-        KEY_FROM_OTHER = (
-            82, 129, 100, 91, 179, 52, 100, 160, 168, 206, 98, 192, 159, 217,
-            187, 184, 178, 181, 138, 45, 170, 47, 28, 184, 215, 247, 194, 75,
-            231, 252, 121, 33)
 
         h = CodenameKey('password', testing_salt).as_bytes
         self.assertEqual(h, bytes(KEY_FROM_PASSWORD),
                          list(h))
+
+    def test_constant_2(self):
+        KEY_FROM_OTHER = (
+            194, 20, 66, 1, 71, 124, 174, 228, 149, 209, 187, 97, 198, 136, 12, 198, 134, 51, 110, 91, 7, 220, 32, 107, 81, 139, 129, 204, 242, 111, 11, 184)
 
         h = CodenameKey('other', testing_salt).as_bytes
         self.assertEqual(h, bytes(KEY_FROM_OTHER),

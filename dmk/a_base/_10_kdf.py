@@ -3,7 +3,6 @@
 
 
 import unittest
-from base64 import b64decode
 from functools import lru_cache
 from typing import Optional, NamedTuple
 
@@ -71,19 +70,8 @@ class CodenameKey:
 @lru_cache(10000)
 def _password_to_key_cached(password: bytes, salt: bytes, mem_cost: int,
                             time_cost: int):
-    return _password_to_key_noncached(password=password, salt=salt, mem_cost=mem_cost, time_cost=time_cost)
-
-
-def _argon_str_to_digest_bytes(argon_str: bytes) -> bytes:
-    digest_str = argon_str.rpartition(b'$')[-1]
-    result = b64decode(digest_str + b'==')
-    return result
-
-
-def _argon_str_to_salt_bytes(argon_str: bytes) -> bytes:
-    digest_str = argon_str.split(b'$')[-2]
-    result = b64decode(digest_str + b'==')
-    return result
+    return _password_to_key_noncached(password=password, salt=salt,
+                                      mem_cost=mem_cost, time_cost=time_cost)
 
 
 def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int,
@@ -108,7 +96,7 @@ def _password_to_key_noncached(password: bytes, salt: bytes, mem_cost: int,
         hash_len=HASH_LEN
     )
 
-    #print(argon_raw)
+    # print(argon_raw)
 
     assert len(result) == HASH_LEN
     return result

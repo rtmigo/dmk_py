@@ -76,8 +76,7 @@ def set_cmd(vault: str, codename: str, text: str, file: List[Path]):
               hide_input=True)
 @click.argument('file', nargs=-1, type=Path)
 def getf_cmd(vault: str, codename: str, file: List[Path]):
-    """Decrypts an entry and prints as text, or writes the descypted
-    content to a file."""
+    """Decrypts an entry and prints as text, or writes to file."""
     if len(file) > 0:
         Main(vault).get_file(codename, str(file[0]))
     else:
@@ -99,21 +98,48 @@ def eval(storage: str, codename: str):
     Main(storage).eval(codename)
 
 
-@click.group()
-@click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
-def dmk_cli():
-    """
-    See https://github.com/rtmigo/dmk_py#readme
-    """
+@click.group(
+    invoke_without_command=True,
+
+    #callback = lambda: print('zzz'),
+
+
+    )
+#@click.version_option(message=f'%(prog)s {__version__}\n(c) {__copyright__}')
+@click.pass_context
+def dmk_cli(ctx):
+    if not ctx.invoked_subcommand:
+        click.echo(f"DMK: Dark Matter Keeper v{__version__}")
+        click.echo('(c) 2021 Artёm IG <ortemeo@gmail.com>')
+        click.echo()
+        click.echo("See https://github.com/rtmigo/dmk_py#readme")
+        click.echo()
+        click.echo(ctx.get_help())
+        ctx.exit(2)
+        #click.e
+        #print('main stuff')
+#    print("haha")
+ #   exit()
+
 
     # todo fix windows --version problem
     pass
 
+# @click.command()
+# @click.option('--option')
+# @click.pass_context
+#
+# def run(ctx, option):
+#     if not option:
+#         print("zzz")
+#         click.echo(ctx.get_help())
+#         ctx.exit()
 
 dmk_cli.add_command(bench)
 dmk_cli.add_command(getf_cmd)
 dmk_cli.add_command(eval)
 dmk_cli.add_command(set_cmd)
+#dmk_cli.add_command(run)
 
 if __name__ == '__main__':
     dmk_cli()
