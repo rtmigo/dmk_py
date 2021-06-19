@@ -171,22 +171,19 @@ contains random rubbish.
 3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
    newly generated  96-bit **block nonce**.
 
-4) The encrypted data of the block starts with a header. Among other data the 
-   decrypted header contains the secret key in plain text. The header is 
-   followed by the **header checksum**, which is a 256-bit **Blake2s** hash. 
+4) The encrypted data of the block starts with a 36-byte header. Among other 
+   data the decrypted header contains the secret key in plain text. The header
+   is followed by the **header checksum**, which is a 256-bit **Blake2s** hash. 
    The checksum itself is also in the encrypted stream.
    
-   To find out if a block refers to a secret name, we compare the decrypted 
-   secret name value with the original one, and the checksum value to the 
-   expected one.
+   Putting it all together, we mutually check, in crazy combinations, the exact 
+   match between a 32-byte private key, a 32-byte checksum, and a secret name 
+   up to 24 bytes long.
    
-   So we checked the mutual correspondence of a 256-bit key, a 256-bit checksum 
-   of 36-byte header, and a string up to 24 bytes long. The process of 
-   decrypting the correct 32 bytes of the checksum was itself part of the
-   verification. We also have reinsured against private key collisions and 
-   checksum collisions.
-   
-   If everything matches, then the block refers to the given secret name.
+   If everything matches everything, this eliminates private key collisions 
+   and checksum collisions. This is indeed a block related to the given secret 
+   name. Still not deterministic, but more likely than any conceivable 
+   coincidence.
 
    We also made sure that the data decryption is proceeding correctly.
 
