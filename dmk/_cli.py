@@ -65,7 +65,7 @@ def bench():
 @click.option('-t', '--text', default=None)
 @click.argument('file', nargs=-1, type=Path)
 def set_cmd(vault: str, codename: str, text: str, file: List[Path]):
-    """Sets entry content."""
+    """Encrypts text or file to an entry."""
 
     if len(file) >= 1:
         if len(file) >= 2:
@@ -103,7 +103,7 @@ def set_cmd(vault: str, codename: str, text: str, file: List[Path]):
               hide_input=True)
 @click.argument('file', nargs=-1, type=Path)
 def getf_cmd(vault: str, codename: str, file: List[Path]):
-    """Writes entry content to a binary file."""
+    """Decrypts an entry and prints as text, or writes the descypted content to a file."""
     if len(file)>0:
         Main(vault).get_file(codename, str(file[0]))
     else:
