@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
+
 import random
 from base64 import urlsafe_b64encode, urlsafe_b64decode, b32encode
 from pathlib import Path
@@ -28,9 +29,6 @@ CLUSTER_META_SIZE = 80
 # the maximum amount of data (in bytes) that can be saved in single cluster
 MAX_CLUSTER_CONTENT_SIZE = CLUSTER_SIZE - CLUSTER_META_SIZE
 assert MAX_CLUSTER_CONTENT_SIZE <= CLUSTER_SIZE
-
-
-######################
 
 
 def read_or_fail(f: BinaryIO, n: int) -> bytes:

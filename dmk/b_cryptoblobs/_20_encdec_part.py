@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
+
 import io
 import zlib
 from pathlib import Path
@@ -19,7 +20,6 @@ from dmk.a_utils.randoms import set_random_last_modified
 from dmk.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
     uint32_to_bytes, uint16_to_bytes, \
     bytes_to_uint16
-from dmk.b_cryptoblobs._10_padding import IntroPadding
 
 _DEBUG_PRINT = False
 
@@ -35,8 +35,6 @@ class GroupImprintMismatch(Exception):
 class ItemImprintMismatch(Exception):
     pass
 
-
-_intro_padding_64 = IntroPadding(64)
 
 ENCRYPTION_NONCE_LEN = 12  # "The TLS ChaCha20 as defined in RFC7539."
 MAC_LEN = 16

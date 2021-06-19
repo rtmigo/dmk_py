@@ -1,20 +1,22 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
+
 import io
 import random
 import unittest
 from io import BytesIO
 
 from dmk._common import MAX_CLUSTER_CONTENT_SIZE, CLUSTER_SIZE
+from dmk.a_base._05_codename import CodenameAscii, CODENAME_LENGTH_BYTES
 from dmk.a_base._10_kdf import FasterKDF, CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 from dmk.b_cryptoblobs._20_encdec_part import Encrypt, \
-    DecryptedIO, GroupImprintMismatch, is_content_io, is_fake_io
-from dmk.a_base._05_codename import CodenameAscii, CODENAME_LENGTH_BYTES
+    DecryptedIO, is_content_io, is_fake_io
 from tests.common import testing_salt
 
-#@unittest.skip("tmp")
+
+# @unittest.skip("tmp")
 class TestEncryptDecrypt(unittest.TestCase):
     faster: FasterKDF
 
@@ -38,7 +40,8 @@ class TestEncryptDecrypt(unittest.TestCase):
             CodenameAscii.to_padded_ascii(NAME))
 
         for _ in range(200):
-            self.assertEqual(CodenameAscii.padded_to_str(CodenameAscii.to_padded_ascii(NAME)), NAME)
+            self.assertEqual(CodenameAscii.padded_to_str(
+                CodenameAscii.to_padded_ascii(NAME)), NAME)
 
         with self.assertRaises(ValueError):
             CodenameAscii.to_padded_ascii('Привет!')
@@ -49,13 +52,15 @@ class TestEncryptDecrypt(unittest.TestCase):
     def test_codename_max_length(self):
 
         long = 'N' * CODENAME_LENGTH_BYTES
-        self.assertEqual(CodenameAscii.padded_to_str(CodenameAscii.to_padded_ascii(long)),
-                         long)
+        self.assertEqual(
+            CodenameAscii.padded_to_str(CodenameAscii.to_padded_ascii(long)),
+            long)
 
         almost = long[:-1]
         assert len(almost) == CODENAME_LENGTH_BYTES - 1
-        self.assertEqual(CodenameAscii.padded_to_str(CodenameAscii.to_padded_ascii(almost)),
-                         almost)
+        self.assertEqual(
+            CodenameAscii.padded_to_str(CodenameAscii.to_padded_ascii(almost)),
+            almost)
 
         longer = long + 'N'
         assert len(longer) == CODENAME_LENGTH_BYTES + 1

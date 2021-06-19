@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 import unittest
 
 from dmk._common import random_basename, looks_like_random_basename
@@ -21,5 +25,4 @@ class TestRandomName(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # TestRandomName().test()
     unittest.main()

@@ -3,7 +3,6 @@
 
 
 import io
-import random
 import zlib
 from pathlib import Path
 from typing import BinaryIO, List, Set
@@ -14,39 +13,6 @@ from dmk.a_utils.randoms import set_random_last_modified
 from dmk.b_cryptoblobs._20_encdec_part import get_stream_size, \
     Encrypt, \
     DecryptedIO
-
-
-def split_random_sizes(full_size: int) -> List[int]:
-    # todo remove
-    if full_size < 0:
-        raise ValueError
-
-    if full_size == 0:
-        return [0]
-
-    truncated_last_part = False  # just for asserts
-
-    sum_sizes = 0
-    part_sizes = list()
-    while sum_sizes < full_size:
-        assert not truncated_last_part
-
-        # up to 64 kb, even if we do not have so much data
-        next_part_size = random.randint(1, MAX_CLUSTER_CONTENT_SIZE)
-        # adjusting the last part size
-        limit = min(MAX_CLUSTER_CONTENT_SIZE, full_size - sum_sizes)
-        assert limit > 0
-        if next_part_size > limit:
-            next_part_size = limit
-            truncated_last_part = True
-
-        # updating sizes list and sum
-        sum_sizes += next_part_size
-        part_sizes.append(next_part_size)
-
-    assert sum(part_sizes) == full_size, f"{sum(part_sizes)} {full_size}"
-    assert all(1 <= p <= MAX_CLUSTER_CONTENT_SIZE for p in part_sizes)
-    return part_sizes
 
 
 def split_cluster_sizes(full_size: int) -> List[int]:
@@ -69,12 +35,7 @@ class MultipartEncryptor:
                  source_io: BinaryIO,
                  content_version: int):
         self.fpk = fpk
-        #self.source_io = source_io
         self.content_version = content_version
-
-
-
-        #full_source_data = source_io.read()
 
         self._source_bytesio = source_io
 
@@ -142,51 +103,6 @@ def encrypt_to_files(fpk: CodenameKey,
 
     assert len(files) == len(me.part_sizes)
     return files
-    #
-    #
-    #
-    # full_size = get_stream_size(source_io)
-    # part_sizes = split_random_sizes(full_size)
-    # assert sum(part_sizes) == full_size
-    #
-    #
-    #
-    # for part_idx, part_size in enumerate(part_sizes):
-    #     target_file = unique_filename(target_dir)
-    #     files.append(target_file)
-    #     Encrypt(fpk,
-    #             parts_len=len(part_sizes),
-    #             part_idx=part_idx,
-    #             part_size=part_size,
-    #             data_version=content_version
-    #             ).io_to_file(source_io, target_file)
-    #
-    # assert len(files) == len(part_sizes)
-    # return files
-
-
-def encrypt_to_files_old(fpk: CodenameKey,
-                         source_io: BinaryIO,
-                         target_dir: Path,
-                         content_version: int) -> List[Path]:
-    full_size = get_stream_size(source_io)
-    part_sizes = split_random_sizes(full_size)
-    assert sum(part_sizes) == full_size
-
-    files: List[Path] = []
-
-    for part_idx, part_size in enumerate(part_sizes):
-        target_file = unique_filename(target_dir)
-        files.append(target_file)
-        Encrypt(fpk,
-                parts_len=len(part_sizes),
-                part_idx=part_idx,
-                part_size=part_size,
-                data_version=content_version
-                ).io_to_file(source_io, target_file)
-
-    assert len(files) == len(part_sizes)
-    return files
 
 
 class BadFilesetError(Exception):
@@ -205,25 +121,19 @@ def decrypt_from_dios(files: List[DecryptedIO],
     files = files.copy()
 
     max_part_idx = max(f.header.part_idx for f in files)
-    if max_part_idx != len(files)-1:
-        raise BadFilesetError(f"max_part_idx={max_part_idx}, but len(files)={len(files)}")
+    if max_part_idx != len(files) - 1:
+        raise BadFilesetError(
+            f"max_part_idx={max_part_idx}, but len(files)={len(files)}")
 
     if set(f.header.part_idx for f in files) != set(range(len(files))):
         raise BadFilesetError(
             f"Some parts are missing")
 
-
     first = files[0]
     for f in files[1:]:
-        # if f.header.parts_len != first.header.parts_len:
-        #     raise BadFilesetError("parts_len mismatch")
-        # if f.header.data_size != first.header.data_size:
-        #     raise BadFilesetError("data_size mismatch")
         if f.header.data_version != first.header.data_version:
             raise BadFilesetError("data_version mismatch")
-    # if len(files) != first.header.parts_len:
-    #     raise BadFilesetError(f"Expected {first.header.parts_len} files, "
-    #                           f"but got {len(files)}.")
+
     if len(set(f.header.part_idx for f in files)) != len(files):
         raise BadFilesetError("some part indexes are not unique")
 

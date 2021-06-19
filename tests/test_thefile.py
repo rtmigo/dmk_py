@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
+
 import unittest
 from io import BytesIO
 from pathlib import Path
@@ -23,17 +24,6 @@ class TestTheFile(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls.faster.end()
 
-    # def test_encdec_empty(self):
-    #     with TemporaryDirectory() as tds:
-    #         temp_dir = Path(tds)
-    #         crypto_dir = CryptoDir(temp_dir)
-    #         NAME = 'empty'
-    #         with BytesIO(b'') as input_io:
-    #             crypto_dir.set_from_io(NAME, input_io)
-    #
-    #         crypto_dir_b = CryptoDir(temp_dir)
-    #         self.assertEqual(crypto_dir_b.get(NAME), b'')
-
     def test_random_write_and_read(self):
 
         for _ in range(7):
@@ -48,8 +38,6 @@ class TestTheFile(unittest.TestCase):
 
                 salts = set()
 
-
-
                 # writing
                 for name, data in names_and_datas:
                     the_file = TheFile(file_path)
@@ -58,9 +46,9 @@ class TestTheFile(unittest.TestCase):
                     # print("Writing", the_file.salt)
 
                     with BytesIO(data) as input_io:
-                        #print("Set", name)
+                        # print("Set", name)
                         the_file.set_from_io(name, input_io)
-                        #print(the_file.blobs_len)
+                        # print(the_file.blobs_len)
 
                 self.assertTrue(file_path.exists())
                 self.assertEqual(len(salts), 1)
@@ -71,7 +59,7 @@ class TestTheFile(unittest.TestCase):
 
                 # reading with same instance
                 for name, data in names_and_datas:
-                    #print("Get", name)
+                    # print("Get", name)
                     self.assertEqual(the_file.get_bytes(name), data)
 
                 # creating a new CryptoDir instance. This time the salt will
@@ -82,13 +70,6 @@ class TestTheFile(unittest.TestCase):
                 # reading with other instance
                 for name, data in names_and_datas:
                     self.assertEqual(crypto_dir_b.get_bytes(name), data)
-
-    # def test_cryptodir_does_not_create_directories(self):
-    #     with TemporaryDirectory() as tds:
-    #         temp_dir = Path(tds)
-    #         temp_subdir = temp_dir/"sub"
-    #         with self.assertRaises(FileNotFoundError):
-    #             CryptoDir(temp_subdir)
 
 
 if __name__ == "__main__":

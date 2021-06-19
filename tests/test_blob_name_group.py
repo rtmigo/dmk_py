@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
+
 import io
 import random
 import unittest
@@ -15,7 +16,7 @@ from dmk.b_cryptoblobs._30_encdec_multipart import MultipartEncryptor
 from dmk.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
 from dmk.c_namegroups._fakes import create_fake_bytes
 from dmk.c_namegroups._namegroup import NameGroup
-#from codn.c_namegroups._fakes import create_fake_bytes
+# from codn.c_namegroups._fakes import create_fake_bytes
 from tests.common import testing_salt
 
 
@@ -90,7 +91,7 @@ class TestNamegroup(unittest.TestCase):
 
                     # find the content blobs in the stream
                     r = BlocksIndexedReader(blobs_stream)
-                    #r.check_all_checksums()
+                    # r.check_all_checksums()
                     ng = NameGroup(r, pk)
                     self.assertEqual(ng.all_content_versions, {1})
                     found_1 = name_group_to_content_blobs(ng)
@@ -117,7 +118,7 @@ class TestNamegroup(unittest.TestCase):
 
                     # find the content blobs in the stream
                     r = BlocksIndexedReader(blobs_stream)
-                    #r.check_all_checksums()
+                    # r.check_all_checksums()
                     ng = NameGroup(r, pk)
                     self.assertEqual(ng.all_content_versions, {1, 2})
                     found_2 = name_group_to_content_blobs(ng)
@@ -139,7 +140,7 @@ class TestNamegroup(unittest.TestCase):
 
                     # find the content blobs in the stream
                     r = BlocksIndexedReader(blobs_stream)
-                    #r.check_all_checksums()
+                    # r.check_all_checksums()
                     ng = NameGroup(r, pk)
                     self.assertEqual(ng.all_content_versions, {1, 2})
                     found_3 = name_group_to_content_blobs(ng)
@@ -156,7 +157,7 @@ class TestNamegroup(unittest.TestCase):
 
                     # find the content blobs in the stream
                     r = BlocksIndexedReader(blobs_stream)
-                    #r.check_all_checksums()
+                    # r.check_all_checksums()
                     ng = NameGroup(r, wrong_key)
                     self.assertEqual(len(ng.all_content_versions), 0)
                     self.assertEqual(len(name_group_to_content_blobs(ng)), 0)

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 import unittest
 
 from dmk.b_cryptoblobs._10_byte_funcs import uint16_to_bytes, \
@@ -12,4 +16,3 @@ class Test(unittest.TestCase):
             uint16_to_bytes(0xFFFF + 1)
         with self.assertRaises(OverflowError):
             uint16_to_bytes(-1)
-

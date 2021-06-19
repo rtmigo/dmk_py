@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-License-Identifier: MIT
+
+
 import datetime
 import random
 from base64 import b64encode
@@ -13,9 +17,9 @@ testing_salt = bytes(
 )
 
 
-
 def gen_random_content(min_size=0, max_size=1024) -> bytes:
     return get_noncrypt_random_bytes(random.randint(min_size, max_size))
+
 
 def gen_random_string() -> str:
     len_bytes = random.randint(0, 20)
@@ -49,6 +53,7 @@ def sizes_are_random(files: List[Path]) -> bool:
         raise ValueError(f"Only {len(files)} files! Need 3.")
     sizes = [f.stat().st_size for f in files]
     return len(set(sizes)) >= 2
+
 
 if __name__ == "__main__":
     print(list(get_noncrypt_random_bytes(KEY_SALT_SIZE)))
