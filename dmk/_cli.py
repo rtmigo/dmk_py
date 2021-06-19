@@ -142,4 +142,4 @@ dmk_cli.add_command(set_cmd)
 #dmk_cli.add_command(run)
 
 if __name__ == '__main__':
-    dmk_cli()
+    dmk_cli(None)
