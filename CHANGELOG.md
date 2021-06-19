@@ -2,7 +2,7 @@
 
 - Replaced KDF from Scrypt to **Argon2**
 - To identify the block, we now try to decrypt and verify its header.
-  Previously, two hashes were used for this. It was more difficult to implement,
+  Previously, two hashes were used for this. It was more complicated,
   less efficient and less reliable
 - Random padding is no longer added to the beginning of the block
 - Fixed `setup.py` issue with subpackages

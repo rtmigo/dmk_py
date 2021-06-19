@@ -9,25 +9,27 @@ from tests.common import testing_salt
 
 class TestKdf(unittest.TestCase):
 
-    @unittest.skip('tmp')
+    #@unittest.skip('tmp')
     def test_constant(self):
         assert CodenameKey._time_cost >= 3
 
         KEY_FROM_PASSWORD = (
-            187, 125, 143, 1, 179, 45, 151, 71, 13, 59, 163, 135, 148, 224, 22, 181, 5, 253, 54, 172, 17, 243, 11, 24, 123, 100, 19, 95, 86, 107, 239, 129)
+            135, 185, 64, 145, 53, 127, 53, 240, 132, 7, 190, 164, 41, 21, 140,
+            235, 111, 141, 89, 100, 68, 75, 59, 72, 230, 58, 252, 209, 87, 75,
+            244, 252)
 
         KEY_FROM_OTHER = (
-            197, 53, 245, 111, 187, 176, 135, 69, 5, 205, 158, 125, 245, 147,
-            90, 147, 20, 145, 15, 59, 158, 193, 250, 102, 168, 129, 146, 147,
-            229, 126, 72, 90)
+            208, 147, 48, 82, 118, 126, 16, 33, 255, 71, 226, 74, 120, 172,
+            196, 34, 3, 30, 19, 32, 19, 62, 70, 156, 63, 75, 7, 133, 183, 246,
+            23, 67)
 
-        print(list(CodenameKey('password', testing_salt).as_bytes))
+        #print(list(CodenameKey('password', testing_salt).as_bytes))
         #print(list(CodenameKey('other', testing_salt).as_bytes))
         self.assertEqual(CodenameKey('password', testing_salt).as_bytes,
                          bytes(KEY_FROM_PASSWORD))
 
-        # self.assertEqual(CodenameKey('other', testing_salt).as_bytes,
-        #                  bytes(KEY_FROM_OTHER))
+        self.assertEqual(CodenameKey('other', testing_salt).as_bytes,
+                         bytes(KEY_FROM_OTHER))
 
         # self.assertEqual(len(FilesetPrivateKey.salt), 32)
 
