@@ -16,20 +16,22 @@ class TestKdf(unittest.TestCase):
         # assert CodenameKey.get_params().time >= 4
 
         KEY_FROM_PASSWORD = (
-            192, 116, 209, 12, 247, 121, 244, 135, 101, 77, 121, 138, 253, 37,
-            11, 214, 50, 183, 175, 9, 218, 230, 218, 219, 132, 110, 175, 225,
-            253, 184, 84, 173)
+            177, 226, 27, 41, 236, 37, 217, 101, 245, 101, 204, 244, 254, 205,
+            254, 208, 135, 173, 69, 212, 61, 168, 35, 53, 131, 68, 55, 91, 16,
+            66, 69, 210)
 
         KEY_FROM_OTHER = (
-            19, 79, 133, 222, 232, 108, 200, 196, 196, 200, 180, 151, 82, 38,
-            176, 0, 108, 252, 219, 253, 86, 115, 228, 184, 37, 187, 19, 111,
-            205, 200, 174, 246)
+            82, 129, 100, 91, 179, 52, 100, 160, 168, 206, 98, 192, 159, 217,
+            187, 184, 178, 181, 138, 45, 170, 47, 28, 184, 215, 247, 194, 75,
+            231, 252, 121, 33)
 
-        self.assertEqual(CodenameKey('password', testing_salt).as_bytes,
-                         bytes(KEY_FROM_PASSWORD))
+        h = CodenameKey('password', testing_salt).as_bytes
+        self.assertEqual(h, bytes(KEY_FROM_PASSWORD),
+                         list(h))
 
-        self.assertEqual(CodenameKey('other', testing_salt).as_bytes,
-                         bytes(KEY_FROM_OTHER))
+        h = CodenameKey('other', testing_salt).as_bytes
+        self.assertEqual(h, bytes(KEY_FROM_OTHER),
+                         list(h))
 
 
     def test_key_len(self):
