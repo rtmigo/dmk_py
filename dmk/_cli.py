@@ -110,7 +110,7 @@ def eval(storage: str, codename: str):
 def dmk_cli(ctx):
     if not ctx.invoked_subcommand:
         click.echo(f"DMK: Dark Matter Keeper v{__version__}")
-        click.echo('(c) 2021 Artёm IG <ortemeo@gmail.com>')
+        print('(c) 2021 Artёm IG <ortemeo@gmail.com>')
         click.echo()
         click.echo("See https://github.com/rtmigo/dmk_py#readme")
         click.echo()
