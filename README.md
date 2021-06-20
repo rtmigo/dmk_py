@@ -1,9 +1,8 @@
-[![Generic badge](https://img.shields.io/badge/Status-Experimental-red.svg)](#)
+[![Generic badge](https://img.shields.io/badge/Status-Pre_Alpha-red.svg)](#)
 [![Generic badge](https://img.shields.io/badge/Python-3.7+-blue.svg)](#)
 [![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS%20|%20Windows-blue.svg)](#)
 
-**This is experimental code. It is not ready to use. This description is also a
-draft.**
+**This is experimental code. The file format may change.**
 
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py#readme)
 
@@ -146,10 +145,6 @@ While `$DMK_VAULT_FILE` is set all the command will use `myfile.data`:
 $ dmk set   # set to myfile.data 
 $ dmk get   # get from myfile.data
 ```
-
-
-
-
 
 # Under the hood
 

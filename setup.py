@@ -24,13 +24,14 @@ setup(
 
     author="Artëm IG",
     author_email="ortemeo@gmail.com",
-    # url='https://github.com/rtmigo/vien_py',
+    url='https://github.com/rtmigo/dmk_py',
 
     packages=find_packages(include='dmk/*'),
     python_requires='>=3.7',
     install_requires=['pycryptodome', 'click', 'argon2-cffi'],
 
-    description="Experimental",
+    description="Experimental storage where each entry is encrypted with "
+                "its own key.",
 
     long_description=readme,
     long_description_content_type='text/markdown',
@@ -47,15 +48,17 @@ setup(
     classifiers=[
         #"Development Status :: 4 - Beta",
         #"Intended Audience :: Developers",
+        'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: BSD License',
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        'Topic :: Security :: Cryptography',
         "Environment :: Console",
         "Typing :: Typed",
         #"Topic :: Software Development :: Build Tools",
         "Operating System :: POSIX",
-        # "Operating System :: Microsoft :: Windows"
+        "Operating System :: Microsoft :: Windows"
     ],
 
     test_suite="test_unit.suite"
