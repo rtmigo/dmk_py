@@ -1,9 +1,8 @@
-[![Generic badge](https://img.shields.io/badge/Status-Experimental-red.svg)](#)
+[![Generic badge](https://img.shields.io/badge/Status-Pre_Alpha-red.svg)](#)
 [![Generic badge](https://img.shields.io/badge/Python-3.7+-blue.svg)](#)
 [![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS%20|%20Windows-blue.svg)](#)
 
-**This is experimental code. It is not ready to use. This description is also a
-draft.**
+**This is experimental code. The file format may change.**
 
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py#readme)
 
@@ -112,19 +111,19 @@ By default, it is `vault.dmk` in the current user's `$HOME` directory.
 The `-v` parameter overrides the location for a single run.
 
 ```
-$ dmk -v /path/to/file.data vault
+$ dmk -v /path/to/myfile.data vault
 ```
 
 Output:
 ```
-/path/to/file.data
+/path/to/myfile.data
 ```
 
 The parameter can be used with any commands:
 
 ```
-$ dmk -v /path/to/file.data set 
-$ dmk -v /path/to/file.data get 
+$ dmk -v /path/to/myfile.data set 
+$ dmk -v /path/to/myfile.data get 
 ```
 
 --------------------------------------------------------------------------------
@@ -132,16 +131,20 @@ $ dmk -v /path/to/file.data get
 The `$DMK_VAULT_FILE` environment variable overrides the default location:
 
 ``` 
-$ export DMK_VAULT_FILE=/path/to/file.data
+$ export DMK_VAULT_FILE=/path/to/myfile.data
 $ dmk vault  
 ```
 Output:
 ```
-/path/to/file.data
+/path/to/myfile.data
 ```
 
+While `$DMK_VAULT_FILE` is set all the command will use `myfile.data`:
 
-
+```
+$ dmk set   # set to myfile.data 
+$ dmk get   # get from myfile.data
+```
 
 # Under the hood
 

@@ -26,10 +26,10 @@ VAULT_ARG_SHORT = "-v"
 VAULT_ARG_LONG = "--vault"
 
 
-def validate_filename(ctx, param, value):
-    if value is None or not value.strip():
-        raise click.BadParameter("Storage filename must be specified")
-    return value
+# def validate_filename(ctx, param, value):
+#     if value is None or not value.strip():
+#         raise click.BadParameter("Storage filename must be specified")
+#     return value
 
 
 class Globals:
@@ -48,10 +48,12 @@ class Globals:
 @click.option(VAULT_ARG_SHORT, VAULT_ARG_LONG,
               envvar=VAULT_FILE_ENVNAME,
               default=DEFAULT_STORAGE_FILE,
-              callback=validate_filename)
+              type=Path,
+              #callback=validate_filename
+              )
 @click.pass_context
-def dmk_cli(ctx, vault):
-    Globals.main = Main(vault)
+def dmk_cli(ctx, vault: Path):
+    Globals.main = Main(vault) # todo
     if not ctx.invoked_subcommand:
         click.echo(f"DMK: Dark Matter Keeper v{__version__}")
         print('(c) 2021 Artem IG <ortemeo@gmail.com>')

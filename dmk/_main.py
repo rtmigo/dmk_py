@@ -22,15 +22,13 @@ class ItemNotFoundExit(SystemExit):
 
 
 class Main:
-    def __init__(self, storage_file: str):
+    def __init__(self, storage_file: Path):
 
-        if not storage_file:
-            raise ValueError
+        str_path = str(storage_file)
+        str_path = os.path.expanduser(str_path)
+        str_path = os.path.expandvars(str_path)
 
-        storage_file = os.path.expanduser(storage_file)
-        storage_file = os.path.expandvars(storage_file)
-
-        self.file_path = Path(storage_file)  # stub
+        self.file_path = Path(str_path)
 
     def set_text(self, name: str, value: str):
         crd = TheFile(self.file_path)
