@@ -90,24 +90,58 @@ $ dmk get -e secRet007 /my/docs/target.docx
 The `-e` parameter is optional. If it is not specified, the value will be
 prompted for interactive input.
 
-# Vault location
+Vault location
+==============
 
-Entries will be stored in a file. By default, the file is named `vault.dmk` and
-placed in the current user's `$HOME` directory.
+Entries will be stored in a file.
 
-It can be redefined with `$DMK_VAULT_FILE` environment variable:
+You can check the current vault file location with `vault` command:
 
-``` 
-$ export DMK_VAULT_FILE=/path/to/vaultfile.data
-$ dmk get ...  
+```
+$ dmk vault
+```
+Output:
+```
+/home/username/vault.dmk
 ```
 
-The `-s` parameter overrides both default and environment variable for a 
-single run: 
+By default, it is `vault.dmk` in the current user's `$HOME` directory.
+
+--------------------------------------------------------------------------------
+
+The `-v` parameter overrides the location for a single run.
+
+```
+$ dmk -v /path/to/file.data vault
+```
+
+Output:
+```
+/path/to/file.data
+```
+
+The parameter can be used with any commands:
+
+```
+$ dmk -v /path/to/file.data set 
+$ dmk -v /path/to/file.data get 
+```
+
+--------------------------------------------------------------------------------
+
+The `$DMK_VAULT_FILE` environment variable overrides the default location:
 
 ``` 
-$ dmk get -v /path/to/vaultfile.data ...  
+$ export DMK_VAULT_FILE=/path/to/file.data
+$ dmk vault  
 ```
+Output:
+```
+/path/to/file.data
+```
+
+
+
 
 # Under the hood
 
