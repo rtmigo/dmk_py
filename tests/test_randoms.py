@@ -4,7 +4,8 @@
 
 import unittest
 
-from dmk.a_utils.randoms import get_noncrypt_random_bytes
+from dmk._common import CODENAME_LENGTH_BYTES
+from dmk.a_utils.randoms import get_noncrypt_random_bytes, random_codename_fullsize
 
 
 class TestRandomBytes(unittest.TestCase):
@@ -21,3 +22,14 @@ class TestRandomBytes(unittest.TestCase):
         self.assertNotEqual(
             get_noncrypt_random_bytes(50),
             get_noncrypt_random_bytes(50))
+
+    def test_random_ascii_keys_different(self):
+        self.assertNotEqual(
+            random_codename_fullsize(),
+            random_codename_fullsize()
+        )
+
+    def test_random_ascii_keys(self):
+        a = random_codename_fullsize()
+        self.assertEqual(len(a), CODENAME_LENGTH_BYTES)
+        _ = a.encode('ascii')

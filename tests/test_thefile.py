@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-
-
+import random
 import unittest
 from io import BytesIO
 from pathlib import Path
@@ -9,6 +8,7 @@ from tempfile import TemporaryDirectory
 
 from dmk._the_file import TheFile
 from dmk.a_base._10_kdf import FasterKDF
+from dmk.a_utils.randoms import random_codename_fullsize
 from tests.common import gen_random_content, gen_random_names
 
 
@@ -43,12 +43,18 @@ class TestTheFile(unittest.TestCase):
                     the_file = TheFile(file_path)
                     salts.add(the_file.salt)
                     self.assertEqual(the_file.get_bytes(name), None)
-                    # print("Writing", the_file.salt)
+
 
                     with BytesIO(data) as input_io:
                         # print("Set", name)
                         the_file.set_from_io(name, input_io)
                         # print(the_file.blobs_len)
+
+                    if random.choice((True,False)):
+                        the_file.add_fakes(
+                            random_codename_fullsize(),
+                            blocks_num=random.randint(1, 100)
+                        )
 
                 self.assertTrue(file_path.exists())
                 self.assertEqual(len(salts), 1)
