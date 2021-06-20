@@ -82,10 +82,10 @@ codename_read_option = click.option(CODENAME_SHORT_ARG, CODENAME_LONG_ARG,
                                     hide_input=True)
 
 codename_confirm_option = click.option(CODENAME_SHORT_ARG, CODENAME_LONG_ARG,
-              'codename',
-              prompt=CODENAME_PROMT,
-              hide_input=True,
-              confirmation_prompt=CODENAME_PROMT_CONFIRMATION)
+                                       'codename',
+                                       prompt=CODENAME_PROMT,
+                                       hide_input=True,
+                                       confirmation_prompt=CODENAME_PROMT_CONFIRMATION)
 
 
 @dmk_cli.command(name='set')
@@ -119,17 +119,29 @@ def getf_cmd(codename: str, file: List[Path]):
         print(s)
 
 
+@dmk_cli.command(name='open',
+                 hidden=True  # not unit-tested
+                 )
+@codename_read_option
+def open_cmd(codename: str):
+    """Saves decrypted entry to file, opens it with 'open', then encrypts
+    again."""
+    Globals.the_main().open(codename)
+
+
 @dmk_cli.command(name='dummy')
 @click.argument('size', type=str)
 def fake_cmd(size: str):
-    """Adds fakes."""
+    """Adds dummy data to the vault."""
     Globals.the_main().fake(size)
 
 
 @dmk_cli.command()
 # @vault_option
 @codename_read_option
-def eval(codename: str):
+def eval(codename: str,
+         hidden=True  # not unit-tested
+         ):
     """Gets item data as text and executes it as shell command."""
     Globals.the_main().eval(codename)
 

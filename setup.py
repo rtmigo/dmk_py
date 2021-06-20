@@ -30,8 +30,7 @@ setup(
     python_requires='>=3.7',
     install_requires=['pycryptodome', 'click', 'argon2-cffi'],
 
-    description="Experimental storage where each entry is encrypted with "
-                "its own key.",
+    description="Experimental storage with entries encrypted independently.",
 
     long_description=readme,
     long_description_content_type='text/markdown',

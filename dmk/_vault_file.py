@@ -19,7 +19,7 @@ from .c_namegroups import NameGroup, update_namegroup_b
 from .c_namegroups._update import add_fakes
 
 
-class TheFile:
+class DmkFile:
     def __init__(self, path: Path):
         self.path = path
         self._salt: Optional[bytes] = None
