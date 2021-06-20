@@ -41,19 +41,17 @@ class Globals:
         if cls.main is None:
             raise TypeError
         return cls.main
-    #vault_arg: Optional[str] = None
+    # vault_arg: Optional[str] = None
 
 
 @click.group(invoke_without_command=True)
 @click.option(VAULT_ARG_SHORT, VAULT_ARG_LONG,
               envvar=VAULT_FILE_ENVNAME,
               default=DEFAULT_STORAGE_FILE,
-              type=Path,
-              #callback=validate_filename
-              )
+              type=Path)
 @click.pass_context
 def dmk_cli(ctx, vault: Path):
-    Globals.main = Main(vault) # todo
+    Globals.main = Main(vault)  # todo
     if not ctx.invoked_subcommand:
         click.echo(f"DMK: Dark Matter Keeper v{__version__}")
         print('(c) 2021 Artem IG <ortemeo@gmail.com>')
@@ -83,14 +81,16 @@ codename_read_option = click.option(CODENAME_SHORT_ARG, CODENAME_LONG_ARG,
                                     prompt=CODENAME_PROMT,
                                     hide_input=True)
 
-
-@dmk_cli.command(name='set')
-# @vault_option
-@click.option(CODENAME_SHORT_ARG, CODENAME_LONG_ARG,
+codename_confirm_option = click.option(CODENAME_SHORT_ARG, CODENAME_LONG_ARG,
               'codename',
               prompt=CODENAME_PROMT,
               hide_input=True,
               confirmation_prompt=CODENAME_PROMT_CONFIRMATION)
+
+
+@dmk_cli.command(name='set')
+# @vault_option
+@codename_confirm_option
 @click.option('-t', '--text', default=None)
 @click.argument('file', nargs=-1, type=Path)
 def set_cmd(codename: str, text: str, file: List[Path]):
@@ -119,6 +119,13 @@ def getf_cmd(codename: str, file: List[Path]):
         print(s)
 
 
+@dmk_cli.command(name='dummy')
+@click.argument('size', type=str)
+def fake_cmd(size: str):
+    """Adds fakes."""
+    Globals.the_main().fake(size)
+
+
 @dmk_cli.command()
 # @vault_option
 @codename_read_option
@@ -131,9 +138,8 @@ def eval(codename: str):
 def vault_cmd():
     """Prints the location of the vault file."""
     click.echo(Globals.the_main().file_path)
-    #click.echo(f'Original: {Globals.main.}')
-    #click.echo(f'Resolved: {Main(Globals.vault_arg).file_path}')
+    # click.echo(f'Original: {Globals.main.}')
+    # click.echo(f'Resolved: {Main(Globals.vault_arg).file_path}')
 
-
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    dmk_cli(None)

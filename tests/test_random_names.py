@@ -4,7 +4,7 @@
 
 import unittest
 
-from dmk._common import random_basename, looks_like_random_basename
+from dmk.a_utils.randoms import random_basename, looks_like_random_basename
 
 
 class TestRandomName(unittest.TestCase):
