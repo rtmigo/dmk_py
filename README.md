@@ -19,7 +19,7 @@ name serves as a name and password at the same time.
 
 Secret name makes possible to identify data
 fragments associated with particular entry and decrypt it. It reveals nothing
-about other entries, even whether they exist. The rest of the data is always a
+about other entries. The rest of the data is always a
 dark matter.
 
 
@@ -96,10 +96,17 @@ Part of the vault file contains dummy data. This data cannot be decrypted.
 Dummy data only increases the size of the storage, thus hiding the amount 
 of real data.
 
-A certain amount of dummy data is added or removed each time the vault 
-is updated.
+Each time the file is updated, a random amount of dummy data is added and removed. 
+The change can be up to 5% of the file size.
 
-But it's a good idea to manually add dummy data with a margin.
+You can also add dummy data manually, to make sure the file is big enough.
+
+Make the vault file 2 megabytes larger:
+
+```
+dmk dummy 2M
+```
+
 
 Make the vault file 500 kilobytes larger:
 
@@ -107,11 +114,6 @@ Make the vault file 500 kilobytes larger:
 dmk dummy 500K
 ```
 
-Make the vault file 2 megabytes larger:
-
-```
-dmk dummy 2M
-```
 
 Keep in mind:
 
@@ -196,14 +198,14 @@ is unknown.
 
 The number of blocks is no secret. Their contents are secret.
 
-- The number of blocks is random. Many blocks are fake. They are
+- The number of blocks is random. Many blocks are dummy. They are
   indistinguishable from real data, but do not contain anything meaningful
 
 - The information about which entry the block belongs to is cryptographically
   protected. It is impossible to even figure out if the blocks refer to the same
   entry
 
-- Random actions are taken every time the vault is updated: some fake blocks are
+- Random actions are taken every time the vault is updated: some dummy blocks are
   added, and some are removed
 
 Thus, **number and size of entries cannot be determined** by the size of the

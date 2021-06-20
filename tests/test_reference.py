@@ -7,7 +7,7 @@ import unittest
 from io import BytesIO
 from pathlib import Path
 
-from dmk._the_file import TheFile
+from dmk._vault_file import DmkFile
 from dmk.a_base import CodenameKey
 
 ref_content = [
@@ -29,7 +29,7 @@ def generate_references():
         assert "ref_" in refs_file.name
         refs_file.unlink()
 
-    d = TheFile(refs_file)
+    d = DmkFile(refs_file)
 
     for name, data in ref_content:
         t = time.monotonic()
@@ -41,7 +41,7 @@ def generate_references():
 class TestRefs(unittest.TestCase):
     def test(self):
         assert CodenameKey.is_standard_params()
-        d = TheFile(refs_file)
+        d = DmkFile(refs_file)
         print("References salt", tuple(d.salt))
         for name, data in ref_content:
             self.assertEqual(d.get_bytes(name), data)

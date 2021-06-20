@@ -3,15 +3,17 @@
 
 
 import os
+import subprocess
 from io import BytesIO
 from math import ceil
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import click.exceptions
 
 from dmk._common import CLUSTER_SIZE
-from dmk._the_file import TheFile
-from dmk.a_utils.randoms import random_codename_fullsize
+from dmk._vault_file import DmkFile
+from dmk.a_utils.randoms import random_codename_fullsize, random_basename
 
 
 def _confirm(txt: str):
@@ -65,7 +67,7 @@ class Main:
         if size_bytes <= 0:
             raise click.exceptions.BadParameter(size_and_units)
 
-        crd = TheFile(self.file_path)
+        crd = DmkFile(self.file_path)
         blocks_num = ceil(size_bytes / CLUSTER_SIZE)
         print(f"Adding {blocks_num} block(s) sized {CLUSTER_SIZE:,} B each")
         print(f"Old file size: {crd.path.stat().st_size:,} B")
@@ -73,24 +75,24 @@ class Main:
         print(f"New file size: {crd.path.stat().st_size:,} B")
 
     def set_text(self, name: str, value: str):
-        crd = TheFile(self.file_path)
+        crd = DmkFile(self.file_path)
         with BytesIO(value.encode('utf-8')) as source_io:
             crd.set_from_io(name, source_io)
 
     def set_file(self, name: str, file: str):
-        crd = TheFile(self.file_path)
+        crd = DmkFile(self.file_path)
         with Path(file).open('rb') as  source_io:
             crd.set_from_io(name, source_io)
 
     def get_text(self, name: str):
-        crd = TheFile(self.file_path)
+        crd = DmkFile(self.file_path)
         decrypted_bytes = crd.get_bytes(name)
         if decrypted_bytes is None:
             raise ItemNotFoundExit
         return decrypted_bytes.decode('utf-8')
 
     def get_file(self, name: str, file: str):
-        crd = TheFile(self.file_path)
+        crd = DmkFile(self.file_path)
         fpath = Path(file)
         if fpath.exists():
             raise FileExistsError  # todo ask
@@ -104,10 +106,36 @@ class Main:
 
     def eval(self, name: str):
         # todo test
-        crd = TheFile(self.file_path)
+        crd = DmkFile(self.file_path)
         decrypted_bytes = crd.get_bytes(name)
         if decrypted_bytes is None:
             raise ItemNotFoundExit
         cmd = decrypted_bytes.decode('utf-8')
 
         exit(os.system(cmd))
+
+    def open(self, codename: str):
+        # todo how to unit test?!..
+        crd = DmkFile(self.file_path)
+        decrypted_bytes = crd.get_bytes(codename)
+        if decrypted_bytes is None:
+            raise click.exceptions.BadParameter("Entry not found")
+        with TemporaryDirectory() as td:
+            fn = Path(td) / random_basename()
+            fn.write_bytes(decrypted_bytes)
+            args = ['open', '-W', str(fn)]
+            lmd = fn.stat().st_mtime
+            #print(args)
+            print("Running the 'open' and waiting for app to close")
+            result = subprocess.run(args, shell=False)
+            if result.returncode == 0:
+                if fn.stat().st_mtime == lmd:
+                    print("The file was not changed")
+                else:
+                    print("Updating the entry...")
+                    with fn.open('rb') as updated_file:
+                        crd.set_from_io(codename, updated_file)
+                    print("Done!")
+            else:
+                click.echo(
+                    "'open' returned non-zero exit code. Entry not updated.")
