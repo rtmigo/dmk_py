@@ -16,9 +16,10 @@ from .b_cryptoblobs import decrypt_from_dios
 from .b_storage_file import StorageFileReader, StorageFileWriter, \
     BlocksIndexedReader
 from .c_namegroups import NameGroup, update_namegroup_b
+from .c_namegroups._update import add_fakes
 
 
-class TheFile:
+class DmkFile:
     def __init__(self, path: Path):
         self.path = path
         self._salt: Optional[bytes] = None
@@ -53,14 +54,28 @@ class TheFile:
         except FileNotFoundError:
             return 0
 
+    def add_fakes(self, codename: str, blocks_num: int):
+        ck = CodenameKey(codename, self.salt)
+        with WritingToTempFile(self.path) as wtf:
+            with self._old_blobs() as old_blobs, \
+                    wtf.dirty.open('wb') as new_file_io, \
+                    StorageFileWriter(new_file_io, self.salt) as writer:
+                add_fakes(ck,
+                          old_blobs,
+                          writer.blobs,
+                          blocks_num)
+            # both files are closed now
+            wtf.replace()  # todo securely remove old file
+
     def set_from_io(self, codename: str, source: BinaryIO):
         ck = CodenameKey(codename, self.salt)
         with WritingToTempFile(self.path) as wtf:
-            with self._old_blobs() as old_blobs:
-                with wtf.dirty.open('wb') as new_file_io:
-                    with StorageFileWriter(new_file_io, self.salt) as writer:
-                        update_namegroup_b(ck, source, old_blobs, writer.blobs)
+            with self._old_blobs() as old_blobs, \
+                    wtf.dirty.open('wb') as new_file_io, \
+                    StorageFileWriter(new_file_io, self.salt) as writer:
+                update_namegroup_b(ck, source, old_blobs, writer.blobs)
             # both files are closed now
+
             wtf.replace()  # todo securely remove old file
 
     def get_bytes(self, name: str) -> Optional[bytes]:

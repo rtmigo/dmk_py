@@ -2,15 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 
-import random
-from base64 import urlsafe_b64encode, urlsafe_b64decode, b32encode
-from pathlib import Path
 from typing import BinaryIO, Tuple
 
 from Crypto.Hash import BLAKE2b, BLAKE2s
-from Crypto.Random import get_random_bytes
-
-from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
 KEY_SIZE = 32
 assert KEY_SIZE * 8 == 256
@@ -42,64 +36,8 @@ def read_or_fail(f: BinaryIO, n: int) -> bytes:
     return result
 
 
-def random_basename() -> str:
-    for _ in range(99999):
-        length = random.randint(2, 12)
-        data = get_noncrypt_random_bytes(length)
-        result = b32encode(data).decode('ascii')
-        result = result.lower().replace('=', '')
-        if contains_digit(result) and contains_alpha(result):
-            assert looks_like_random_basename(result)
-            return result
-    raise RuntimeError("Dead loop prevented")
-
-
-def looks_like_random_basename(txt: str) -> bool:
-    return all(c.isalnum() and c.lower() == c for c in txt) \
-           and contains_digit(txt) \
-           and contains_alpha(txt)
-
-
 class InsufficientData(Exception):
     pass
-
-
-def contains_digit(txt: str) -> bool:
-    return any(c.isdigit() for c in txt)
-
-
-def contains_alpha(txt: str) -> bool:
-    return any(c.isalpha() for c in txt)
-
-
-def unique_filename(parent: Path) -> Path:
-    for _ in range(999999):
-        file = parent / random_basename()
-        if not file.exists():
-            return file
-    raise RuntimeError("Cannot find unique filename")
-
-
-def unique_filename_old(parent: Path) -> Path:
-    for _ in range(999999):
-        # length is not secure, but bytes are.
-        # How to make the length secure?
-        length = random.randint(1, 12)
-        basename = bytes_to_fn_str(get_random_bytes(length))
-        file = parent / basename
-        if not file.exists():
-            return file
-    raise RuntimeError("Cannot find unique filename")
-
-
-def bytes_to_fn_str(data: bytes) -> str:
-    # if len(data) != IMPRINT_SIZE:
-    #    raise ValueError
-    return urlsafe_b64encode(data).decode('ascii')
-
-
-def fnstr_to_bytes(data: str) -> bytes:
-    return urlsafe_b64decode(data.encode('ascii'))
 
 
 def half_n_half(salt: bytes) -> Tuple[bytes, bytes]:

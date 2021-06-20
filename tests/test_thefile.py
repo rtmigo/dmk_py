@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-
-
+import random
 import unittest
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from dmk._the_file import TheFile
+from dmk._vault_file import DmkFile
 from dmk.a_base._10_kdf import FasterKDF
+from dmk.a_utils.randoms import random_codename_fullsize
 from tests.common import gen_random_content, gen_random_names
 
 
@@ -40,20 +40,26 @@ class TestTheFile(unittest.TestCase):
 
                 # writing
                 for name, data in names_and_datas:
-                    the_file = TheFile(file_path)
+                    the_file = DmkFile(file_path)
                     salts.add(the_file.salt)
                     self.assertEqual(the_file.get_bytes(name), None)
-                    # print("Writing", the_file.salt)
+
 
                     with BytesIO(data) as input_io:
                         # print("Set", name)
                         the_file.set_from_io(name, input_io)
                         # print(the_file.blobs_len)
 
+                    if random.choice((True,False)):
+                        the_file.add_fakes(
+                            random_codename_fullsize(),
+                            blocks_num=random.randint(1, 100)
+                        )
+
                 self.assertTrue(file_path.exists())
                 self.assertEqual(len(salts), 1)
 
-                the_file = TheFile(file_path)
+                the_file = DmkFile(file_path)
                 self.assertEqual(the_file.salt, next(iter(salts)))
                 self.assertGreater(the_file.blobs_len, 0)
 
@@ -64,7 +70,7 @@ class TestTheFile(unittest.TestCase):
 
                 # creating a new CryptoDir instance. This time the salt will
                 # not be randomly generated, but read from file
-                crypto_dir_b = TheFile(file_path)
+                crypto_dir_b = DmkFile(file_path)
                 self.assertEqual(the_file.salt, crypto_dir_b.salt)
 
                 # reading with other instance

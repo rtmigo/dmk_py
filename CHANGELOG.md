@@ -1,11 +1,17 @@
+# 0.5.0
+
+- Added `dummy` cli command
+- The number of randomly added / removed dummy blocks is now proportional to 
+  the vault size
+
 # 0.4.0
 
-- Replaced KDF from Scrypt to **Argon2**
+- Replaced KDF to Argon2 (was Scrypt) 
 - To identify the block, we now try to decrypt and verify its header.
   Previously, two hashes were used for this. It was more complicated,
   less efficient and less reliable
 - Random padding is no longer added to the beginning of the block
-- Fixed `setup.py` issue with subpackages
+- Fixed `setup.py` issue: subpackages were not installing
 
 
 # 0.3.0

@@ -12,21 +12,21 @@ Entries can be binary (files) or text (passwords, etc).
 Besides encrypting entries `dmk` makes uncertain the very fact of their
 existence. The vault file consists of "dark matter":
 unidentifiable data, most of which is just random bytes. There is no master
-password and no way the see the table of contents.
+password and no table of contents.
 
 Each entry is independent and encrypted with unique **secret name**. The secret 
 name serves as a name and password at the same time.
 
 Secret name makes possible to identify data
 fragments associated with particular entry and decrypt it. It reveals nothing
-about other entries, even whether they exist. The rest of the data is always a
+about other entries. The rest of the data is always a
 dark matter.
 
 
 # Install
 
 ``` 
-$ pip install git+https://github.com/rtmigo/dmk_py#egg=dmk
+$ pip3 install dmk
 ```
 
 # Secret names
@@ -88,6 +88,38 @@ $ dmk get -e secRet007 /my/docs/target.docx
 
 The `-e` parameter is optional. If it is not specified, the value will be
 prompted for interactive input.
+
+Add dummy data
+==============
+
+Part of the vault file contains dummy data. This data cannot be decrypted.
+Dummy data only increases the size of the storage, thus hiding the amount 
+of real data.
+
+Each time the file is updated, a random amount of dummy data is added and removed. 
+The change can be up to 5% of the file size.
+
+You can also add dummy data manually, to make sure the file is big enough.
+
+Make the vault file 2 megabytes larger:
+
+```
+dmk dummy 2M
+```
+
+
+Make the vault file 500 kilobytes larger:
+
+```
+dmk dummy 500K
+```
+
+
+Keep in mind:
+
+- Dummy data added in this way cannot be removed
+- Vault speed linearly depends on its size. If you increase the vault 10 times, 
+  then the search for data in it will go 10 times slower
 
 Vault location
 ==============
@@ -166,14 +198,14 @@ is unknown.
 
 The number of blocks is no secret. Their contents are secret.
 
-- The number of blocks is random. Many blocks are fake. They are
+- The number of blocks is random. Many blocks are dummy. They are
   indistinguishable from real data, but do not contain anything meaningful
 
 - The information about which entry the block belongs to is cryptographically
   protected. It is impossible to even figure out if the blocks refer to the same
   entry
 
-- Random actions are taken every time the vault is updated: some fake blocks are
+- Random actions are taken every time the vault is updated: some dummy blocks are
   added, and some are removed
 
 Thus, **number and size of entries cannot be determined** by the size of the

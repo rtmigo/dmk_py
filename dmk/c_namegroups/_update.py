@@ -4,7 +4,7 @@
 
 import io
 import random
-from typing import List, BinaryIO, Set
+from typing import List, BinaryIO, Set, NamedTuple
 
 from dmk.a_base import CodenameKey
 from dmk.b_cryptoblobs import MultipartEncryptor
@@ -52,17 +52,81 @@ def remove_random_items(source: Set[int],
     return result
 
 
-# def remember_all_nonces(old_blobs: BlocksIndexedReader):
-#     for block_io in old_blobs:
-#         # This is rather sub-optimal: we have already read many of these
-#         # imprints by scanning the namegroup.
-#
-#         Imprint.add_known_nonce(
-#             Imprint.bytes_to_nonce(DecryptedIO.read_imprint_a_bytes(block_io)))
-#
-#         Imprint.add_known_nonce(
-#             Imprint.bytes_to_nonce(DecryptedIO.read_imprint_b_bytes(block_io)))
+class TaskKeep(NamedTuple):
+    old_block_idx: int
 
+
+class TaskFake:
+    pass
+
+
+class TaskEncrypt(NamedTuple):
+    part_idx: int
+
+
+def copy_block(old_blobs: BlocksIndexedReader,
+               old_block_idx: int,
+               new_blobs: BlocksSequentialWriter):
+    old_buf = old_blobs.io(old_block_idx).read()
+    # todo don't recompute crc32
+    new_blobs.write_bytes(old_buf)
+
+
+def add_fake(cdk: CodenameKey, new_blobs: BlocksSequentialWriter):
+    new_blobs.write_bytes(create_fake_bytes(cdk))
+
+
+def add_fakes(cdk: CodenameKey,
+              old_blobs: BlocksIndexedReader,
+              new_blobs: BlocksSequentialWriter,
+              fakes_to_add_num: int):
+    # todo test
+    tasks: List[object] = list()
+    for old_idx in range(len(old_blobs)):
+        tasks.append(TaskKeep(old_idx))
+    for _ in range(fakes_to_add_num):
+        tasks.append(TaskFake())
+
+    for task in tasks:
+        if isinstance(task, TaskFake):
+            add_fake(cdk, new_blobs)
+        elif isinstance(task, TaskKeep):
+            copy_block(old_blobs, task.old_block_idx, new_blobs)
+        else:
+            raise TypeError
+    new_blobs.write_tail()  # todo test
+
+
+class MaxFakes:
+    def __init__(self, old_blocks_num: int):
+        max_loss_percent = 0.05
+        min_delta = 3
+
+        self.max_loss = round(old_blocks_num * max_loss_percent)
+        self.max_loss = max(self.max_loss, min_delta)
+        self.max_loss = min(self.max_loss, old_blocks_num)
+
+        # было x0 блоков.
+        # Если потеряем все блоки, станет x1 = x0-max_loss.
+        # Чтобы восстановиться нужно будет вернуть в точности max_loss
+        # блоков. Относительный прирост потребуется
+        #   rel_recover = max_loss/x1 = max_loss/(x0-max_loss)
+        # Мы не знаем, мы теряли в прошлый раз блоки или приобретали.
+        # Просто нужно симметрично восстанавливающее значение max_recover.
+        # Поэтому считаем его так, словно уже потеряли блоки в прошлый раз.
+
+        divisor = (old_blocks_num - self.max_loss)
+        if divisor>=1:
+            rel_recover = self.max_loss / divisor
+            self.max_add = max(min_delta, round(old_blocks_num * rel_recover))
+        else:
+            self.max_add = min_delta
+
+        assert self.max_add >= 1
+        assert self.max_loss >= 0
+
+
+# def max_fakes(old_blocks_num: int) -> Tuple[int,int]:
 
 def update_namegroup_b(cdk: CodenameKey,
                        new_content_io: BinaryIO,
@@ -79,60 +143,57 @@ def update_namegroup_b(cdk: CodenameKey,
     # longer any valuable data among them. There are only fake or outdated
     # ones. Therefore, we can safely delete them.
 
-    MAX_TO_DELETE = MAX_TO_FAKE = 5  # todo avoid constants
+    # FAKE_PERCENT = 0.05
+    # MAX_FAKES_TO_ADD = max(5, )
+
+    #MAX_TO_DELETE = MAX_TO_FAKE = 5  # todo avoid constants
+
+    max_fakes = MaxFakes(len(old_blobs))
 
     if len(our_old_blob_indexes) >= 1:
         our_new_blob_indexes = remove_random_items(
             our_old_blob_indexes,
             min_to_delete=1,
-            max_to_delete=MAX_TO_DELETE)
+            max_to_delete=max_fakes.max_loss)
     else:
         assert len(our_old_blob_indexes) == 0
         our_new_blob_indexes = set()
+
+    tasks: List[object] = list()
 
     indexes_to_keep = set(all_blob_indexes)
     indexes_to_keep -= our_old_blob_indexes
     indexes_to_keep.update(our_new_blob_indexes)
 
-    # First of all, we write to the new file the blobs that we decided to
-    # keep. We write them in the most predictable order, making it easier for
-    # services like Dropbox to synchronize unchanged data. Placing previously
-    # existing blobs in a new random order would add nothing to the privacy.
-
-    for idx in sorted(indexes_to_keep):
-        old_buf = old_blobs.io(idx).read()
-        # todo don't recompute crc32
-        new_blobs.write_bytes(old_buf)
-
-    # In this list, non-negative values correspond to parts of the new content,
-    # and negative values correspond to fakes.
-    tasks: List[int] = list()
-
-    FAKE_TASK = -1
+    for idx in indexes_to_keep:
+        tasks.append(TaskKeep(idx))
 
     me = MultipartEncryptor(cdk, new_content_io,
                             increased_data_version(name_group))
     for part_idx in range(len(me.part_sizes)):
-        assert part_idx != FAKE_TASK
-        tasks.append(part_idx)
+        # assert part_idx != FAKE_TASK
+        tasks.append(TaskEncrypt(part_idx))
 
-    for idx in range(random.randint(1, MAX_TO_FAKE)):
-        tasks.append(FAKE_TASK)
+    for idx in range(random.randint(1, max_fakes.max_add)):
+        tasks.append(TaskFake())
 
-    assert sum(1 for t in tasks if t == FAKE_TASK) >= 1
+    assert sum(1 for t in tasks if isinstance(t, TaskFake)) >= 1
 
-    # writing fakes and new content in random order
+    # copying old block, writing fakes, and new content in random order
     random.shuffle(tasks)
     for task in tasks:
-        if task == FAKE_TASK:
-            new_blobs.write_bytes(create_fake_bytes(cdk))
-        else:
-            assert task != FAKE_TASK
+        if isinstance(task, TaskFake):
+            add_fake(cdk, new_blobs)
+        elif isinstance(task, TaskEncrypt):
             assert not me.all_encrypted
             with io.BytesIO() as temp_io:
-                me.encrypt(part_idx=task,
+                me.encrypt(part_idx=task.part_idx,
                            target_io=temp_io)
                 temp_io.seek(0, io.SEEK_SET)
                 new_blobs.write_bytes(temp_io.read())
+        elif isinstance(task, TaskKeep):
+            copy_block(old_blobs, task.old_block_idx, new_blobs)
+        else:
+            raise TypeError
     new_blobs.write_tail()
     assert me.all_encrypted
