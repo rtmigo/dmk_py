@@ -8,7 +8,7 @@
 
 `dmk` stores files, passwords or other private data in an encrypted **vault file**.
 
-Each encrypted entry is independent. The **secret name** of entry decrypts only
+Each **encrypted entry** is independent. The **secret name** of entry decrypts only
 that entry. It reveals nothing about other entries, even whether they exist.
 
 No master password. No table of contents. The number of entries cannot be determined. 
