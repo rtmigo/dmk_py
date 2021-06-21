@@ -11,9 +11,8 @@
 Each **entry** has a **secret name**, that decrypts the entry.
 It reveals nothing about other entries, even whether they exist.
 
-No master password. No table of contents. No way get all data without knowing all 
-secret names. No way to determine the number entries or their or size.
-
+No master password. No table of contents. No way to determine the number entries. 
+No way to access all entries at once. 
 
 The vault file is mostly unidentifiable data. Secret name discovers
 the data of particular entry. The rest of the data remain dark matter.
