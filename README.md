@@ -6,15 +6,14 @@
 
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py#readme)
 
-`dmk` allows you to store files, passwords or other private data in an encrypted 
-file.
+`dmk` stores files, passwords or other private data in an encrypted **vault file**.
 
 Each encrypted entry is independent. The **secret name** of entry decrypts only
 that entry. It reveals nothing about other entries, even whether they exist.
 
 No master password. No table of contents. The number of entries cannot be determined. 
 
-The file is mostly unidentifiable data. Secret name discovers
+The vault file is mostly unidentifiable data. Secret name discovers
 the data of particular entry. The rest of the data remain dark matter.
 
 # Install
