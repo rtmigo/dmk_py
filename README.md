@@ -12,7 +12,7 @@ file.
 Each entry is independent. The **secret name** of entry decrypts only that
 entry. It reveals nothing about other entries, even whether they exist.
  
-No master password. No table of contents. The number of entries cannot be determined: it is not in the file. 
+No master password. No table of contents. The number of entries cannot be determined. 
 
 The file consists of unidentifiable data. Secret name is necessary to discover
 the data of particular entry. The rest of the data remain dark matter.
