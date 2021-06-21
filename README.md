@@ -8,10 +8,12 @@
 
 `dmk` stores files, passwords or other private data in an encrypted **vault file**.
 
-Each **encrypted entry** is independent. The **secret name** of entry decrypts only
-that entry. It reveals nothing about other entries, even whether they exist.
+Each **entry** has a **secret name**, that decrypts the entry.
+It reveals nothing about other entries, even whether they exist.
 
-No master password. No table of contents. The number of entries cannot be determined. 
+No master password. No table of contents. No way get all data without knowing all 
+secret names. No way to determine the number entries or their or size.
+
 
 The vault file is mostly unidentifiable data. Secret name discovers
 the data of particular entry. The rest of the data remain dark matter.
@@ -228,7 +230,7 @@ The only predictable part of the file is a version identifier encoded in
 the first two bytes. But the similar "version number" can be found literally 
 in every fourth file in the world. Those two bytes are not even constant.
 
-## Block encryption
+## Еncryption
 
 1) **URandom** creates 38-bytes **salt** when we initialize the vault file. The
    salt is saved openly in the file. This salt never changes. It is required for
