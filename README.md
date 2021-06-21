@@ -14,7 +14,7 @@ that entry. It reveals nothing about other entries, even whether they exist.
 
 No master password. No table of contents. The number of entries cannot be determined. 
 
-The file consists of unidentifiable data. Secret name is necessary to discover
+The file consists of unidentifiable data. Secret name discovers
 the data of particular entry. The rest of the data remain dark matter.
 
 # Install
