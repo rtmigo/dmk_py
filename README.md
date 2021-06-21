@@ -6,22 +6,16 @@
 
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py#readme)
 
-`dmk` keeps encrypted data entries in a file. Entries can be added, updated, and removed.
-Entries can be binary (files) or text (passwords, etc).
+`dmk` allows you to store files, passwords or other private data in an encrypted 
+file.
 
-Besides encrypting entries `dmk` makes uncertain the very fact of their
-existence. The vault file consists of "dark matter":
-unidentifiable data, most of which is just random bytes. There is no master
-password and no table of contents.
+Each entry is independent. The **secret name** of entry decrypts only that
+entry. It reveals nothing about other entries, even whether they exist.
+ 
+No master password. No table of contents. The number of entries cannot be determined: it is not in the file. 
 
-Each entry is independent and encrypted with unique **secret name**. The secret 
-name serves as a name and password at the same time.
-
-Secret name makes possible to identify data
-fragments associated with particular entry and decrypt it. It reveals nothing
-about other entries. The rest of the data is always a
-dark matter.
-
+The file consists of unidentifiable data. Secret name is necessary to discover
+the data of particular entry. The rest of the data remain dark matter.
 
 # Install
 
@@ -31,11 +25,17 @@ $ pip3 install dmk
 
 # Secret names
 
-The secret name serves as both the identifier of the entry and the password that
-decrypts it. It is a secret. And it must be unique.
+The secret name serves as both:
 
-For example, information about a bitcoin wallet can be stored under name
-`"b1TC01n"` or `"bitcoin_secret123"`.
+- the name of the entry
+- the password
+
+It is a secret. And it must be unique.
+
+For example, information about a credit card credentials can be stored under name
+`"crEd1tcard"` or `"visa_secret123"`.
+
+Longer secret names mean better encryption.
 
 # Save and read text
 
@@ -74,16 +74,16 @@ My darling's jokes are not so funny
 
 # Save and read file
 
-Read data from a `source.docx` and save it as encrypted entry `secRet007`
+Read data from a `source.doc` and save it as encrypted entry `secRet007`
 
 ```  
-$ dmk set -e secRet007 /my/docs/source.docx
+$ dmk set -e secRet007 /my/docs/source.doc
 ```
 
-Decrypt the entry `secRet007` and write the result to `target.docx`
+Decrypt the entry `secRet007` and write the result to `target.doc`
 
 ``` bash
-$ dmk get -e secRet007 /my/docs/target.docx
+$ dmk get -e secRet007 /my/docs/target.doc
 ```
 
 The `-e` parameter is optional. If it is not specified, the value will be
@@ -184,7 +184,7 @@ $ dmk get   # get from myfile.data
 - Number of entries cannot be determined
 - File format is unidentifiable
 
-## Entries obfuscation
+## Size obfuscation
 
 The vault file stores all data within multiple fixed-size blocks.
 
@@ -193,7 +193,7 @@ padded to fit into multiple blocks. In the end, they are all just a lot of
 blocks.
 
 A block gives absolutely no information for someone who does not own the
-codename. All non-random data is either hashed or encrypted. The size of padding
+secret name. All non-random data is either hashed or encrypted. The size of padding
 is unknown.
 
 The number of blocks is no secret. Their contents are secret.
@@ -202,7 +202,7 @@ The number of blocks is no secret. Their contents are secret.
   indistinguishable from real data, but do not contain anything meaningful
 
 - The information about which entry the block belongs to is cryptographically
-  protected. It is impossible to even figure out if the blocks refer to the same
+  protected. It is impossible to even figure out if two blocks belong to the same
   entry
 
 - Random actions are taken every time the vault is updated: some dummy blocks are
@@ -211,20 +211,23 @@ The number of blocks is no secret. Their contents are secret.
 Thus, **number and size of entries cannot be determined** by the size of the
 vault file or number of blocks.
 
-The payload is smaller than the vault size. Only this is known for certain.
+Only the following is known:
+- The payload is smaller than the file size
+- The number of entries is less than the number of blocks
+
+By the way, the file may contain zero entries.
 
 ## File obfuscation
 
-The vault file format is virtually **indistinguishable from random data**.
+The vault file format is **indistinguishable from random data**.
 
-The file has no header, no constant bytes (or even bits), no block boundaries.
-File size will not give clues: the file is randomly padded with a size that is
-not a multiple of a block.
+The file has no signatures, no header, no constant bytes (or even bits), no
+block boundaries. File size will not give clues: the file is randomly padded
+with a size that is not a multiple of a block.
 
-The only predictable part of the file is the format version number encoded in
-the first two bytes. However, even the first two bytes are not constant.
-Similar "version number" can be found literally in every fourth file, even if it
-contains random rubbish.
+The only predictable part of the file is a version identifier encoded in
+the first two bytes. But the similar "version number" can be found literally 
+in every fourth file in the world. Those two bytes are not even constant.
 
 ## Block encryption
 
