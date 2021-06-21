@@ -53,8 +53,7 @@ class Globals:
 def dmk_cli(ctx, vault: Path):
     Globals.main = Main(vault)  # todo
     if not ctx.invoked_subcommand:
-        click.echo(f"DMK: Dark Matter Keeper v{__version__}")
-        print('(c) 2021 Artem IG <ortemeo@gmail.com>')
+        click.echo(f"DMK: Dark Matter Keeper v{__version__} (c) 2021 Artem IG")
         click.echo()
         click.echo("See https://github.com/rtmigo/dmk_py#readme")
         click.echo()
