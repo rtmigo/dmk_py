@@ -42,7 +42,10 @@ setup(
             'dmk = dmk:dmk_cli',
         ]},
 
-    keywords="".split(),
+    keywords="encryption password keeper storage vault keychain file"
+             "privacy deniable data security "
+             "chacha20 argon2 "
+             "".split(),
 
     classifiers=[
         #"Development Status :: 4 - Beta",

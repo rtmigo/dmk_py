@@ -31,7 +31,7 @@ def decrypt_chacha():
 
 
 if __name__ == "__main__":
-    N = 50000
+    N = 50
     for _ in range(5):
         print("blake", timeit(blake2, number=N))
         print("chacha", timeit(decrypt_chacha, number=N))

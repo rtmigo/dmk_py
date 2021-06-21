@@ -3,8 +3,10 @@
 
 
 import datetime
+import itertools
 import os
 import random
+import struct
 from base64 import b32encode, urlsafe_b64encode, urlsafe_b64decode
 from pathlib import Path
 
@@ -15,9 +17,26 @@ from dmk._common import CODENAME_LENGTH_BYTES
 
 # todo remove unused funcs
 
-
-def get_noncrypt_random_bytes(n: int):
-    return bytes(random.getrandbits(8) for _ in range(n))
+def get_noncrypt_random_bytes(n, _struct8k=struct.Struct(
+    "!1000Q").pack_into) -> bytes:
+    # https://stackoverflow.com/a/43788050
+    # by Richard Thiessen, CC BY-SA 3.0
+    # For n = 1M it's six times faster
+    # than Crypto.Random.get_random_bytes (aka urandom)
+    if n < 8000:
+        longs = (n + 7) // 8
+        return struct.pack("!%iQ" % longs, *map(
+            random.getrandbits, itertools.repeat(64, longs)))[:n]
+    data = bytearray(n)
+    offset = -1
+    for offset in range(0, n - 7999, 8000):
+        _struct8k(data,  # type: ignore
+                  offset,
+                  *map(random.getrandbits, itertools.repeat(64, 1000)))
+    assert offset >= 0
+    offset += 8000
+    data[offset:] = get_noncrypt_random_bytes(n - offset)
+    return data
 
 
 MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000 * 1000

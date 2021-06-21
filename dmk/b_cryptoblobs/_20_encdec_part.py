@@ -17,7 +17,8 @@ from dmk._common import read_or_fail, InsufficientData, \
 from dmk.a_base._05_codename import CodenameAscii
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.dirty_file import WritingToTempFile
-from dmk.a_utils.randoms import set_random_last_modified
+from dmk.a_utils.randoms import set_random_last_modified, \
+    get_noncrypt_random_bytes
 from dmk.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
     uint32_to_bytes, uint16_to_bytes, \
     bytes_to_uint16
@@ -379,7 +380,14 @@ class Encrypt:
         current_size = outfile.tell()
         padding_size = self.target_size - current_size
         assert padding_size >= 0
-        outfile.write(get_random_bytes(padding_size))
+
+        # instead of just appending "secure" random bytes with
+        #   `outfile.write(urandom(padding_size))`
+        # we generate bytes faster, and then encrypting them.
+        # So we try to insure against detectable anomalies
+
+        encrypt_and_write(get_noncrypt_random_bytes(padding_size))
+        #
 
     def io_to_file(self,
                    source_io: BinaryIO,
