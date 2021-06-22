@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-
-
+import random
 import unittest
 
 from dmk._common import CODENAME_LENGTH_BYTES
@@ -14,6 +13,11 @@ class TestRandomBytes(unittest.TestCase):
         self.assertEqual(len(get_noncrypt_random_bytes(16)), 16)
         self.assertEqual(len(get_noncrypt_random_bytes(10)), 10)
         self.assertEqual(len(get_noncrypt_random_bytes(0)), 0)
+
+    def test_len_many(self):
+        for _ in range(100):
+            n = random.randint(0, 20000)
+            self.assertEqual(len(get_noncrypt_random_bytes(n)), n)
 
     def test_type(self):
         self.assertIsInstance(get_noncrypt_random_bytes(16), bytes)
