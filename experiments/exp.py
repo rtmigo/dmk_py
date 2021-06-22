@@ -37,7 +37,9 @@ def encrypt_chacha(key, data: bytes) -> bytes:
     cipher = ChaCha20.new(key=key, nonce=gen_nonce_96())
     return cipher.encrypt(data)
 
+
 N = 1000000
+
 
 def find_chacha_collision():
     """In this example, we encrypt A, but after decrypting (with a different
