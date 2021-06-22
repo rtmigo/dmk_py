@@ -1,4 +1,4 @@
-# 0.5.2
+# 0.5.3
 
 - byte with format version added inside each block
 - changed the size of the secret name and checksum
