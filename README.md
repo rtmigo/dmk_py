@@ -171,7 +171,7 @@ Output:
 /path/to/myfile.data
 ```
 
-While `$DMK_VAULT_FILE` is set all the command will use `myfile.data`:
+While `$DMK_VAULT_FILE` is set all the commands will use `myfile.data`:
 
 ```
 $ dmk set   # set to myfile.data 
@@ -241,19 +241,19 @@ in every fourth file in the world. Those two bytes are not even constant.
 3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
    newly generated 96-bit urandom **block nonce**.
 
-4) The encrypted data of the block starts with a 40-byte header. This header
+4) The encrypted data of the block starts with a 42-bytes header. This header
    contains the secret key in plain text, and some other information.
-   The header is followed by the **header checksum**, which is a 160-bit 
+   The header is followed by the **header checksum**, which is a 168-bit 
    **Blake2s** hash. The checksum itself is also in the encrypted stream.
    
    When decrypting, we are directly or indirectly checking that all components 
    match each other:
    - 32-byte (256-bit) private key (1) - it decrypts the data
-   - 20-byte (160-bit) header checksum (4)
-   - decrypted secret name (4) up to 28 bytes long
+   - 21-byte (168-bit) header checksum (4)
+   - decrypted secret name (4) up to 29 bytes long
    - the secret name provided by user
    
-   If everything matches everything, it is at least a 53 bytes match. We also 
+   If everything matches everything, it is at least a 54 bytes match. We also 
    verified that this is not a private key collision or a checksum collision. 
    Still not deterministic, but more likely than any conceivable coincidence. 
    This is indeed a block related to the given secret name.
