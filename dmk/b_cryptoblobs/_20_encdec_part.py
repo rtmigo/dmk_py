@@ -522,7 +522,6 @@ class DecryptedIO:
             raise VerificationFailure("Codename mismatch.")
 
         version_data = self.__read_and_decrypt(1)
-        assert version_data[0] == 1
 
         # PART_IDX
         part_idx_data = self.__read_and_decrypt(2)
@@ -596,6 +595,8 @@ class DecryptedIO:
 
         if blake2s(header_data, HEADER_CHECKSUM_LEN) != header_checksum:
             raise VerificationFailure("Header checksum mismatch.")
+
+        assert version_data[0] == 1
 
         return Header(content_crc32=content_crc32,
                       data_version=content_version,
