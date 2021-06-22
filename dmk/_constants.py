@@ -3,4 +3,5 @@
 
 
 __version__ = "0.5.4"
+
 __copyright__ = "2021 Artёm IG <github.com/rtmigo>"
