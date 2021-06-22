@@ -237,34 +237,32 @@ in every fourth file in the world. Those two bytes are not even constant.
 
 2) **Argon2id** (memory 128 MiB, iterations 4, parallelism 8) derives 
    256-bit **private key** from salted (1) secret name.
-
-3) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
-   newly generated 96-bit urandom **block nonce**.
-
-4) The encrypted data of the block starts with a 42-bytes header. This header
-   contains the secret key in plain text, and some other information.
-   The header is followed by the **header checksum**, which is a 168-bit 
-   **Blake2s** hash. The checksum itself is also in the encrypted stream.
    
-   When decrypting, we are directly or indirectly checking that all components 
-   match each other:
-   - 32-byte (256-bit) private key (1) - it decrypts the data
-   - 21-byte (168-bit) header checksum (4)
-   - decrypted secret name (4) up to 29 bytes long
-   - the secret name provided by user
-   
-   If everything matches everything, it is at least a 54 bytes match. We also 
-   verified that this is not a private key collision or a checksum collision. 
-   Still not deterministic, but more likely than any conceivable coincidence. 
-   This is indeed a block related to the given secret name.
-   
-   We also made sure that the data decryption is proceeding correctly.
+3) 96-bit urandom **block nonce** is generated for each new block.
 
-5) **CRC-32** checksum verifies the entry data decrypted from the block.
+4) To indicate that a block refers to the secret name, we write a 256-bit hash
+   to the beginning of the block. It is a **Blake2s** hash derived from private
+   key (2) + block nonce (3).
 
-   This verification occurs when we have already checked (4) the correctness
-   of the private key (2). Therefore, it is really only a self-test to see
-   if the data is decoded as expected.
+   If, when reading, we get the same hash from the key and nonce, then we will
+   decide that this block refers to the secret name.
+
+   Hypothetically, there can be a collision of 256-bit private keys, or a
+   collision of 256-bit hashes. Either of these two events will cause the block
+   to be misclassified and may result in data loss. However, the probability 
+   of getting such an error is vanishingly small compared to the risk of the 
+   death of humanity from the sudden fall of an asteroid in the next second.
+   To protect yourself for sure, it is useful to make backups primarily out of 
+   concern for asteroids.
+
+5) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
+   newly block nonce (3).
+ 
+6) **CRC-32** checksum verifies the entry data decrypted from the block.
+
+   This verification occurs when we have already beleive (4) that the private 
+   key is correct. Therefore, it is really only a self-test to see if the data 
+   is decoded as expected.
 
    This checksum is saved inside the encrypted stream. If the data in the 
    blocks is the same, it will not be noticeable from the outside due to 
