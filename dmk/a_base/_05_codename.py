@@ -9,6 +9,8 @@ from dmk._common import CODENAME_LENGTH_BYTES
 
 class CodenameAscii:
 
+    # todo remove?
+
     @classmethod
     def to_padded_ascii(cls, codename: str) -> bytes:
         result = cls.to_ascii(codename)

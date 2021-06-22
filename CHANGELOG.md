@@ -1,3 +1,9 @@
+# 0.5.4
+
+- changed the way blocks are identified. The secret name is no longer present 
+  in the header (which partially devalued KDF and allowed you to quickly reduce 
+  the number of brute-force passwords)
+
 # 0.5.3
 
 - byte with format version added inside each block
