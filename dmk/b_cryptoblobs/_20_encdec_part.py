@@ -40,7 +40,7 @@ class ItemImprintMismatch(Exception):
 
 ENCRYPTION_NONCE_LEN = 12  # "The TLS ChaCha20 as defined in RFC7539."
 MAC_LEN = 16
-HEADER_CHECKSUM_LEN = 4
+HEADER_CHECKSUM_LEN = 21
 VERSION_LEN = 1
 
 
@@ -59,6 +59,20 @@ def blake2s_160(data: bytes) -> bytes:
     h_obj = BLAKE2s.new(digest_bits=160)
     h_obj.update(data)
     return h_obj.digest()
+
+def blake2s_168(data: bytes) -> bytes:
+    h_obj = BLAKE2s.new(digest_bits=168)
+    h_obj.update(data)
+    return h_obj.digest()
+
+def blake2s(data: bytes, target_size_bytes: int) -> bytes:
+    h_obj = BLAKE2s.new(digest_bits=target_size_bytes*8)
+    h_obj.update(data)
+    result = h_obj.digest()
+    assert len(result)==target_size_bytes
+    return result
+
+
 
 
 def bytes_to_str(lst: bytes):
@@ -203,7 +217,7 @@ class Encrypt:
 
         <encrypted>
             <header>
-                CODENAME    (28 bytes)  The codename string in ASCII.
+                CODENAME    (29 bytes)  The codename string in ASCII.
 
                                         For codenames shorter than 28 chars
                                         it is prefixed with random bytes
@@ -220,11 +234,17 @@ class Encrypt:
                                         And it's good that our decrypted stream
                                         starts from such a randomish data.
 
+                FORMAT_VER    (uint8)   Always 1.
+                                        This constant will hypothetically make
+                                        it possible to change the format of
+                                        the blocks without changing the format
+                                        of the container file.
+
                 CONTENT_CRC32 (uint32)  Checksum of the CONTENT_DATA
                                         (the entry data, stored in current
                                         block).
 
-                                        For fake bloks it is not checksum,
+                                        For fake blocks it is not checksum,
                                         but four random bytes.
 
 
@@ -244,7 +264,7 @@ class Encrypt:
                                         For fake blocks it's 0xFFFFFFFF.
             </header>
 
-            HEADER_CHECKSUM (32 bytes)  Blake2s 256-bit hash of the header.
+            HEADER_CHECKSUM (16 bytes)  Blake2s 128-bit hash of the header.
 
                                         This is the final stage of verification,
                                         after which we will definitely decide
@@ -355,19 +375,26 @@ class Encrypt:
         # CRC-32 are extremely unpredictable bytes. Therefore, we place
         # them at the very beginning of the data to be encrypted.
 
+        version = bytes((1,))
+
         header_data = b''.join((
             codename_data,
-            body_crc_bytes,
+            version,
             part_idx_bytes,
             part_size_bytes,
             content_ver_bytes,
+            body_crc_bytes,
         ))
 
         assert len(header_data) == HEADER_SIZE, len(header_data)
 
         encrypt_and_write(header_data)
 
-        encrypt_and_write(blake2s_160(header_data))
+        checksum = blake2s(header_data, HEADER_CHECKSUM_LEN)
+
+        #checksum = blake2s_168(header_data)
+        #assert len(checksum) == HEADER_CHECKSUM_LEN
+        encrypt_and_write(checksum)
 
         assert outfile.tell() == CLUSTER_META_SIZE, f"pos is {outfile.tell()}"
 
@@ -494,8 +521,8 @@ class DecryptedIO:
             # todo cache codename_to_ascii in fpk
             raise VerificationFailure("Codename mismatch.")
 
-        body_crc32_data = self.__read_and_decrypt(4)
-        content_crc32 = bytes_to_uint32(body_crc32_data)
+        version_data = self.__read_and_decrypt(1)
+        assert version_data[0] == 1
 
         # PART_IDX
         part_idx_data = self.__read_and_decrypt(2)
@@ -511,16 +538,21 @@ class DecryptedIO:
         content_version_data = self.__read_and_decrypt(4)
         content_version = bytes_to_uint32(content_version_data)
 
-        header_checksum = self.__read_and_decrypt(20)
+        body_crc32_data = self.__read_and_decrypt(4)
+        content_crc32 = bytes_to_uint32(body_crc32_data)
+
+
+        header_checksum = self.__read_and_decrypt(HEADER_CHECKSUM_LEN)
 
         # todo read whole header data, then re-read from bytesio?
 
         header_data = b''.join((
             codename_data,
-            body_crc32_data,
+            version_data,
             part_idx_data,
             part_size_data,
             content_version_data,
+            body_crc32_data,
         ))
 
         assert len(header_data) == HEADER_SIZE, len(header_data)
@@ -562,7 +594,7 @@ class DecryptedIO:
         # improbability drive. This is also not a completely deterministic
         # statement.
 
-        if blake2s_160(header_data) != header_checksum:
+        if blake2s(header_data, HEADER_CHECKSUM_LEN) != header_checksum:
             raise VerificationFailure("Header checksum mismatch.")
 
         return Header(content_crc32=content_crc32,

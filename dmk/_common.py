@@ -14,15 +14,15 @@ assert KEY_SIZE * 8 == 256
 # arguments
 KEY_SALT_SIZE = 38
 
-CODENAME_LENGTH_BYTES = 28
-HEADER_SIZE = 40
+CODENAME_LENGTH_BYTES = 29
+HEADER_SIZE = 42
 
 ########################
 
 CLUSTER_SIZE = 4096
 
 # all the meta data in block: nonce, header, header checksum.
-CLUSTER_META_SIZE = 72
+CLUSTER_META_SIZE = 75
 
 # the maximum amount of data (in bytes) that can be saved in single cluster
 MAX_CLUSTER_CONTENT_SIZE = CLUSTER_SIZE - CLUSTER_META_SIZE

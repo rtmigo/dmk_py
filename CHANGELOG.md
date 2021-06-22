@@ -1,3 +1,13 @@
+# 0.5.2
+
+- byte with format version added inside each block
+- changed the size of the secret name and checksum
+
+# 0.5.1
+
+- random data in blocks is now encrypted (previously it was just random from 
+  `urandom`) 
+
 # 0.5.0
 
 - Added `dummy` cli command
