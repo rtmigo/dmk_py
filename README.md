@@ -4,7 +4,7 @@
 
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py#readme)
 
-**This is experimental code. The file format may change.**
+**THIS IS EXPERIMENTAL CODE. THE FILE FORMAT MAY CHANGE**
 
 `dmk` stores files, passwords or other private data in an encrypted **vault file**.
 
