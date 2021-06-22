@@ -238,25 +238,18 @@ in every fourth file in the world. Those two bytes are not even constant.
 2) **Argon2id** (memory 128 MiB, iterations 4, parallelism 8) derives 
    256-bit **private key** from salted (1) secret name.
    
-3) 96-bit urandom **block nonce** is generated for each new block.
+3) 96-bit urandom **block nonce** is generated for each block.
 
 4) To indicate that a block refers to the secret name, we write a 256-bit hash
    to the beginning of the block. It is a **Blake2s** hash derived from private
    key (2) + block nonce (3).
-
-   If, when reading, we get the same hash from the key and nonce, then we will
-   decide that this block refers to the secret name.
-
-   Hypothetically, there can be a collision of 256-bit private keys, or a
-   collision of 256-bit hashes. Either of these two events will cause the block
-   to be misclassified and may result in data loss. However, the probability 
-   of getting such an error is vanishingly small compared to the risk of the 
-   death of humanity from the sudden fall of an asteroid in the next second.
-   To protect yourself for sure, it is useful to make backups primarily out of 
-   concern for asteroids.
+   
+   During the read, for each block, we compute this hash again. If the value 
+   matches, we [decide](https://stackoverflow.com/a/4014407) that the block 
+   refers to the codename.
 
 5) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
-   newly block nonce (3).
+   96-bit block nonce (3).
  
 6) **CRC-32** checksum verifies the entry data decrypted from the block.
 
