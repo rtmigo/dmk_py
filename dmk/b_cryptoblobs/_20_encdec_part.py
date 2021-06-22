@@ -16,6 +16,7 @@ from dmk._common import read_or_fail, InsufficientData, \
     CODENAME_LENGTH_BYTES, HEADER_SIZE
 from dmk.a_base._05_codename import CodenameAscii
 from dmk.a_base._10_kdf import CodenameKey
+from dmk.a_utils.bytes import bytes_to_str
 from dmk.a_utils.dirty_file import WritingToTempFile
 from dmk.a_utils.randoms import set_random_last_modified, \
     get_noncrypt_random_bytes
@@ -38,53 +39,16 @@ class ItemImprintMismatch(Exception):
     pass
 
 
-ENCRYPTION_NONCE_LEN = 12  # "The TLS ChaCha20 as defined in RFC7539."
-MAC_LEN = 16
+# in 2021 there is finished ChaCha20 standards with 64-bit and 96-bit nonce
+ENCRYPTION_NONCE_LEN = 12  # 96-bit
 HEADER_CHECKSUM_LEN = 21
-VERSION_LEN = 1
 
-
-def blake2s_128(data: bytes) -> bytes:
-    h_obj = BLAKE2s.new(digest_bits=128)
-    h_obj.update(data)
-    return h_obj.digest()
-
-
-def blake2s_256(data: bytes) -> bytes:
-    h_obj = BLAKE2s.new(digest_bits=256)
-    h_obj.update(data)
-    return h_obj.digest()
-
-def blake2s_160(data: bytes) -> bytes:
-    h_obj = BLAKE2s.new(digest_bits=160)
-    h_obj.update(data)
-    return h_obj.digest()
-
-def blake2s_168(data: bytes) -> bytes:
-    h_obj = BLAKE2s.new(digest_bits=168)
-    h_obj.update(data)
-    return h_obj.digest()
 
 def blake2s(data: bytes, target_size_bytes: int) -> bytes:
-    h_obj = BLAKE2s.new(digest_bits=target_size_bytes*8)
+    h_obj = BLAKE2s.new(digest_bits=target_size_bytes * 8)
     h_obj.update(data)
     result = h_obj.digest()
-    assert len(result)==target_size_bytes
-    return result
-
-
-
-
-def bytes_to_str(lst: bytes):
-    result = '['
-    if len(lst) > 0:
-        result += hex(lst[0])[2:]
-    if len(lst) > 1:
-        result += ' ' + hex(lst[1])[2:]
-    if len(lst) > 2:
-        result += ' .. ' + hex(lst[-1])[2:]
-    result += ']'
-    result += f' len {len(lst)}'
+    assert len(result) == target_size_bytes
     return result
 
 
@@ -235,6 +199,7 @@ class Encrypt:
                                         starts from such a randomish data.
 
                 FORMAT_VER    (uint8)   Always 1.
+
                                         This constant will hypothetically make
                                         it possible to change the format of
                                         the blocks without changing the format
@@ -246,7 +211,6 @@ class Encrypt:
 
                                         For fake blocks it is not checksum,
                                         but four random bytes.
-
 
                 PART_IDX      (uint16)  Zero-based part index. If we split
                                         the data into three clusters, they
@@ -262,14 +226,14 @@ class Encrypt:
                 ITEM_VER      (uint32)  Increases on each write.
 
                                         For fake blocks it's 0xFFFFFFFF.
+
             </header>
 
-            HEADER_CHECKSUM (16 bytes)  Blake2s 128-bit hash of the header.
+            HEADER_CHECKSUM (21 bytes)  Blake2s 168-bit hash of the header.
 
                                         This is the final stage of verification,
                                         after which we will definitely decide
                                         that the block belongs to the codename.
-
 
                                         It is stored inside the encrypted
                                         stream, so even for identical headers
@@ -339,14 +303,10 @@ class Encrypt:
             body_bytes = read_or_fail(source, self.part_size)
             body_crc_bytes = uint32_to_bytes(zlib.crc32(body_bytes))
 
-        # parts_len_bytes = uint16_to_bytes(self.parts_len - 1)
         part_idx_bytes = uint16_to_bytes(self.part_idx)
         part_size_bytes = uint16_to_bytes(part_is_last_and_size)
-        # header_end_marker = b'~'
 
         codename_data = CodenameAscii.to_padded_ascii(self.cnk.codename)
-
-        # header_crc_bytes = uint32_to_bytes(zlib.crc32(header_bytes))
 
         cryptographer = Cryptographer(fpk=self.cnk,
                                       nonce=nonce)
@@ -357,33 +317,25 @@ class Encrypt:
             print(cryptographer)
             print("---")
 
-        # writing the imprint. It is not encrypted, but it's a hash +
-        # random nonce. It's indistinguishable from any random rubbish
         outfile.write(nonce)
-        # outfile.write(imprint_b.as_bytes)
 
         assert len(cryptographer.nonce) == ENCRYPTION_NONCE_LEN, \
             f"Unexpected nonce length: {len(cryptographer.nonce)}"
-
-        # outfile.write(cryptographer.nonce)
 
         assert outfile.seek(0, io.SEEK_CUR) <= 1024
 
         def encrypt_and_write(data: bytes):
             outfile.write(cryptographer.cipher.encrypt(data))
 
-        # CRC-32 are extremely unpredictable bytes. Therefore, we place
-        # them at the very beginning of the data to be encrypted.
-
         version = bytes((1,))
 
         header_data = b''.join((
             codename_data,
             version,
+            body_crc_bytes,
             part_idx_bytes,
             part_size_bytes,
             content_ver_bytes,
-            body_crc_bytes,
         ))
 
         assert len(header_data) == HEADER_SIZE, len(header_data)
@@ -391,9 +343,6 @@ class Encrypt:
         encrypt_and_write(header_data)
 
         checksum = blake2s(header_data, HEADER_CHECKSUM_LEN)
-
-        #checksum = blake2s_168(header_data)
-        #assert len(checksum) == HEADER_CHECKSUM_LEN
         encrypt_and_write(checksum)
 
         assert outfile.tell() == CLUSTER_META_SIZE, f"pos is {outfile.tell()}"
@@ -408,13 +357,12 @@ class Encrypt:
         padding_size = self.target_size - current_size
         assert padding_size >= 0
 
-        # instead of just appending "secure" random bytes with
-        #   `outfile.write(urandom(padding_size))`
-        # we generate bytes faster, and then encrypting them.
-        # So we try to insure against detectable anomalies
-
+        # instead of just appending "cryptographic" random bytes with
+        #   outfile.write(urandom(padding_size))
+        # we generate bytes with standard RNG, and then encrypting them.
+        # If urandom created any anomalies distinct from the cipher,
+        # now they will not be
         encrypt_and_write(get_noncrypt_random_bytes(padding_size))
-        #
 
     def io_to_file(self,
                    source_io: BinaryIO,
@@ -521,37 +469,28 @@ class DecryptedIO:
             # todo cache codename_to_ascii in fpk
             raise VerificationFailure("Codename mismatch.")
 
-        version_data = self.__read_and_decrypt(1)
+        format_version_data = self.__read_and_decrypt(1)
 
-        # PART_IDX
-        part_idx_data = self.__read_and_decrypt(2)
-        part_idx = bytes_to_uint16(part_idx_data)
-
-        # PART_SIZE
-        part_size_data = self.__read_and_decrypt(2)
-        last_and_size = bytes_to_uint16(part_size_data)
-        part_size = get_lower15bits(last_and_size)
-        is_last = get_highest_bit_16(last_and_size)
-
-        # CONTENT_VER
-        content_version_data = self.__read_and_decrypt(4)
-        content_version = bytes_to_uint32(content_version_data)
+        # after reading the format version version we can choose different
+        # paths. Do not forget that this may not be a version, but random data.
+        # And there are no different ways yet: there is only one block format
+        # version.
 
         body_crc32_data = self.__read_and_decrypt(4)
-        content_crc32 = bytes_to_uint32(body_crc32_data)
-
-
+        part_idx_data = self.__read_and_decrypt(2)
+        part_size_data = self.__read_and_decrypt(2)
+        content_version_data = self.__read_and_decrypt(4)
         header_checksum = self.__read_and_decrypt(HEADER_CHECKSUM_LEN)
 
         # todo read whole header data, then re-read from bytesio?
 
         header_data = b''.join((
             codename_data,
-            version_data,
+            format_version_data,
+            body_crc32_data,
             part_idx_data,
             part_size_data,
             content_version_data,
-            body_crc32_data,
         ))
 
         assert len(header_data) == HEADER_SIZE, len(header_data)
@@ -561,19 +500,18 @@ class DecryptedIO:
         # key collisions.
         #
         # But it is possible that we "decrypted" the expected codename from
-        # random data. For example, if the code name consists of a single byte,
+        # random data. For example, if the codename consists of a single byte,
         # then each 256th private key combination with a nonce would "decrypt"
-        # the expected byte. And the variety of possible key+nonce combinations
-        # would not have helped in any way. Figuratively speaking, by using
-        # a new nonce every time, we deliberately brute force such a collision.
+        # the expected byte. By using a new nonce every time, we deliberately
+        # brute force such a collision even for constant keys.
         #
         # The good news is that we are ready for this. Now is the final stage
         # of verification: we compare the checksum of the decrypted header
-        # with the checksum also read from the encrypted data.
+        # with the checksum that is also read from the encrypted data.
         #
         # This is how we verify everything together in combination:
         #
-        # - the 160-bit checksum can be read correctly from the stream.
+        # - the 168-bit checksum can be read correctly from the stream.
         #   If we decode nonsense with a random key, then the checksum will
         #   not match the header: either the header or the sum will be read
         #   incorrectly. The match almost certainly means, the private key
@@ -585,8 +523,8 @@ class DecryptedIO:
         #   (a) was is the correct codename (b) we are so successful at
         #   decrypting the data not because of the KDF collision
         #
-        # So we got perfect match of 256-bit key with a 160-bit checksum and
-        # variable-length codename (up to 28 bytes).
+        # So we got perfect match of 256-bit key with a 168-bit checksum and
+        # variable-length codename (1-29 bytes).
         #
         # It's still not deterministic. But even if you brute force it hard, it
         # will lead to a collision only on a spaceship with infinite
@@ -596,7 +534,19 @@ class DecryptedIO:
         if blake2s(header_data, HEADER_CHECKSUM_LEN) != header_checksum:
             raise VerificationFailure("Header checksum mismatch.")
 
-        assert version_data[0] == 1
+        # until now, we could read random data from the header. We avoided
+        # exceptions, because when the data is random, we must raise
+        # VerificationFailure. Now we can actually check and parse the data
+
+        assert format_version_data[0] == 1
+        part_idx = bytes_to_uint16(part_idx_data)
+
+        last_and_size = bytes_to_uint16(part_size_data)
+        part_size = get_lower15bits(last_and_size)
+        is_last = get_highest_bit_16(last_and_size)
+
+        content_version = bytes_to_uint32(content_version_data)
+        content_crc32 = bytes_to_uint32(body_crc32_data)
 
         return Header(content_crc32=content_crc32,
                       data_version=content_version,

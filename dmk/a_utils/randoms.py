@@ -17,12 +17,15 @@ from dmk._common import CODENAME_LENGTH_BYTES
 
 # todo remove unused funcs
 
-def get_noncrypt_random_bytes(n, _struct8k=struct.Struct(
-    "!1000Q").pack_into) -> bytes:
-    # https://stackoverflow.com/a/43788050
-    # by Richard Thiessen, CC BY-SA 3.0
+def get_noncrypt_random_bytes(
+        n: int,
+        _struct8k=struct.Struct("!1000Q").pack_into) -> bytes:
     # For n = 1M it's six times faster
-    # than Crypto.Random.get_random_bytes (aka urandom)
+    # than urandom (aka Crypto.Random.get_random_bytes)
+    # Original:
+    #   https://stackoverflow.com/a/43788050
+    #   by Richard Thiessen, CC BY-SA 3.0
+
     if n < 8000:
         longs = (n + 7) // 8
         return struct.pack("!%iQ" % longs, *map(
@@ -36,6 +39,7 @@ def get_noncrypt_random_bytes(n, _struct8k=struct.Struct(
     assert offset >= 0
     offset += 8000
     data[offset:] = get_noncrypt_random_bytes(n - offset)
+    assert len(data) == n
     return data
 
 
