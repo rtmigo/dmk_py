@@ -521,7 +521,7 @@ class DecryptedIO:
             # todo cache codename_to_ascii in fpk
             raise VerificationFailure("Codename mismatch.")
 
-        version_data = self.__read_and_decrypt(1)
+        format_version_data = self.__read_and_decrypt(1)
 
         # PART_IDX
         part_idx_data = self.__read_and_decrypt(2)
@@ -547,7 +547,7 @@ class DecryptedIO:
 
         header_data = b''.join((
             codename_data,
-            version_data,
+            format_version_data,
             part_idx_data,
             part_size_data,
             content_version_data,
@@ -596,7 +596,7 @@ class DecryptedIO:
         if blake2s(header_data, HEADER_CHECKSUM_LEN) != header_checksum:
             raise VerificationFailure("Header checksum mismatch.")
 
-        assert version_data[0] == 1
+        assert format_version_data[0] == 1
 
         return Header(content_crc32=content_crc32,
                       data_version=content_version,
