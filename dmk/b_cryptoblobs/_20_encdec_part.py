@@ -55,24 +55,25 @@ def blake2s_256(data: bytes) -> bytes:
     h_obj.update(data)
     return h_obj.digest()
 
+
 def blake2s_160(data: bytes) -> bytes:
     h_obj = BLAKE2s.new(digest_bits=160)
     h_obj.update(data)
     return h_obj.digest()
+
 
 def blake2s_168(data: bytes) -> bytes:
     h_obj = BLAKE2s.new(digest_bits=168)
     h_obj.update(data)
     return h_obj.digest()
 
+
 def blake2s(data: bytes, target_size_bytes: int) -> bytes:
-    h_obj = BLAKE2s.new(digest_bits=target_size_bytes*8)
+    h_obj = BLAKE2s.new(digest_bits=target_size_bytes * 8)
     h_obj.update(data)
     result = h_obj.digest()
-    assert len(result)==target_size_bytes
+    assert len(result) == target_size_bytes
     return result
-
-
 
 
 def bytes_to_str(lst: bytes):
@@ -235,6 +236,7 @@ class Encrypt:
                                         starts from such a randomish data.
 
                 FORMAT_VER    (uint8)   Always 1.
+
                                         This constant will hypothetically make
                                         it possible to change the format of
                                         the blocks without changing the format
@@ -392,8 +394,8 @@ class Encrypt:
 
         checksum = blake2s(header_data, HEADER_CHECKSUM_LEN)
 
-        #checksum = blake2s_168(header_data)
-        #assert len(checksum) == HEADER_CHECKSUM_LEN
+        # checksum = blake2s_168(header_data)
+        # assert len(checksum) == HEADER_CHECKSUM_LEN
         encrypt_and_write(checksum)
 
         assert outfile.tell() == CLUSTER_META_SIZE, f"pos is {outfile.tell()}"
@@ -523,24 +525,15 @@ class DecryptedIO:
 
         format_version_data = self.__read_and_decrypt(1)
 
-        # PART_IDX
+        # after reading the format version version we can choose different
+        # paths. Do not forget that this may not be a version, but random data.
+        # And there are no different ways yet: there is only one block format
+        # version.
+
         part_idx_data = self.__read_and_decrypt(2)
-        part_idx = bytes_to_uint16(part_idx_data)
-
-        # PART_SIZE
         part_size_data = self.__read_and_decrypt(2)
-        last_and_size = bytes_to_uint16(part_size_data)
-        part_size = get_lower15bits(last_and_size)
-        is_last = get_highest_bit_16(last_and_size)
-
-        # CONTENT_VER
         content_version_data = self.__read_and_decrypt(4)
-        content_version = bytes_to_uint32(content_version_data)
-
         body_crc32_data = self.__read_and_decrypt(4)
-        content_crc32 = bytes_to_uint32(body_crc32_data)
-
-
         header_checksum = self.__read_and_decrypt(HEADER_CHECKSUM_LEN)
 
         # todo read whole header data, then re-read from bytesio?
@@ -561,19 +554,18 @@ class DecryptedIO:
         # key collisions.
         #
         # But it is possible that we "decrypted" the expected codename from
-        # random data. For example, if the code name consists of a single byte,
+        # random data. For example, if the codename consists of a single byte,
         # then each 256th private key combination with a nonce would "decrypt"
-        # the expected byte. And the variety of possible key+nonce combinations
-        # would not have helped in any way. Figuratively speaking, by using
-        # a new nonce every time, we deliberately brute force such a collision.
+        # the expected byte. By using a new nonce every time, we deliberately
+        # brute force such a collision even for constant keys.
         #
         # The good news is that we are ready for this. Now is the final stage
         # of verification: we compare the checksum of the decrypted header
-        # with the checksum also read from the encrypted data.
+        # with the checksum that is also read from the encrypted data.
         #
         # This is how we verify everything together in combination:
         #
-        # - the 160-bit checksum can be read correctly from the stream.
+        # - the 168-bit checksum can be read correctly from the stream.
         #   If we decode nonsense with a random key, then the checksum will
         #   not match the header: either the header or the sum will be read
         #   incorrectly. The match almost certainly means, the private key
@@ -585,8 +577,8 @@ class DecryptedIO:
         #   (a) was is the correct codename (b) we are so successful at
         #   decrypting the data not because of the KDF collision
         #
-        # So we got perfect match of 256-bit key with a 160-bit checksum and
-        # variable-length codename (up to 28 bytes).
+        # So we got perfect match of 256-bit key with a 168-bit checksum and
+        # variable-length codename (1-29 bytes).
         #
         # It's still not deterministic. But even if you brute force it hard, it
         # will lead to a collision only on a spaceship with infinite
@@ -596,7 +588,19 @@ class DecryptedIO:
         if blake2s(header_data, HEADER_CHECKSUM_LEN) != header_checksum:
             raise VerificationFailure("Header checksum mismatch.")
 
+        # until now, we could read random data from the header. We avoided
+        # exceptions, because when the data is random, we must raise
+        # VerificationFailure. Now we can actually check and parse the data
+
         assert format_version_data[0] == 1
+        part_idx = bytes_to_uint16(part_idx_data)
+
+        last_and_size = bytes_to_uint16(part_size_data)
+        part_size = get_lower15bits(last_and_size)
+        is_last = get_highest_bit_16(last_and_size)
+
+        content_version = bytes_to_uint32(content_version_data)
+        content_crc32 = bytes_to_uint32(body_crc32_data)
 
         return Header(content_crc32=content_crc32,
                       data_version=content_version,
