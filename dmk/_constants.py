@@ -2,6 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 
-__version__ = "0.5.4"
+__version__ = "0.5.5"
 
 __copyright__ = "2021 Artёm IG <github.com/rtmigo>"

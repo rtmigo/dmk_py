@@ -2,9 +2,9 @@
 [![Generic badge](https://img.shields.io/badge/Python-3.7+-blue.svg)](#)
 [![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS%20|%20Windows-blue.svg)](#)
 
-**This is experimental code. The file format may change.**
-
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py#readme)
+
+**This is experimental code. The file format may change.**
 
 `dmk` stores files, passwords or other private data in an encrypted **vault file**.
 
