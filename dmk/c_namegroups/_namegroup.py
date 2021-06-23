@@ -37,6 +37,9 @@ class NameGroup:
         self._streams: List[BinaryIO] = []
         self._fresh_content_dios: Optional[List[DecryptedIO]] = None
 
+        # todo for "our" blocks also try to read and verify (with CRC) the
+        # data. So it will be 256-bit + 32-bit match
+
         self.items: List[NameGroupItem] = []
 
         for idx in range(len(self.blobs)):

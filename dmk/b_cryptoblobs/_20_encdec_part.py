@@ -21,7 +21,7 @@ from dmk.a_utils.randoms import set_random_last_modified, \
     get_noncrypt_random_bytes
 from dmk.b_cryptoblobs._10_byte_funcs import bytes_to_uint32, \
     uint32_to_bytes, uint16_to_bytes, \
-    bytes_to_uint16
+    bytes_to_uint16, uint48_to_bytes, bytes_to_uint48
 
 _DEBUG_PRINT = False
 
@@ -38,9 +38,10 @@ class ItemImprintMismatch(Exception):
     pass
 
 
-# in 2021 there is finished ChaCha20 standards with 64-bit and 96-bit nonce
+# in 2021 there are only finished ChaCha20 standards with 64-bit and
+# 96-bit nonce
 ENCRYPTION_NONCE_LEN = 12  # 96-bit
-HEADER_CHECKSUM_LEN = 21
+#HEADER_CHECKSUM_LEN = 21
 
 
 def blake2s(data: bytes, target_size_bytes: int) -> bytes:
@@ -117,7 +118,7 @@ def get_lower15bits(x: int) -> int:
     return x & 0x7FFF
 
 
-FAKE_CONTENT_VERSION = 0xFFFFFFFF
+FAKE_CONTENT_VERSION = 0xFFFFFFFFFFFF
 
 
 def to_imprint(cnk: CodenameKey, nonce: bytes):
@@ -198,7 +199,6 @@ class Encrypt:
                                         the blocks without changing the format
                                         of the container file.
 
-
                 PART_IDX      (uint16)  Zero-based part index. If we split
                                         the data into three clusters, they
                                         will have PART_IDX values 0, 1, 2.
@@ -210,9 +210,9 @@ class Encrypt:
                                         Highest bit is 1 if this is
                                         the last cluster, 0 if not
 
-                ITEM_VER      (uint32)  Increases on each write.
+                ITEM_VER      (uint48)  Increases on each write.
 
-                                        For fake blocks it's 0xFFFFFFFF.
+                                        For fake blocks it's FFFF FFFF FFFF.
 
             </header>
 
@@ -240,9 +240,9 @@ class Encrypt:
 
         # ITEM_VER
         if is_fake:
-            content_ver_bytes = uint32_to_bytes(FAKE_CONTENT_VERSION)
+            content_ver_bytes = uint48_to_bytes(FAKE_CONTENT_VERSION)
         else:
-            content_ver_bytes = uint32_to_bytes(self.data_version)
+            content_ver_bytes = uint48_to_bytes(self.data_version)
 
         # PART_SIZE
         if self.part_size is None:
@@ -389,6 +389,7 @@ class DecryptedIO:
         self._tried_to_read_header = False
 
         self._data_read = False
+        #self._data = None
 
         pos = self._source.tell()
         if pos != 0:
@@ -468,7 +469,7 @@ class DecryptedIO:
 
         part_idx_data = self.__read_and_decrypt(2)
         part_size_data = self.__read_and_decrypt(2)
-        content_version_data = self.__read_and_decrypt(4)
+        content_version_data = self.__read_and_decrypt(6)
         # header_checksum = self.__read_and_decrypt(HEADER_CHECKSUM_LEN)
 
         # todo read whole header data, then re-read from bytesio?
@@ -492,7 +493,7 @@ class DecryptedIO:
         part_size = get_lower15bits(last_and_size)
         is_last = get_highest_bit_16(last_and_size)
 
-        content_version = bytes_to_uint32(content_version_data)
+        content_version = bytes_to_uint48(content_version_data)
         content_crc32 = bytes_to_uint32(body_crc32_data)
 
         return Header(content_crc32=content_crc32,

@@ -14,19 +14,24 @@ from dmk.c_namegroups._namegroup import NameGroup
 
 
 def increased_data_version(namegroup: NameGroup) -> int:
+
+    # todo when we somehow reached upper limit, remove all blocks from
+    # the namegroup, start again
+
     # MAX_INT64 = 0x7FFFFFFFFFFFFFFF
-    MAX_UINT32 = 0xFFFFFFFF
+    MAX_UINT48 = 0xFFFFFFFFFFFF
     if len(namegroup.all_content_versions) <= 0:
-        return random.randint(1, 9999)
+        return random.randint(1, 99999)
 
     previously_max = max(namegroup.all_content_versions)
 
     assert previously_max >= 1
-    result = previously_max + random.randint(1, 10)
-    if result > MAX_UINT32:
+    result = previously_max + random.randint(1, 100)
+    if result > MAX_UINT48:
+        # ((2**48)-99999) / 100 = 2 814 749 766 106.57 (two trillions)
         # this will never happen
         raise ValueError(f"new_data_version={result} "
-                         f"cannot be saved as INT64")
+                         f"cannot be saved as UINT48")
     assert result > previously_max
     return result
 
@@ -97,14 +102,15 @@ def add_fakes(cdk: CodenameKey,
     new_blobs.write_tail()  # todo test
 
 
-class MaxFakes:
-    def __init__(self, old_blocks_num: int):
+class FakeDeltas:
+    def __init__(self, old_blocks_num: int, adding_blocks: int):
         max_loss_percent = 0.05
         min_delta = 3
 
         self.max_loss = round(old_blocks_num * max_loss_percent)
         self.max_loss = max(self.max_loss, min_delta)
         self.max_loss = min(self.max_loss, old_blocks_num)
+        #
 
         # было x0 блоков.
         # Если потеряем все блоки, станет x1 = x0-max_loss.
@@ -116,17 +122,19 @@ class MaxFakes:
         # Поэтому считаем его так, словно уже потеряли блоки в прошлый раз.
 
         divisor = (old_blocks_num - self.max_loss)
-        if divisor>=1:
+        if divisor >= 1:
             rel_recover = self.max_loss / divisor
             self.max_add = max(min_delta, round(old_blocks_num * rel_recover))
         else:
             self.max_add = min_delta
 
+        self.max_loss = max(self.max_loss, adding_blocks)
+        self.max_loss = min(self.max_loss, old_blocks_num)
+
         assert self.max_add >= 1
         assert self.max_loss >= 0
+        assert self.max_loss <= old_blocks_num
 
-
-# def max_fakes(old_blocks_num: int) -> Tuple[int,int]:
 
 def update_namegroup_b(cdk: CodenameKey,
                        new_content_io: BinaryIO,
@@ -134,27 +142,27 @@ def update_namegroup_b(cdk: CodenameKey,
                        new_blobs: BlocksSequentialWriter):
     name_group = NameGroup(old_blobs, cdk)
 
+    encryptor = MultipartEncryptor(cdk, new_content_io,
+                                   increased_data_version(name_group))
+
     all_blob_indexes = set(range(len(old_blobs)))
     our_old_blob_indexes = set(e.idx for e in name_group.items)
-    # other_blob_indexes = all_blob_indexes-our_blob_indexes
     assert all(idx in all_blob_indexes for idx in our_old_blob_indexes)
 
     # All our_blob_indexes refer to the current codename. But there is no
     # longer any valuable data among them. There are only fake or outdated
     # ones. Therefore, we can safely delete them.
 
-    # FAKE_PERCENT = 0.05
-    # MAX_FAKES_TO_ADD = max(5, )
-
-    #MAX_TO_DELETE = MAX_TO_FAKE = 5  # todo avoid constants
-
-    max_fakes = MaxFakes(len(old_blobs))
+    fake_deltas = FakeDeltas(
+        old_blocks_num=len(old_blobs),
+        adding_blocks=len(encryptor.part_sizes)
+    )
 
     if len(our_old_blob_indexes) >= 1:
         our_new_blob_indexes = remove_random_items(
             our_old_blob_indexes,
             min_to_delete=1,
-            max_to_delete=max_fakes.max_loss)
+            max_to_delete=fake_deltas.max_loss)
     else:
         assert len(our_old_blob_indexes) == 0
         our_new_blob_indexes = set()
@@ -168,27 +176,25 @@ def update_namegroup_b(cdk: CodenameKey,
     for idx in indexes_to_keep:
         tasks.append(TaskKeep(idx))
 
-    me = MultipartEncryptor(cdk, new_content_io,
-                            increased_data_version(name_group))
-    for part_idx in range(len(me.part_sizes)):
-        # assert part_idx != FAKE_TASK
+    for part_idx in range(len(encryptor.part_sizes)):
         tasks.append(TaskEncrypt(part_idx))
 
-    for idx in range(random.randint(1, max_fakes.max_add)):
+    for idx in range(random.randint(1, fake_deltas.max_add)):
         tasks.append(TaskFake())
 
     assert sum(1 for t in tasks if isinstance(t, TaskFake)) >= 1
 
-    # copying old block, writing fakes, and new content in random order
+    # in random order: copying old blocks, writing fake blocks,
+    # adding new content
     random.shuffle(tasks)
     for task in tasks:
         if isinstance(task, TaskFake):
             add_fake(cdk, new_blobs)
         elif isinstance(task, TaskEncrypt):
-            assert not me.all_encrypted
+            assert not encryptor.all_encrypted
             with io.BytesIO() as temp_io:
-                me.encrypt(part_idx=task.part_idx,
-                           target_io=temp_io)
+                encryptor.encrypt(part_idx=task.part_idx,
+                                  target_io=temp_io)
                 temp_io.seek(0, io.SEEK_SET)
                 new_blobs.write_bytes(temp_io.read())
         elif isinstance(task, TaskKeep):
@@ -196,4 +202,4 @@ def update_namegroup_b(cdk: CodenameKey,
         else:
             raise TypeError
     new_blobs.write_tail()
-    assert me.all_encrypted
+    assert encryptor.all_encrypted

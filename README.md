@@ -193,7 +193,7 @@ padded to fit into multiple blocks. In the end, they are all just a lot of
 blocks.
 
 A block gives absolutely no information for someone who does not own the
-secret name. All non-random data is encrypted. The size of padding
+secret name. All non-random data is either hashed or encrypted. The size of padding
 is unknown.
 
 The number of blocks is no secret. Their contents are secret.
@@ -240,7 +240,7 @@ in every fourth file in the world. Those two bytes are not even constant.
    
 3) 96-bit urandom **block nonce** is generated for each block.
 
-4) To indicate that a block refers to the secret name, we write a 256-bit hash
+4) To indicate that a block refers to the secret name, we add a 256-bit hash
    to the beginning of the block. It is a **Blake2s** hash derived from private
    key (2) + block nonce (3).
    
