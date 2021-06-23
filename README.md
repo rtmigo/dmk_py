@@ -240,7 +240,7 @@ in every fourth file in the world. Those two bytes are not even constant.
    
 3) 96-bit urandom **block nonce** is generated for each block.
 
-4) To indicate that a block refers to the secret name, we write a 256-bit hash
+4) To indicate that a block refers to the secret name, we add a 256-bit hash
    to the beginning of the block. It is a **Blake2s** hash derived from private
    key (2) + block nonce (3).
    

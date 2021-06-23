@@ -11,7 +11,7 @@ from dmk.a_base._10_kdf import FasterKDF, CodenameKey
 from dmk.b_cryptoblobs._20_encdec_part import is_content_io, \
     is_fake_io
 from dmk.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
-from dmk.c_namegroups._update import update_namegroup_b, MaxFakes
+from dmk.c_namegroups._update import update_namegroup_b, FakeDeltas
 from tests.common import testing_salt
 
 
@@ -19,36 +19,49 @@ def full_stream_to_bytes(stream: BinaryIO) -> bytes:
     stream.seek(0, io.SEEK_SET)
     return stream.read()
 
+
 class TestMaxFakes(unittest.TestCase):
+    # test multiple times on long run
+
     def test_large(self):
-        mf = MaxFakes(1000)
+        mf = FakeDeltas(1000, 0)
         self.assertEqual(mf.max_add, 53)
         self.assertEqual(mf.max_loss, 50)
 
     def test_0(self):
-        mf = MaxFakes(0)
+        mf = FakeDeltas(0, 0)
         self.assertEqual(mf.max_add, 3)
         self.assertEqual(mf.max_loss, 0)
 
     def test_1(self):
-        mf = MaxFakes(1)
+        mf = FakeDeltas(1, 0)
         self.assertEqual(mf.max_add, 3)
         self.assertEqual(mf.max_loss, 1)
 
     def test_2(self):
-        mf = MaxFakes(2)
+        mf = FakeDeltas(2, 0)
         self.assertEqual(mf.max_add, 3)
         self.assertEqual(mf.max_loss, 2)
 
     def test_3(self):
-        mf = MaxFakes(3)
+        mf = FakeDeltas(3, 0)
         self.assertEqual(mf.max_add, 3)
         self.assertEqual(mf.max_loss, 3)
 
     def test_4(self):
-        mf = MaxFakes(3)
+        mf = FakeDeltas(3, 0)
         self.assertEqual(mf.max_add, 3)
         self.assertEqual(mf.max_loss, 3)
+
+    def test_adding_to_large(self):
+        mf = FakeDeltas(1000, adding_blocks=99)
+        self.assertEqual(mf.max_add, 53)
+        self.assertEqual(mf.max_loss, 99)
+
+    def test_adding_to_small(self):
+        mf = FakeDeltas(1000, adding_blocks=1200)
+        self.assertEqual(mf.max_add, 53)
+        self.assertEqual(mf.max_loss, 1000)
 
 
 class TestUpdate(unittest.TestCase):

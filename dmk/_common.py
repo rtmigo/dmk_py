@@ -17,14 +17,14 @@ KEY_SALT_SIZE = 38
 IMPRINT_SIZE = 32
 
 CODENAME_LENGTH_BYTES = 40
-HEADER_SIZE = 13
+HEADER_SIZE = 15
 
 ########################
 
 CLUSTER_SIZE = 4096
 
 # all the meta data in block: nonce, header, header checksum.
-CLUSTER_META_SIZE = 57
+CLUSTER_META_SIZE = 59
 
 # the maximum amount of data (in bytes) that can be saved in single cluster
 MAX_CLUSTER_CONTENT_SIZE = CLUSTER_SIZE - CLUSTER_META_SIZE
