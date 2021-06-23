@@ -41,7 +41,9 @@ class ItemImprintMismatch(Exception):
 # in 2021 there are only finished ChaCha20 standards with 64-bit and
 # 96-bit nonce
 ENCRYPTION_NONCE_LEN = 12  # 96-bit
-#HEADER_CHECKSUM_LEN = 21
+
+
+# HEADER_CHECKSUM_LEN = 21
 
 
 def blake2s(data: bytes, target_size_bytes: int) -> bytes:
@@ -389,7 +391,7 @@ class DecryptedIO:
         self._tried_to_read_header = False
 
         self._data_read = False
-        #self._data = None
+        # self._data = None
 
         pos = self._source.tell()
         if pos != 0:
@@ -521,6 +523,27 @@ class DecryptedIO:
 
         self._data_read = True
         return body
+
+    def verify_data(self) -> bool:
+        """This can be called before removing an old block.
+
+        Usually, by this point, the block's codename has already been verified
+        by a 256-bit hash. But we will check it again with a 32-bit checksum
+        (for data blocks) or a 48-bit version number (for fake blocks).
+        Just because we can
+        """
+
+        # todo unit test
+
+        if not self.contains_data:
+            # 48-bit match
+            assert self.header.data_version == FAKE_CONTENT_VERSION
+            return True
+        try:
+            self.read_data()  # checking 32-bit crc32 match
+            return True
+        except VerificationFailure:
+            return False
 
 
 def is_content_io(fpk: CodenameKey, stream: BinaryIO) -> bool:

@@ -100,6 +100,9 @@ class NameGroup:
                     gf.is_fresh_data = True
                 break
 
+    def block_idx_to_item(self, idx: int) -> NameGroupItem:
+        return next(gf for gf in self.items if gf.idx == idx)
+
     @property
     def fresh_content_dios(self) -> List[DecryptedIO]:
         if self._fresh_content_dios is None:
