@@ -1,3 +1,10 @@
+# 0.5.6
+
+- larger `content_ver` size now allows to rewrite an entry up to 2 trillion 
+  times
+- the number of randomly created and deleted dummy blocks now takes into account 
+  the size of the added entry 
+
 # 0.5.4
 
 - changed the way blocks are identified. The secret name is no longer present 
