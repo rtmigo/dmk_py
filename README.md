@@ -193,7 +193,7 @@ padded to fit into multiple blocks. In the end, they are all just a lot of
 blocks.
 
 A block gives absolutely no information for someone who does not own the
-secret name. All non-random data is encrypted. The size of padding
+secret name. All non-random data is either hashed or encrypted. The size of padding
 is unknown.
 
 The number of blocks is no secret. Their contents are secret.
