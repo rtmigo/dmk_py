@@ -240,13 +240,13 @@ in every fourth file in the world. Those two bytes are not even constant.
    
 3) 96-bit urandom **block nonce** is generated for each block.
 
-4) To indicate that a block refers to the secret name, we add a 256-bit hash
-   to the beginning of the block. It is a **Blake2s** hash derived from private
+4) To indicate that a block belongs to the secret name, we add a 256-bit hash
+   to the beginning of the block. It is a **Blake2s** hash of private
    key (2) + block nonce (3).
    
    During the read, for each block, we compute this hash again. If the value 
    matches, we [decide](https://stackoverflow.com/a/4014407) that the block 
-   refers to the codename.
+   belongs to the secret name.
 
 5) **ChaCha20** encrypts the block data using the 256-bit private key (2) and 
    96-bit block nonce (3).
@@ -257,8 +257,8 @@ in every fourth file in the world. Those two bytes are not even constant.
    key is correct. Therefore, it is really only a self-test to see if the data 
    is decoded as expected.
 
-   This checksum is saved inside the encrypted stream. If the data in the 
-   blocks is the same, it will not be noticeable from the outside due to 
+   This checksum is saved inside the encrypted stream. If the data in two  
+   blocks are the same, it will not be noticeable from the outside due to 
    different nonce (3) values.
 
 
