@@ -49,6 +49,23 @@ class NameGroup:
             if not dio.belongs_to_namegroup:
                 continue
             assert dio.belongs_to_namegroup
+
+            # We have checked that the block belongs to this code name.
+            # This assumption is wrong only in the case of a collision
+            # of the 256-bit private keys or the 256-bit imprints.
+            # We believe that any of these collisions are impossible.
+            #
+            # But if speed is not a priority, we can double-check our belief
+            # in the absence of imprint collisions.
+
+            if dio.contains_data:
+                # checking CRC-32 of the decrypted body is ok
+                assert dio.data is not None
+            else:
+                # already checked 48-bit decrypted constant content_ver is ok,
+                # just recheck the property returns none
+                assert dio.data is None
+
             gf = NameGroupItem(idx, dio)
             self.items.append(gf)
 
