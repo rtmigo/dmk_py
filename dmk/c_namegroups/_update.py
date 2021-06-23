@@ -43,18 +43,28 @@ def get_stream_size(stream: BinaryIO) -> int:
     return result
 
 
-def remove_random_items(source: Set[int],
+# def remove_random_items(source: Set[int],
+#                         min_to_delete=1,
+#                         max_to_delete=5) -> Set[int]:
+#     if len(source) < min_to_delete:
+#         raise ValueError("List is too small")
+#
+#     max_to_delete = min(max_to_delete, len(source))
+#     num_to_delete = random.randint(min_to_delete, max_to_delete)
+#     indexes_to_delete = random.sample(list(source), num_to_delete)
+#     result = source - set(indexes_to_delete)
+#     assert len(result) < len(source) or min_to_delete == 0
+#     return result
+
+def random_indexes_to_delete(source: Set[int],
                         min_to_delete=1,
-                        max_to_delete=5) -> Set[int]:
+                        max_to_delete=5) -> List[int]:
     if len(source) < min_to_delete:
         raise ValueError("List is too small")
 
     max_to_delete = min(max_to_delete, len(source))
     num_to_delete = random.randint(min_to_delete, max_to_delete)
-    indexes_to_delete = random.sample(list(source), num_to_delete)
-    result = source - set(indexes_to_delete)
-    assert len(result) < len(source) or min_to_delete == 0
-    return result
+    return random.sample(list(source), num_to_delete)
 
 
 class TaskKeep(NamedTuple):
@@ -146,10 +156,10 @@ def update_namegroup_b(cdk: CodenameKey,
                                    increased_data_version(name_group))
 
     all_blob_indexes = set(range(len(old_blobs)))
-    our_old_blob_indexes = set(e.idx for e in name_group.items)
-    assert all(idx in all_blob_indexes for idx in our_old_blob_indexes)
+    ng_old_indexes = set(e.idx for e in name_group.items)
+    assert all(idx in all_blob_indexes for idx in ng_old_indexes)
 
-    # All our_blob_indexes refer to the current codename. But there is no
+    # All ng_old_indexes refer to the current codename. But there is no
     # longer any valuable data among them. There are only fake or outdated
     # ones. Therefore, we can safely delete them.
 
@@ -158,19 +168,42 @@ def update_namegroup_b(cdk: CodenameKey,
         adding_blocks=len(encryptor.part_sizes)
     )
 
-    if len(our_old_blob_indexes) >= 1:
-        our_new_blob_indexes = remove_random_items(
-            our_old_blob_indexes,
+    if len(ng_old_indexes) >= 1:
+        indexes_to_delete = random_indexes_to_delete(
+            ng_old_indexes,
             min_to_delete=1,
-            max_to_delete=fake_deltas.max_loss)
+            max_to_delete=fake_deltas.max_loss
+        )
+
+        # we already verified (with 256-bit hash) that all the blocks in
+        # ng_old_indexes related to to CodenameKey. But before deleting a block
+        # (that the most dangerous thing we ever do), we additionally verify
+        # that the data of the block matches the block header. So it's actually
+        # 256+32 or 256+48 bit match.
+        #
+        # In case of speed problems this check can be safely ignored, since
+        # collisions of 256-bit hashes are almost impossible
+        indexes_to_delete = [idx for idx in indexes_to_delete
+                             if name_group.block_idx_to_item(idx)
+                                 .dio.verify_data()]
+
+        assert all(idx in ng_old_indexes
+                   for idx in indexes_to_delete)
+
+        our_new_blob_indexes = ng_old_indexes - set(indexes_to_delete)
+
+        # our_new_blob_indexes = remove_random_items(
+        #     our_old_blob_indexes,
+        #     min_to_delete=1,
+        #     max_to_delete=fake_deltas.max_loss)
     else:
-        assert len(our_old_blob_indexes) == 0
+        assert len(ng_old_indexes) == 0
         our_new_blob_indexes = set()
 
     tasks: List[object] = list()
 
     indexes_to_keep = set(all_blob_indexes)
-    indexes_to_keep -= our_old_blob_indexes
+    indexes_to_keep -= ng_old_indexes
     indexes_to_keep.update(our_new_blob_indexes)
 
     for idx in indexes_to_keep:
