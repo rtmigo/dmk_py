@@ -1,5 +1,5 @@
 import random
-from collections import Collection
+from typing import Collection
 
 MAX_UINT48 = 0xFFFFFFFFFFFF
 MAX_CONTENT_VERSION = MAX_UINT48 - 1
