@@ -11,29 +11,7 @@ from dmk.b_cryptoblobs import MultipartEncryptor
 from dmk.b_storage_file import BlocksIndexedReader, BlocksSequentialWriter
 from dmk.c_namegroups._fakes import create_fake_bytes
 from dmk.c_namegroups._namegroup import NameGroup
-
-
-def increased_data_version(namegroup: NameGroup) -> int:
-
-    # todo when we somehow reached upper limit, remove all blocks from
-    # the namegroup, start again
-
-    # MAX_INT64 = 0x7FFFFFFFFFFFFFFF
-    MAX_UINT48 = 0xFFFFFFFFFFFF
-    if len(namegroup.all_content_versions) <= 0:
-        return random.randint(1, 99999)
-
-    previously_max = max(namegroup.all_content_versions)
-
-    assert previously_max >= 1
-    result = previously_max + random.randint(1, 100)
-    if result > MAX_UINT48:
-        # ((2**48)-99999) / 100 = 2 814 749 766 106.57 (two trillions)
-        # this will never happen
-        raise ValueError(f"new_data_version={result} "
-                         f"cannot be saved as UINT48")
-    assert result > previously_max
-    return result
+from dmk.c_namegroups.content_ver import increased_data_version
 
 
 def get_stream_size(stream: BinaryIO) -> int:
@@ -143,7 +121,7 @@ def update_namegroup_b(cdk: CodenameKey,
     name_group = NameGroup(old_blobs, cdk)
 
     encryptor = MultipartEncryptor(cdk, new_content_io,
-                                   increased_data_version(name_group))
+                                   increased_data_version(name_group.all_content_versions))
 
     all_blob_indexes = set(range(len(old_blobs)))
     ng_old_indexes = set(e.idx for e in name_group.items)
