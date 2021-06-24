@@ -1,3 +1,8 @@
+# 0.5.7
+
+- the initial `content_ver` is now computed from a huge random interval with no 
+  hard boundaries
+
 # 0.5.6
 
 - larger `content_ver` size now allows to rewrite an entry up to 2 trillion 
