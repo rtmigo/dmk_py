@@ -65,7 +65,7 @@ class DmkFile:
                           writer.blobs,
                           blocks_num)
             # both files are closed now
-            wtf.replace()  # todo securely remove old file
+            wtf.replace()
 
     def set_from_io(self, codename: str, source: BinaryIO):
         ck = CodenameKey(codename, self.salt)
@@ -76,7 +76,7 @@ class DmkFile:
                 update_namegroup_b(ck, source, old_blobs, writer.blobs)
             # both files are closed now
 
-            wtf.replace()  # todo securely remove old file
+            wtf.replace()
 
     def get_bytes(self, name: str) -> Optional[bytes]:
         ck = CodenameKey(name, self.salt)
