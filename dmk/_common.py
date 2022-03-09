@@ -4,7 +4,7 @@
 
 from typing import BinaryIO, Tuple
 
-from Crypto.Hash import BLAKE2b, BLAKE2s
+from Crypto.Hash import BLAKE2s
 
 KEY_SIZE = 32
 assert KEY_SIZE * 8 == 256
@@ -50,14 +50,6 @@ def half_n_half(salt: bytes) -> Tuple[bytes, bytes]:
     b = salt[half:]
     assert abs(len(a) - len(b)) <= 1
     return a, b
-
-
-def blake192(data: bytes, salt: bytes) -> bytes:
-    # todo remove?
-    h_obj = BLAKE2b.new(digest_bits=192)
-    a, b = half_n_half(salt)
-    h_obj.update(a + data + b)
-    return h_obj.digest()
 
 
 def blake2s_256(data: bytes, salt: bytes) -> bytes:

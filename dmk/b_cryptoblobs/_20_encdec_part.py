@@ -356,7 +356,7 @@ class Encrypt:
                 self.io_to_io(source_io, outfile)
             set_random_last_modified(wtf.dirty)
             # dirty file is written AND closed (important for Windows)
-            wtf.replace()
+            wtf.commit()
 
     def file_to_file(self, source_file: Path, target_file: Path):
         with source_file.open('rb') as source_io:

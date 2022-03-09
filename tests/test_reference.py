@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-FileCopyrightText: (c) 2021-2022 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
 
@@ -39,10 +39,11 @@ def generate_references():
 
 
 class TestRefs(unittest.TestCase):
+    """Reading pre-encoded file, checking it reads the content as expected."""
+
     def test(self):
         assert CodenameKey.is_standard_params()
         d = DmkFile(refs_file)
-        # print("References salt", tuple(d.salt))
         for name, data in ref_content:
             self.assertEqual(d.get_bytes(name), data)
 
