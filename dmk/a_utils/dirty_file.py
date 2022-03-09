@@ -23,7 +23,7 @@ class WritingToTempFile:
     def __enter__(self):
         return self
 
-    def replace(self):
+    def commit(self):
         # instead of atomically replacing `final` with `dirty`,
         # we will copy `final` to a .bak file, rename `dirty` to `final`,
         # and securely remove the `.bak`. This way we'll be sure, the old
