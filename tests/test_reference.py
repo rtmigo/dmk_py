@@ -37,12 +37,12 @@ def generate_references():
             d.set_from_io(name, input_io)
         print(f"Written in {time.monotonic() - t}")
 
-#@unittest.skip('tmp')
+
 class TestRefs(unittest.TestCase):
     def test(self):
         assert CodenameKey.is_standard_params()
         d = DmkFile(refs_file)
-        print("References salt", tuple(d.salt))
+        # print("References salt", tuple(d.salt))
         for name, data in ref_content:
             self.assertEqual(d.get_bytes(name), data)
 
