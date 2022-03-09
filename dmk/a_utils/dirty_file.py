@@ -26,8 +26,8 @@ class WritingToTempFile:
     def replace(self):
         # instead of atomically replacing `final` with `dirty`,
         # we will copy `final` to a .bak file, rename `dirty` to `final`,
-        # and securely remove the `.bak`. This way we'll be sure, there are
-        # no traces of previous file can be found in the file system
+        # and securely remove the `.bak`. This way we'll be sure, the old
+        # file content is not kept in the file system
 
         bak: Optional[Path] = None
         if self.final.exists():
