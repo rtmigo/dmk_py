@@ -1,4 +1,5 @@
-[![Generic badge](https://img.shields.io/badge/Status-Pre_Alpha-red.svg)](#)
+[![Generic badge](https://img.shields.io/badge/Maturity-Experimental-red.svg)
+](#)
 [![Generic badge](https://img.shields.io/badge/Python-3.7+-blue.svg)](#)
 [![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS%20|%20Windows-blue.svg)](#)
 

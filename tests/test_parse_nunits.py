@@ -20,5 +20,6 @@ class TastParseN(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_n_units("123x")
 
+
 if __name__ == "__main__":
     unittest.main()
