@@ -32,11 +32,11 @@ def bytes_to_uint24(data: bytes) -> int:
         raise ValueError
     return int.from_bytes(data, byteorder='big', signed=False)
 
+
 def bytes_to_uint48(data: bytes) -> int:
     if len(data) != 6:
         raise ValueError
     return int.from_bytes(data, byteorder='big', signed=False)
-
 
 
 def bytes_to_int64(data: bytes) -> int:

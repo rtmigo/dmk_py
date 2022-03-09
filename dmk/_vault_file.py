@@ -65,7 +65,7 @@ class DmkFile:
                           writer.blobs,
                           blocks_num)
             # both files are closed now
-            wtf.replace()  # todo securely remove old file
+            wtf.commit()
 
     def set_from_io(self, codename: str, source: BinaryIO):
         ck = CodenameKey(codename, self.salt)
@@ -75,17 +75,14 @@ class DmkFile:
                     StorageFileWriter(new_file_io, self.salt) as writer:
                 update_namegroup_b(ck, source, old_blobs, writer.blobs)
             # both files are closed now
-
-            wtf.replace()  # todo securely remove old file
+            wtf.commit()
 
     def get_bytes(self, name: str) -> Optional[bytes]:
         ck = CodenameKey(name, self.salt)
-        # print("pk", ck.as_bytes)
         with self._old_blobs() as old_blobs:
             ng = NameGroup(old_blobs, ck)
 
             if not ng.fresh_content_dios:
-                # print(f"No fresh content case blobs: {len(old_blobs)}")
                 return None
 
             with BytesIO() as decrypted:

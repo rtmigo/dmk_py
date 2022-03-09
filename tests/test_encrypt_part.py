@@ -17,7 +17,6 @@ from dmk.b_cryptoblobs._20_encdec_part import Encrypt, \
 from tests.common import testing_salt
 
 
-# @unittest.skip("tmp")
 class TestEncryptDecrypt(unittest.TestCase):
     faster: FasterKDF
 
@@ -136,8 +135,6 @@ class TestEncryptDecrypt(unittest.TestCase):
                                   part_size=MAX_CLUSTER_CONTENT_SIZE,
                                   part_idx=2)
 
-    #
-    # @unittest.skip('temp')
     def test_encdec_part_random(self):
         for _ in range(1000):
             name_len = random.randint(0, 10)

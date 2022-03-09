@@ -71,6 +71,7 @@ def set_random_last_modified(file: Path):
 
 
 def random_basename() -> str:
+    """We may use random filenames for temporary files."""
     for _ in range(99999):
         length = random.randint(2, 12)
         data = get_noncrypt_random_bytes(length)

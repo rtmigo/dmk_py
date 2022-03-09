@@ -44,17 +44,13 @@ class TestTheFile(unittest.TestCase):
                     salts.add(the_file.salt)
                     self.assertEqual(the_file.get_bytes(name), None)
 
-
                     with BytesIO(data) as input_io:
-                        # print("Set", name)
                         the_file.set_from_io(name, input_io)
-                        # print(the_file.blobs_len)
 
-                    if random.choice((True,False)):
+                    if random.choice((True, False)):
                         the_file.add_fakes(
                             random_codename_fullsize(),
-                            blocks_num=random.randint(1, 100)
-                        )
+                            blocks_num=random.randint(1, 100))
 
                 self.assertTrue(file_path.exists())
                 self.assertEqual(len(salts), 1)

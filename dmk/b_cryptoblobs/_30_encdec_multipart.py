@@ -83,28 +83,6 @@ class MultipartEncryptor:
         return len(self.encrypted_indices) == len(self.part_sizes)
 
 
-def encrypt_to_files(fpk: CodenameKey,
-                     source_io: BinaryIO,
-                     target_dir: Path,
-                     content_version: int) -> List[Path]:
-    # todo remove this method
-    # it is outdated and it does not use WTF
-    # is is kept temporarily for transition period
-    me = MultipartEncryptor(fpk, source_io, content_version)
-
-    files: List[Path] = []
-
-    for i in range(len(me.part_sizes)):
-        target_file = unique_filename(target_dir)
-        files.append(target_file)
-        with target_file.open('wb') as f:
-            me.encrypt(i, f)
-        set_random_last_modified(target_file)
-
-    assert len(files) == len(me.part_sizes)
-    return files
-
-
 class BadFilesetError(Exception):
     pass
 

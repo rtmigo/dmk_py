@@ -1,3 +1,8 @@
+# 0.6.0
+
+- the old contents of the file will be shredded instead of being replaced 
+- Python 3.10 added to supported platforms
+
 # 0.5.7
 
 - the initial `content_ver` is now computed from a huge random interval with no 

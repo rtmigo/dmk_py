@@ -7,8 +7,6 @@ from pathlib import Path
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 
 
-# todo remove this module?
-
 def shred(file: Path, cycles=2):
     size = file.stat().st_size
     for _ in range(cycles):
