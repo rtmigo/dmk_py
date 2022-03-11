@@ -5,7 +5,6 @@ from io import BytesIO
 from pathlib import Path
 
 from dmk import DmkFile
-from dmk._main import DmkKeyError
 
 
 def set_text(dmk_file: DmkFile,
@@ -45,3 +44,7 @@ def get_file(dmk_file: DmkFile,
 
     with Path(target_file).open('wb') as target_io:
         target_io.write(decrypted_bytes)
+
+
+class DmkKeyError(KeyError):
+    pass
