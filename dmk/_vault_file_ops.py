@@ -8,37 +8,37 @@ from dmk import DmkFile
 
 
 def set_text(dmk_file: DmkFile,
-             secret_key: str,
+             codename: str,
              source_text: str):
     # todo test
     with BytesIO(source_text.encode('utf-8')) as source_io:
-        dmk_file.set_from_io(secret_key, source_io)
+        dmk_file.set_from_io(codename, source_io)
 
 
-def get_text(dmk_file: DmkFile, secret_key: str) -> str:
+def get_text(dmk_file: DmkFile, codename: str) -> str:
     # todo test
-    decrypted_bytes = dmk_file.get_bytes(secret_key)
+    decrypted_bytes = dmk_file.get_bytes(codename)
     if decrypted_bytes is None:
         raise DmkKeyError
     return decrypted_bytes.decode('utf-8')
 
 
 def set_file(dmk_file: DmkFile,
-             secret_key: str,
+             codename: str,
              source_file: Path):
     # todo test
     with Path(source_file).open('rb') as source_io:
-        dmk_file.set_from_io(secret_key, source_io)
+        dmk_file.set_from_io(codename, source_io)
 
 
 def get_file(dmk_file: DmkFile,
-             secret_key: str,
+             codename: str,
              target_file: Path):
     # todo test
     if target_file.exists():
         raise FileExistsError
 
-    decrypted_bytes = dmk_file.get_bytes(secret_key)  # todo get io, chunks?
+    decrypted_bytes = dmk_file.get_bytes(codename)  # todo get io, chunks?
     if decrypted_bytes is None:
         raise DmkKeyError
 

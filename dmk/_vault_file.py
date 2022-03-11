@@ -55,6 +55,11 @@ class DmkFile:
             return 0
 
     def add_fakes(self, codename: str, blocks_num: int):
+        """Adds fake blocks.
+
+        `codename` here is a random string, that should NOT match existing
+        names or names that will ever be added.
+        """
         ck = CodenameKey(codename, self.salt)
         with WritingToTempFile(self.path) as wtf:
             with self._old_blobs() as old_blobs, \
@@ -77,8 +82,8 @@ class DmkFile:
             # both files are closed now
             wtf.commit()
 
-    def get_bytes(self, name: str) -> Optional[bytes]:
-        ck = CodenameKey(name, self.salt)
+    def get_bytes(self, codename: str) -> Optional[bytes]:
+        ck = CodenameKey(codename, self.salt)
         with self._old_blobs() as old_blobs:
             ng = NameGroup(old_blobs, ck)
 

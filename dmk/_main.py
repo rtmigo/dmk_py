@@ -80,14 +80,14 @@ class Main:
 
     def set_file(self, name: str, file: str):
         set_file(dmk_file=DmkFile(self.file_path),
-                 secret_key=name,
+                 codename=name,
                  source_file=Path(file))
 
     def get_text(self, name: str):
         try:
             return get_text(
                 dmk_file=DmkFile(self.file_path),
-                secret_key=name)
+                codename=name)
         except DmkKeyError:
             raise ItemNotFoundExit
 
@@ -95,7 +95,7 @@ class Main:
         try:
             get_file(
                 dmk_file=DmkFile(self.file_path),
-                secret_key=name,
+                codename=name,
                 target_file=Path(file))
         except DmkKeyError:
             raise ItemNotFoundExit
