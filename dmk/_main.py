@@ -47,7 +47,50 @@ def parse_n_units(txt: str) -> int:
     else:
         raise ValueError(f"Unknown suffix: {suffix}")
 
-# todo export with meaningful name
+
+class DmkKeyError(KeyError):
+    pass
+
+
+def set_text(dmk_file: DmkFile,
+             secret_key: str,
+             source_text: str):
+    # todo test
+    with BytesIO(source_text.encode('utf-8')) as source_io:
+        dmk_file.set_from_io(secret_key, source_io)
+
+
+def get_text(dmk_file: DmkFile, secret_key: str) -> str:
+    # todo test
+    decrypted_bytes = dmk_file.get_bytes(secret_key)
+    if decrypted_bytes is None:
+        raise DmkKeyError
+    return decrypted_bytes.decode('utf-8')
+
+
+def set_file(dmk_file: DmkFile,
+             secret_key: str,
+             source_file: Path):
+    # todo test
+    with Path(source_file).open('rb') as source_io:
+        dmk_file.set_from_io(secret_key, source_io)
+
+
+def get_file(dmk_file: DmkFile,
+             secret_key: str,
+             target_file: Path):
+    # todo test
+    if target_file.exists():
+        raise FileExistsError
+
+    decrypted_bytes = dmk_file.get_bytes(secret_key)  # todo get io, chunks?
+    if decrypted_bytes is None:
+        raise DmkKeyError
+
+    with Path(target_file).open('wb') as target_io:
+        target_io.write(decrypted_bytes)
+
+
 class Main:
     def __init__(self, storage_file: Path):
 
@@ -75,34 +118,26 @@ class Main:
         print(f"New file size: {crd.path.stat().st_size:,} B")
 
     def set_text(self, name: str, value: str):
-        crd = DmkFile(self.file_path)
-        with BytesIO(value.encode('utf-8')) as source_io:
-            crd.set_from_io(name, source_io)
+        set_text(DmkFile(self.file_path), name, value)
 
     def set_file(self, name: str, file: str):
-        crd = DmkFile(self.file_path)
-        with Path(file).open('rb') as  source_io:
-            crd.set_from_io(name, source_io)
+        set_file(dmk_file=DmkFile(self.file_path),
+                 secret_key=name,
+                 source_file=Path(file))
 
     def get_text(self, name: str):
-        crd = DmkFile(self.file_path)
-        decrypted_bytes = crd.get_bytes(name)
-        if decrypted_bytes is None:
+        try:
+            return get_text(
+                dmk_file=DmkFile(self.file_path),
+                secret_key=name)
+        except DmkKeyError:
             raise ItemNotFoundExit
-        return decrypted_bytes.decode('utf-8')
 
     def get_file(self, name: str, file: str):
-        crd = DmkFile(self.file_path)
-        fpath = Path(file)
-        if fpath.exists():
-            raise FileExistsError  # todo ask
-
-        data = crd.get_bytes(name)  # todo get io, chunks?
-        if data is None:
-            raise Exception("No data!")  # todo
-
-        with Path(file).open('wb') as outio_io:
-            outio_io.write(data)
+        get_file(
+            dmk_file=DmkFile(self.file_path),
+            secret_key=name,
+            target_file=Path(file))
 
     def eval(self, name: str):
         # todo test
@@ -125,7 +160,7 @@ class Main:
             fn.write_bytes(decrypted_bytes)
             args = ['open', '-W', str(fn)]
             lmd = fn.stat().st_mtime
-            #print(args)
+            # print(args)
             print("Running the 'open' and waiting for app to close")
             result = subprocess.run(args, shell=False)
             if result.returncode == 0:
