@@ -10,9 +10,9 @@ from tempfile import TemporaryDirectory
 
 import click.exceptions
 
-from dmk import set_text, get_text, set_file, get_file
 from dmk._common import CLUSTER_SIZE
 from dmk._vault_file import DmkFile
+from dmk._vault_file_ops import set_text, get_text, set_file, get_file
 from dmk.a_utils.randoms import random_codename_fullsize, random_basename
 
 
