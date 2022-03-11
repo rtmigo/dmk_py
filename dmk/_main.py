@@ -1,16 +1,16 @@
-# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-FileCopyrightText: (c) 2021-2022 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
 
 import os
 import subprocess
-from io import BytesIO
 from math import ceil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import click.exceptions
 
+from dmk import set_text, get_text, set_file, get_file
 from dmk._common import CLUSTER_SIZE
 from dmk._vault_file import DmkFile
 from dmk.a_utils.randoms import random_codename_fullsize, random_basename
@@ -50,45 +50,6 @@ def parse_n_units(txt: str) -> int:
 
 class DmkKeyError(KeyError):
     pass
-
-
-def set_text(dmk_file: DmkFile,
-             secret_key: str,
-             source_text: str):
-    # todo test
-    with BytesIO(source_text.encode('utf-8')) as source_io:
-        dmk_file.set_from_io(secret_key, source_io)
-
-
-def get_text(dmk_file: DmkFile, secret_key: str) -> str:
-    # todo test
-    decrypted_bytes = dmk_file.get_bytes(secret_key)
-    if decrypted_bytes is None:
-        raise DmkKeyError
-    return decrypted_bytes.decode('utf-8')
-
-
-def set_file(dmk_file: DmkFile,
-             secret_key: str,
-             source_file: Path):
-    # todo test
-    with Path(source_file).open('rb') as source_io:
-        dmk_file.set_from_io(secret_key, source_io)
-
-
-def get_file(dmk_file: DmkFile,
-             secret_key: str,
-             target_file: Path):
-    # todo test
-    if target_file.exists():
-        raise FileExistsError
-
-    decrypted_bytes = dmk_file.get_bytes(secret_key)  # todo get io, chunks?
-    if decrypted_bytes is None:
-        raise DmkKeyError
-
-    with Path(target_file).open('wb') as target_io:
-        target_io.write(decrypted_bytes)
 
 
 class Main:
@@ -134,10 +95,13 @@ class Main:
             raise ItemNotFoundExit
 
     def get_file(self, name: str, file: str):
-        get_file(
-            dmk_file=DmkFile(self.file_path),
-            secret_key=name,
-            target_file=Path(file))
+        try:
+            get_file(
+                dmk_file=DmkFile(self.file_path),
+                secret_key=name,
+                target_file=Path(file))
+        except DmkKeyError:
+            raise ItemNotFoundExit
 
     def eval(self, name: str):
         # todo test
@@ -154,7 +118,7 @@ class Main:
         crd = DmkFile(self.file_path)
         decrypted_bytes = crd.get_bytes(codename)
         if decrypted_bytes is None:
-            raise click.exceptions.BadParameter("Entry not found")
+            raise ItemNotFoundExit
         with TemporaryDirectory() as td:
             fn = Path(td) / random_basename()
             fn.write_bytes(decrypted_bytes)
