@@ -191,7 +191,7 @@ class Encrypt:
                                         (the entry data, stored in current
                                         block).
 
-                                        For fake blocks it is not checksum,
+                                        For fake blocks it is not a checksum,
                                         but four random bytes.
 
                 FORMAT_VER    (uint8)   Always 1.
