@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
+# SPDX-FileCopyrightText: (c) 2021-2022 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
 
 
@@ -8,12 +8,13 @@ from typing import BinaryIO, Optional, Type, Iterator, AnyStr, Iterable, List
 
 
 class FragmentIO(BinaryIO):
-    """Reads data from a fragment of a stream. The fragment is described
-    by start position and the length in bytes.
+    """`BinaryIO` that actually reads a fragment of a larger `BinaryIO`.
 
-    The fragment will look like a stream. But this object will only allow
-    reading the bytes that belong to the fragment. The seek method will also
-    only set the position within the fragment.
+    A fragment is described by start position and the length in bytes.
+
+    `FragmentIO` will not allow reading bytes outside the fragment.
+    The position in the `seek` method denotes the local position
+    within the fragment.
     """
 
     def __init__(self, underlying: BinaryIO, start: int, length: int):
