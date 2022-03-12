@@ -94,3 +94,8 @@ class DmkFile:
                 decrypt_from_dios(ng.fresh_content_dios, decrypted)
                 decrypted.seek(0, io.SEEK_SET)
                 return decrypted.read()
+
+    def set_bytes(self, codename: str, data: bytes):
+        # todo test
+        with BytesIO(data) as bytes_io:
+            self.set_from_io(codename, bytes_io)
