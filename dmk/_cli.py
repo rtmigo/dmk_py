@@ -1,18 +1,19 @@
 # SPDX-FileCopyrightText: (c) 2021 Artёm IG <github.com/rtmigo>
 # SPDX-License-Identifier: MIT
-
-
+import sys
 import time
 from pathlib import Path
 from typing import List, Optional
 
 import click
+from click_shell import shell
 
 from dmk._common import KEY_SALT_SIZE
 from dmk._main import Main
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
-from ._constants import __version__
+from ._constants import __version__, __copyright__
+#from ._shell import MyApp
 
 VAULT_FILE_ENVNAME = 'DMK_VAULT_FILE'
 DEFAULT_STORAGE_FILE = "~/vault.dmk"
@@ -44,21 +45,18 @@ class Globals:
     # vault_arg: Optional[str] = None
 
 
-@click.group(invoke_without_command=True)
+#@click.group(invoke_without_command=True)
+@shell(prompt='dmk> ',
+       epilog="See https://github.com/rtmigo/dmk_py#readme",
+       intro=f"Welcome to DMK shell")
 @click.option(VAULT_ARG_SHORT, VAULT_ARG_LONG,
               envvar=VAULT_FILE_ENVNAME,
               default=DEFAULT_STORAGE_FILE,
               type=Path)
+@click.version_option(__version__, message=f"DMK: Dark Matter Keeper v{__version__}\n(c) {__copyright__}")
 @click.pass_context
 def dmk_cli(ctx, vault: Path):
     Globals.main = Main(vault)  # todo
-    if not ctx.invoked_subcommand:
-        click.echo(f"DMK: Dark Matter Keeper v{__version__} (c) 2021 Artem IG")
-        click.echo()
-        click.echo("See https://github.com/rtmigo/dmk_py#readme")
-        click.echo()
-        click.echo(ctx.get_help())
-        ctx.exit(2)
 
 
 @click.command(hidden=True)
@@ -152,5 +150,7 @@ def vault_cmd():
     # click.echo(f'Original: {Globals.main.}')
     # click.echo(f'Resolved: {Main(Globals.vault_arg).file_path}')
 
-# if __name__ == '__main__':
-#    dmk_cli(None)
+
+# @dmk_cli.command(name='shell', hidden=True)  # experimental
+# def cmd_shell():
+#     sys.exit(MyApp().cmdloop())

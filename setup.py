@@ -28,7 +28,7 @@ setup(
 
     packages=find_packages(include='dmk/*'),
     python_requires='>=3.7',
-    install_requires=['pycryptodome', 'click', 'argon2-cffi'],
+    install_requires=['pycryptodome', 'click', 'argon2-cffi', 'click_shell'],
 
     description="Experimental storage with entries encrypted independently.",
 
