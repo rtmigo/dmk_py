@@ -13,7 +13,8 @@ from dmk._main import Main
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
 from ._constants import __version__, __copyright__
-#from ._shell import MyApp
+
+# from ._shell import MyApp
 
 VAULT_FILE_ENVNAME = 'DMK_VAULT_FILE'
 DEFAULT_STORAGE_FILE = "~/vault.dmk"
@@ -45,7 +46,7 @@ class Globals:
     # vault_arg: Optional[str] = None
 
 
-#@click.group(invoke_without_command=True)
+# @click.group(invoke_without_command=True)
 @shell(prompt='dmk> ',
        epilog="See https://github.com/rtmigo/dmk_py#readme",
        intro=f"Welcome to DMK shell")
@@ -53,7 +54,8 @@ class Globals:
               envvar=VAULT_FILE_ENVNAME,
               default=DEFAULT_STORAGE_FILE,
               type=Path)
-@click.version_option(__version__, message=f"DMK: Dark Matter Keeper v{__version__}\n(c) {__copyright__}")
+@click.version_option(__version__,
+                      message=f"DMK: Dark Matter Keeper v{__version__}\n(c) {__copyright__}")
 @click.pass_context
 def dmk_cli(ctx, vault: Path):
     Globals.main = Main(vault)  # todo
@@ -133,14 +135,24 @@ def fake_cmd(size: str):
     Globals.the_main().fake(size)
 
 
+def _is_running_shell() -> bool:
+    if len(sys.argv) == 1:
+        return True
+    return False
+
+
 @dmk_cli.command()
 # @vault_option
 @codename_read_option
 def eval(codename: str,
-         hidden=True  # not unit-tested
-         ):
+         hidden=True):  # not unit-tested
     """Gets item data as text and executes it as shell command."""
-    Globals.the_main().eval(codename)
+    code = Globals.the_main().eval(codename)
+    if _is_running_shell():
+        # print(f"Return code: {code}")
+        pass
+    else:
+        exit(code)
 
 
 @dmk_cli.command(name='vault')
@@ -149,7 +161,6 @@ def vault_cmd():
     click.echo(Globals.the_main().file_path)
     # click.echo(f'Original: {Globals.main.}')
     # click.echo(f'Resolved: {Main(Globals.vault_arg).file_path}')
-
 
 # @dmk_cli.command(name='shell', hidden=True)  # experimental
 # def cmd_shell():
