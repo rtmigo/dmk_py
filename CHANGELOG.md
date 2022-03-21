@@ -1,3 +1,7 @@
+# 0.7.0
+
+- running `dmk` CLI without arguments will start shell mode 
+
 # 0.6.0
 
 - the old contents of the file will be shredded instead of being replaced 
