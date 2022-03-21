@@ -3,6 +3,7 @@
 import sys
 import time
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import List, Optional
 
 import click
@@ -46,16 +47,24 @@ class Globals:
     # vault_arg: Optional[str] = None
 
 
-# @click.group(invoke_without_command=True)
+# there is no evident way to avoid saving the history of click_shell commands.
+# But we can save the history to temporary file
+_click_shell_history_file = NamedTemporaryFile("r")
+
+
 @shell(prompt='dmk> ',
        epilog="See https://github.com/rtmigo/dmk_py#readme",
-       intro=f"Welcome to DMK shell")
+       intro=f"Welcome to DMK shell",
+
+       hist_file=_click_shell_history_file.name,
+       on_finished=lambda _: _click_shell_history_file.close())
 @click.option(VAULT_ARG_SHORT, VAULT_ARG_LONG,
               envvar=VAULT_FILE_ENVNAME,
               default=DEFAULT_STORAGE_FILE,
               type=Path)
-@click.version_option(__version__,
-                      message=f"DMK: Dark Matter Keeper v{__version__}\n(c) {__copyright__}")
+@click.version_option(
+    __version__,
+    message=f"DMK: Dark Matter Keeper v{__version__}\n(c) {__copyright__}")
 @click.pass_context
 def dmk_cli(ctx, vault: Path):
     Globals.main = Main(vault)  # todo
