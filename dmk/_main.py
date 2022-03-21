@@ -100,15 +100,14 @@ class Main:
         except DmkKeyError:
             raise ItemNotFoundExit
 
-    def eval(self, name: str):
+    def eval(self, name: str) -> int:
         # todo test
         crd = DmkFile(self.file_path)
         decrypted_bytes = crd.get_bytes(name)
         if decrypted_bytes is None:
             raise ItemNotFoundExit
         cmd = decrypted_bytes.decode('utf-8')
-
-        exit(os.system(cmd))
+        return os.system(cmd)
 
     def open(self, codename: str):
         # todo how to unit test?!..
@@ -133,5 +132,5 @@ class Main:
                         crd.set_from_io(codename, updated_file)
                     print("Done!")
             else:
-                click.echo(
-                    "'open' returned non-zero exit code. Entry not updated.")
+                click.echo("'open' returned non-zero exit code. "
+                           "Entry not updated.")
