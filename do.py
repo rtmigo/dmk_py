@@ -63,7 +63,6 @@ def _replace_build_date(fn: Path):
         r'__build_timestamp__.+',
         f'__build_timestamp__ = "{now}"',
         text)
-    print(new_text)
     assert new_text != text, "timestamp not changed"
     fn.write_text(new_text)
 
@@ -85,6 +84,10 @@ def _build_exe() -> Path:
     ])
 
     exe = project_dir / "dist" / name
+    if not exe.exists():
+        exe = exe.parent/(exe.name+".exe")
+    if not exe.exists():
+        raise Exception("Cannot find the built executable")
     print(f"Built {exe}")
     print(f"Exe size: {exe.stat().st_size / 1024 / 1024:.0f} MiB")
 
