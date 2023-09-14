@@ -4,3 +4,4 @@
 
 __version__ = "0.7.0"
 __copyright__ = "2021-2022 Artem IG <github.com/rtmigo>"
+__build_timestamp__ = "0000-00-00 00:00"
