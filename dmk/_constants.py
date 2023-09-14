@@ -14,3 +14,5 @@ try:
     __copyright__.encode(sys.stdout.encoding)
 except UnicodeEncodeError:
     __copyright__ = __copyright__.replace("ё", "e")
+    # fail immediately if it's still not fixed
+    __copyright__.encode(sys.stdout.encoding)
