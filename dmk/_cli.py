@@ -102,7 +102,7 @@ codename_confirm_option = click.option(CODENAME_SHORT_ARG, CODENAME_LONG_ARG,
 @click.option('-t', '--text', default=None)
 @click.argument('file', nargs=-1, type=Path)
 def set_cmd(codename: str, text: str, file: List[Path]):
-    """Encrypts text or file to an entry."""
+    """Encrypt text or file to an entry."""
 
     if len(file) >= 1:
         if len(file) >= 2:
@@ -119,7 +119,7 @@ def set_cmd(codename: str, text: str, file: List[Path]):
 @codename_read_option
 @click.argument('file', nargs=-1, type=Path)
 def getf_cmd(codename: str, file: List[Path]):
-    """Decrypts an entry and prints as text, or writes to file."""
+    """Decrypt an entry and prints as text, or writes to file."""
     if len(file) > 0:
         Globals.the_main().get_file(codename, str(file[0]))
     else:
@@ -140,7 +140,7 @@ def open_cmd(codename: str):
 @dmk_cli.command(name='dummy')
 @click.argument('size', type=str)
 def fake_cmd(size: str):
-    """Adds dummy data to the vault."""
+    """Add dummy data to the vault."""
     Globals.the_main().fake(size)
 
 
@@ -155,7 +155,7 @@ def _is_running_shell() -> bool:
 @codename_read_option
 def eval(codename: str,
          hidden=True):  # not unit-tested
-    """Gets item data as text and executes it as shell command."""
+    """Execute shell command defined by text decrypted from an entry."""
     code = Globals.the_main().eval(codename)
     if _is_running_shell():
         # print(f"Return code: {code}")
@@ -166,11 +166,5 @@ def eval(codename: str,
 
 @dmk_cli.command(name='vault')
 def vault_cmd():
-    """Prints the location of the vault file."""
+    """Print the location of the vault file."""
     click.echo(Globals.the_main().file_path)
-    # click.echo(f'Original: {Globals.main.}')
-    # click.echo(f'Resolved: {Main(Globals.vault_arg).file_path}')
-
-# @dmk_cli.command(name='shell', hidden=True)  # experimental
-# def cmd_shell():
-#     sys.exit(MyApp().cmdloop())

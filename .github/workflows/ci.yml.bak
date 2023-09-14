@@ -63,7 +63,6 @@ jobs:
           type: now
           target_branch: staging
           github_token: ${{ github.token }}
-    timeout-minutes: 5
 
   to-master:
     # if the commit message was "publish", copy the tested code
@@ -109,4 +108,3 @@ jobs:
         run: |
           python setup.py sdist bdist_wheel
           twine upload dist/*
-    timeout-minutes: 5
