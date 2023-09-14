@@ -42,11 +42,11 @@ jobs:
           python3 ./lint.py
       - name: Run unit tests
         run: |
-          # pip3 install neatest
+      #   pip3 install neatest
           python ./test_unit.py
-      - name: Prepare pkg tests
-        run: |
-          pip install chkpkg
+      #- name: Prepare pkg tests
+      #  run: |
+      #    pip install chkpkg
       - name: Run pkg tests
         run: |
           python ./test_pkg.py
