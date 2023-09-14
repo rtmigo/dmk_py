@@ -50,10 +50,6 @@ def _lint():
         exit(1)
 
 
-# def _get_git_commit():
-#     return subprocess.check_output("git log --pretty=format:'%h' -n 1".split())
-
-
 def _replace_build_date(fn: Path):
     now = datetime.datetime.now().isoformat(sep=" ", timespec="seconds")
     text = fn.read_text()
@@ -66,20 +62,7 @@ def _replace_build_date(fn: Path):
     fn.write_text(new_text)
 
 
-# def _replace_git_commit(fn: Path):
-#     now = datetime.datetime.now().isoformat(sep=" ", timespec="seconds")
-#     text = fn.read_text()
-#     text = re.sub(
-#         r'__prev_commit__.+$',
-#         f'__prev_prev_commit__ = "{now}"',
-#         text)
-#     print(text)
-#     fn.write_text(text)
-
-
-@app.command()
-def install():
-    """Build PyInstaller executable and copy it to ~/.local/bin"""
+def _build_exe() -> Path:
     name = "dmk"
     project_dir = Path(__file__).parent
 
@@ -96,16 +79,31 @@ def install():
     ])
 
     exe = project_dir / "dist" / name
+    print(f"Built {exe}")
     print(f"Exe size: {exe.stat().st_size / 1024 / 1024:.0f} MiB")
 
-    os.remove(project_dir / "dmk.spec")
-    shutil.rmtree(project_dir / "build")
-    target = Path(os.path.expanduser("~/.local/bin")) / name
+    return exe
+
+
+@app.command()
+def build():
+    """Build PyInstaller executable"""
+    _build_exe()
+
+
+@app.command()
+def install():
+    """Build PyInstaller executable and copy it to ~/.local/bin"""
+    exe = _build_exe()
+    project_dir = Path(__file__).parent
+    target = Path(os.path.expanduser("~/.local/bin")) / "dmk"
     if target.parent.exists():
         print(f"Copying to {target}")
         shutil.move(exe, target)
     else:
         print(f"{target.parent} does not exist")
+    os.remove(project_dir / "dmk.spec")
+    shutil.rmtree(project_dir / "build")
 
 
 if __name__ == "__main__":

@@ -50,6 +50,10 @@ jobs:
       - name: Run pkg tests
         run: |
           python ./test_pkg.py
+      - name: Build PyInstaller
+        run: |
+          python ./do.py build     
+          dist/dmk --version
 
   to-staging:
     needs: test

@@ -13,7 +13,7 @@ from dmk._common import KEY_SALT_SIZE
 from dmk._main import Main
 from dmk.a_base._10_kdf import CodenameKey
 from dmk.a_utils.randoms import get_noncrypt_random_bytes
-from ._constants import __version__, __copyright__
+from ._constants import __version__, __copyright__, __build_timestamp__
 
 # from ._shell import MyApp
 
@@ -64,7 +64,7 @@ _click_shell_history_file = NamedTemporaryFile("r")
               type=Path)
 @click.version_option(
     __version__,
-    message=f"DMK: Dark Matter Keeper v{__version__}\n(c) {__copyright__}")
+    message=f"DMK: Dark Matter Keeper v{__version__}\n(c) {__copyright__} | {__build_timestamp__}")
 @click.pass_context
 def dmk_cli(ctx, vault: Path):
     Globals.main = Main(vault)  # todo

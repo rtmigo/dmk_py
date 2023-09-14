@@ -2,4 +2,4 @@ neatest
 pylint
 mypy
 chkpkg
-#py_common_subseq
+pyinstaller
