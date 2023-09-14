@@ -138,7 +138,7 @@ class Encrypt:
                  # original_size: int = None,
                  part_idx: int = 0,
                  parts_len: int = 1,
-                 part_size: int = None):
+                 part_size: Optional[int] = None):
 
         self.target_size = target_size
 

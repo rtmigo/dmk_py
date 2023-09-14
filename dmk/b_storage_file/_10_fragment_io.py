@@ -3,8 +3,10 @@
 
 
 import io
+from abc import abstractmethod
 from types import TracebackType
-from typing import BinaryIO, Optional, Type, Iterator, AnyStr, Iterable, List
+from typing import BinaryIO, Optional, Type, Iterator, AnyStr, Iterable, List, \
+    Union
 
 
 class FragmentIO(BinaryIO):
@@ -90,13 +92,13 @@ class FragmentIO(BinaryIO):
         assert 0 <= self.__pos <= self.length
         return buffer
 
-    def write(self, s: AnyStr) -> int:
+    def write(self, s: Union[bytes, bytearray]) -> int:  # type: ignore
         raise NotImplementedError
 
     def __enter__(self) -> BinaryIO:
         return self
 
-    def __exit__(self, t: Optional[Type[BaseException]],
+    def __exit__(self, t: Optional[Type[BaseException]],  # type: ignore
                  value: Optional[BaseException],
                  traceback: Optional[TracebackType]) -> Optional[bool]:
         pass
@@ -134,7 +136,7 @@ class FragmentIO(BinaryIO):
     def writable(self) -> bool:
         return self.underlying.writable()
 
-    def writelines(self, lines: Iterable[AnyStr]) -> None:
+    def writelines(self, lines: List[AnyStr]) -> None:  # type: ignore
         raise NotImplementedError
 
     def __next__(self) -> AnyStr:
