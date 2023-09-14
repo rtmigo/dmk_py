@@ -1,6 +1,6 @@
 [![Generic badge](https://img.shields.io/badge/Maturity-Experimental-red.svg)
 ](#)
-[![Generic badge](https://img.shields.io/badge/Python-3.7+..3.12-blue.svg)](#)
+[![Generic badge](https://img.shields.io/badge/Python-3.7..3.12-blue.svg)](#)
 [![Generic badge](https://img.shields.io/badge/OS-Linux%20|%20macOS%20|%20Windows-blue.svg)](#)
 
 # [dmk: dark matter keeper](https://github.com/rtmigo/dmk_py#readme)
